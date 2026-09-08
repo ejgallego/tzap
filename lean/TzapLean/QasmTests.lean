@@ -115,8 +115,9 @@ def parseAccepts (src : String) : Bool := (parse src).toOption.isSome
 #guard (PassName.parse "DecomposeRz").isNone
 #guard (PassName.parse "nonsense").isNone
 #guard PassName.all.length == 4
--- Every executable pass carries an unconditional proof.
-#guard (PassName.all.filter (fun p => !p.2.1.verified)).map (·.1) == []
+#guard tagBits == 128
+-- Phase folding is probabilistically bounded; the other executable passes are unconditional.
+#guard (PassName.all.filter (fun p => !p.2.1.verified)).map (·.1) == ["PhaseFoldRand"]
 -- `O1` is the only level that skips the table.
 #guard !Level.O1.usesSuperOpt
 #guard Level.O2.usesSuperOpt && Level.O3.usesSuperOpt && !Level.O1.usesSuperOpt

@@ -301,11 +301,11 @@ boundary. The correctness theorem relates that stream to the theory's `Draws k` 
 `wordToBits`, which is why nothing in the inner loop ever touches an `F₂` function: the pass
 XORs machine words, and only the statement of the theorem talks about bits.
 
-The optional randomized runner draws a `Sample (varBound c) k` — an element of the very space
+The randomized runner draws a `Sample (varBound c) k` — an element of the very space
 `PhaseFoldRand.correct` bounds a measure over — and hands `phaseFold` the words it stands
-for. `PhaseFoldRand_run` records that `phaseFold k (wordsOf k (padSample s)) c` *is*
-`(PhaseFoldRand k).run c s`. The main executable uses the collision-free seed from
-`PhaseFoldRand.lean`; this helper remains available for explicitly probabilistic callers.
+for. `PhaseFoldRand_run` records that `phaseFold k (wordsOf k (liftSample s)) c` *is*
+`(PhaseFoldRand k).run c s`. The executable obtains the bytes from the operating system;
+the mathematical theorem separately assumes the corresponding sample is uniform.
 -/
 
 /-- The number of variables a circuit's analysis can allocate: one per wire, plus one per
@@ -314,10 +314,6 @@ slightly longer proof in `bounded_visited`: it is the size of either seed repres
 and on a typical circuit it is four or five times smaller. -/
 def varBound (c : RawCircuit) : Nat := c.numQubits + c.gates.countP Gate.allocates
 
-/-- Executable `liftSample`: pad a finite seed out to a draw stream. -/
-def padSample {m k : Nat} (sample : Sample m k) : Draws k :=
-  fun i => if h : i < m then sample ⟨i, h⟩ else 0
-
 /-- The packed word stream a bit-valued draw stream stands for. -/
 def wordsOf (k : Nat) (draws : Draws k) : Nat → Tag := fun i => bitsToWord (draws i)
 
@@ -325,36 +321,30 @@ def wordsOf (k : Nat) (draws : Draws k) : Nat → Tag := fun i => bitsToWord (dr
     wordToBits (k := k) (wordsOf k draws i) = draws i := by
   simp [wordsOf]
 
-/-- Draw one pseudorandom `k`-bit tag per variable from the runtime's generator, as an element of
-the finite space the failure bound is a measure over.
+/-- Pack `count` bytes starting at `start` into a little-endian natural number. -/
+def natOfBytes (bytes : ByteArray) (start count : Nat) : Nat := Id.run do
+  let mut w := 0
+  for i in [0:count] do
+    w := w ||| ((bytes[start + i]!).toNat <<< (8 * i))
+  return w
 
-A bit at a time, from the low bit of one generator step. This function makes no claim that the
-finite-state generator realizes the independent uniform PMF used by `PhaseFoldRand`; that is
-why it is not used by the verified CLI. Called directly rather than through `IO.rand` so the
-generator is checked out once instead of taken and put back for each bit.
+/-- Draw one OS-random `k`-bit tag per variable, as an element of the finite sample space in
+the failure theorem. Extra high bits in the final byte are ignored when `k` is not a multiple
+of eight.
 
-Rows are packed into `Nat`s and unpacked by `testBit`, so a drawn sample costs one machine
-word per variable rather than an array of `k` field elements. -/
+The implementation makes one entropy request for the entire sample, then exposes its packed
+rows as bit functions. The proof does not assert that `IO.getRandomBytes` realizes the ideal
+independent uniform PMF; that is the explicit platform-RNG assumption at the executable
+boundary. -/
 def randomSample (m k : Nat) : IO (Sample m k) := do
-  let mut gen ← IO.stdGenRef.get
+  let bytesPerTag := (k + 7) / 8
+  let totalBytes := m * bytesPerTag
+  if totalBytes ≥ USize.size then
+    throw (IO.userError "phase-fold random sample is too large for this platform")
+  let bytes ← IO.getRandomBytes totalBytes.toUSize
   let mut rows : Array Nat := Array.emptyWithCapacity m
-  for _ in [0:m] do
-    let mut w : Nat := 0
-    for _ in [0:k] do
-      let (v, gen') := stdNext gen
-      gen := gen'
-      w := 2 * w + v % 2
-    rows := rows.push w
-  IO.stdGenRef.set gen
+  for i in [0:m] do
+    rows := rows.push (natOfBytes bytes (i * bytesPerTag) bytesPerTag)
   return fun i j => bit ((rows[i.val]!).testBit j.val)
-
-/-- Phase folding with freshly drawn tags: an optional probabilistic runner.
-
-Fresh *per call*, which is what makes the round loop's union bound apply. A single stream
-reused across rounds would be adaptive — round two's circuit depends on round one's draws —
-and no bound here covers that. -/
-def phaseFoldIO (k : Nat) (c : RawCircuit) : IO RawCircuit := do
-  let s ← randomSample (varBound c) k
-  return phaseFold k (wordsOf k (padSample s)) c
 
 end TzapLean
