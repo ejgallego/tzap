@@ -12,7 +12,8 @@ What is absent, and says so when asked for: `--parallel` (deliberately not porte
 report those as unknown flags — which would read as a typo — each gets an error saying it is
 not in this build.
 
-`--seed` is accepted for command-line compatibility; exact phase folding no longer consumes it.
+`--seed` is accepted for command-line compatibility; randomized phase folding obtains fresh
+entropy from the operating system and does not consume this value.
 -/
 
 namespace TzapLean
@@ -83,8 +84,8 @@ def printHelp : IO Unit := do
   IO.println "  \x1b[1;33mUSAGE\x1b[0m"
   IO.println "    tzap-lean <input.qasm> [output.qasm] [options]"
   IO.println ""
-  IO.println "  Every executable pass carries an unconditional machine-checked proof"
-  IO.println "  that its output denotes the same channel as its input."
+  IO.println "  Deterministic passes carry unconditional machine-checked proofs."
+  IO.println "  PhaseFoldRand has a proved failure bound for uniform 128-bit tags."
   IO.println ""
   IO.println "  \x1b[1;33mARGS\x1b[0m"
   IO.println "    \x1b[1m<input.qasm>\x1b[0m     Input OpenQASM 2.0 file"
@@ -95,7 +96,7 @@ def printHelp : IO Unit := do
   IO.println "    \x1b[1m--passes\x1b[0m <list>  Run these passes in order, overriding the default pipeline"
   IO.println "                     (see PASSES)"
   IO.println "    \x1b[1m--fixpoint\x1b[0m       Repeat the pipeline until gate count stops decreasing"
-  IO.println "    \x1b[1m--seed\x1b[0m <n>       Accepted for compatibility (exact tags need no seed)"
+  IO.println "    \x1b[1m--seed\x1b[0m <n>       Accepted for compatibility (OS entropy is used instead)"
   IO.println "    \x1b[1m--verbose\x1b[0m        Report detailed input and table-loading information"
   IO.println "    \x1b[1m-O1\x1b[0m              Fastest: phase folding + gate cancellation only"
   IO.println "    \x1b[1m-O2\x1b[0m              Adds a superoptimization pass to O1 (2 rounds)"
@@ -110,6 +111,7 @@ def printHelp : IO Unit := do
     IO.println s!"    \x1b[1m{name}\x1b[0m{String.ofList (List.replicate (16 - name.length) ' ')}\x1b[2m{mark}\x1b[0m {desc}"
   IO.println ""
   IO.println "  \x1b[2mproved = output proved equivalent to input, unconditionally\x1b[0m"
+  IO.println "  \x1b[2mbounded = failure probability proved under uniform OS-random tags\x1b[0m"
   IO.println ""
 
 /-- Parse the command line. -/

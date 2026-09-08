@@ -5,16 +5,16 @@ import TzapLean.PhaseFoldRand
 
 Every behavioural test from `src/phase_fold_rand.rs` that does not depend on a pass this
 development has not ported (the Toffoli decomposition). Rust checks gate *counts* plus a
-numerical `circuits_equiv`; here the equivalence is already a theorem for every input
-(`phaseFoldGates_correct`), so these `#guard`s pin down the stronger fact — the exact gate
-list the pass produces — and the counts follow.
+numerical `circuits_equiv`; here `phaseFoldGates_correct` proves equivalence whenever the tags
+are faithful, and `PhaseFoldRand.correct` bounds the probability that they are not. These
+`#guard`s pin down the exact gate list the pass produces, and the counts follow.
 
 Angles are rationals in units of `π`, so Rust's radian constants become the `π`-fraction with
 the same classification: `0.3` (not a quarter turn) becomes `3/10`, `PI/4` becomes `1/4`.
 
 The draws here are a fixed splitmix stream, so the results are reproducible. The optimizer
-itself never uses one: `phaseFoldIO` draws a uniform `Sample`, which is the space
-`PhaseFoldRand.correct` bounds a measure over, and nothing relates a splitmix stream to it.
+itself obtains fresh 128-bit samples from `IO.getRandomBytes`; the theorem models those as
+independent uniform samples, while the platform RNG assumption remains explicit.
 -/
 
 namespace TzapLean
@@ -32,6 +32,9 @@ def seedWords (k : Nat) (seed : Nat) : Nat → Tag := fun i =>
 
 /-- A fixed draw stream for the tests below. -/
 def testWords : Nat → Tag := seedWords 63 0
+
+-- OS entropy is packed little-endian before the tag is exposed as bits.
+#guard natOfBytes (ByteArray.mk #[0x01, 0x02, 0x03]) 0 3 == 0x030201
 
 /-- Phase folding with those draws. -/
 def pf (n : Nat) (gs : List Gate) : List Gate := phaseFoldGates 63 testWords n gs
