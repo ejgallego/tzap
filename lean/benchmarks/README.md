@@ -19,9 +19,10 @@ The fixed surface uses unmodified circuits from the repository:
 | `qft20` | `qft/qft_q020_d32421.qasm` | Large QFT, dominated by single-qubit gates |
 
 The default is `-O1`, one warmup and three measured runs per circuit, with a
-60-second limit per invocation. QFT currently exceeds that limit: its timeout
-is retained as a scalability result, and the runner exits nonzero. A failed case
-is attempted once; the other cases still run. Select a smaller surface or allow
+60-second limit per invocation. All six cases complete on the profiling machine
+after the Hadamard-sweep improvement. A timeout is retained as a scalability
+result, and any failed case makes the runner exit nonzero. A failed case is
+attempted once; the other cases still run. Select a smaller surface or allow
 a longer deadline with `--case` and `--timeout`:
 
 ```sh
@@ -73,7 +74,9 @@ On machines with different CPU core types, pin both binaries to the same core
 for acceptance measurements (for example, `taskset -c 2` on Linux). The suite
 records its inherited CPU affinity when the operating system exposes it.
 
-See the [tag-state and sample-packing experiment](2026-09-10-tag-state.md) for
-the initial before/after measurements and the remaining QFT bottleneck.
-The [Rust comparison](2026-09-10-rust-comparison.md) measures both native CLIs
-on the same surface and checks their output quality.
+See the [Hadamard-sweep experiment](2026-09-10-hadamard-sweeps.md) for the latest
+measurements and the resolved QFT timeout. The
+[tag-state and sample-packing experiment](2026-09-10-tag-state.md) records the
+initial improvements. The [Rust comparison](2026-09-10-rust-comparison.md)
+measures both native CLIs before the Hadamard-sweep change and checks their
+output quality.
