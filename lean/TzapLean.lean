@@ -31,3 +31,4 @@ import TzapLean.Optimize
 import TzapLean.Cli
 import TzapLean.SuperOptTests
 import TzapLean.QasmTests
+import TzapLean.ExecutableRandPassTests
