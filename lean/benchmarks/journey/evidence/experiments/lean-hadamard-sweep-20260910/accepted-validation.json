@@ -1,0 +1,88 @@
+{
+  "gf16": {
+    "invocations": 14,
+    "all_exit_zero": true,
+    "all_metrics_identical": true,
+    "retained_output_byte_identical": true,
+    "identity_stable": true,
+    "output_metrics": {
+      "Gates": 2703,
+      "2q gates": 1581,
+      "T/Tdg": 1040,
+      "Depth": 491
+    }
+  },
+  "gf32": {
+    "invocations": 14,
+    "all_exit_zero": true,
+    "all_metrics_identical": true,
+    "retained_output_byte_identical": true,
+    "identity_stable": true,
+    "output_metrics": {
+      "Gates": 10562,
+      "2q gates": 6268,
+      "T/Tdg": 4128,
+      "Depth": 1003
+    }
+  },
+  "gf64": {
+    "invocations": 14,
+    "all_exit_zero": true,
+    "all_metrics_identical": true,
+    "retained_output_byte_identical": true,
+    "identity_stable": true,
+    "output_metrics": {
+      "Gates": 41547,
+      "2q gates": 24765,
+      "T/Tdg": 16448,
+      "Depth": 2027
+    }
+  },
+  "hwb8": {
+    "invocations": 14,
+    "all_exit_zero": true,
+    "all_metrics_identical": true,
+    "retained_output_byte_identical": true,
+    "identity_stable": true,
+    "output_metrics": {
+      "Gates": 13009,
+      "2q gates": 7073,
+      "T/Tdg": 3597,
+      "Depth": 8134
+    }
+  },
+  "chebyshev": {
+    "invocations": 14,
+    "all_exit_zero": true,
+    "all_metrics_identical": true,
+    "retained_output_byte_identical": true,
+    "identity_stable": true,
+    "output_metrics": {
+      "Gates": 96343,
+      "2q gates": 20431,
+      "T/Tdg": 31868,
+      "Depth": 42193
+    }
+  },
+  "gf32-o3": {
+    "invocations": 14,
+    "all_exit_zero": true,
+    "all_metrics_identical": true,
+    "retained_output_byte_identical": true,
+    "identity_stable": true,
+    "output_metrics": {
+      "Gates": 10562,
+      "2q gates": 6268,
+      "T/Tdg": 4128,
+      "Depth": 1003
+    }
+  },
+  "qft20": {
+    "invocations": 7,
+    "all_exit_zero": true,
+    "all_outputs_identical_to_rust": true,
+    "output_sha256": "8a1d80038afa8a6690af0b290ed7e6d7d3dc3f3f0cf4f9ec0e61435eb99943ea",
+    "identity_stable": true,
+    "baseline_timeout_same_binary_input_and_cpu": true
+  }
+}

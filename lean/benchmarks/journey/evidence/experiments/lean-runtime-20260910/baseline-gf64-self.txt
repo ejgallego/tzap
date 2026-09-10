@@ -1,0 +1,32 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 9K of event 'cycles:u'
+# Event count (approx.): 29401256117
+#
+#     Overhead  Symbol                                                                                                          IPC   [IPC Coverage]
+# ............  ..............................................................................................................  ....................
+#
+        16.73%  [.] mi_malloc_small                                                                                             -      -            
+        13.09%  [.] l_List_get_x3fInternal___redArg                                                                             -      -            
+        11.20%  [.] l___private_Init_Data_List_Impl_0__List_setTR_go___redArg                                                   -      -            
+         9.83%  [.] mi_free                                                                                                     -      -            
+         8.36%  [.] lean_dec_ref_cold                                                                                           -      -            
+         4.94%  [.] lean_array_push                                                                                             -      -            
+         2.78%  [.] malloc                                                                                                      -      -            
+         2.72%  [.] lean::lean_del_core_other(lean_object*, unsigned char, lean_object*)                                        -      -            
+         2.30%  [.] cfree@GLIBC_2.2.5                                                                                           -      -            
+         1.96%  [.] _int_free                                                                                                   -      -            
+         1.90%  [.] __gmpz_n_pow_ui                                                                                             -      -            
+         1.43%  [.] realloc                                                                                                     -      -            
+         1.35%  [.] _mi_page_retire(mi_page_s*)                                                                                 -      -            
+         1.32%  [.] lp_tzap_x2dlean_TzapLean_mergeInto                                                                          -      -            
+         1.14%  [.] lp_tzap_x2dlean_TzapLean_splitBlocker                                                                       -      -            
+         1.14%  [.] mi_find_page(mi_heap_s*, unsigned long, unsigned long)                                                      -      -            
+
+
+#
+# (Tip: If you have debuginfo enabled, try: perf report -s sym,srcline)
+#

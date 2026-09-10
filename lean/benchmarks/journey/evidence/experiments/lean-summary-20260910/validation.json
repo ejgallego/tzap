@@ -1,0 +1,169 @@
+{
+  "invocations": 162,
+  "successes": 161,
+  "errors": [
+    {
+      "argv": [
+        "taskset",
+        "-c",
+        "2",
+        "/home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline",
+        "/home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm",
+        "-O1",
+        "-o",
+        "/home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-warmup-0-baseline.qasm"
+      ],
+      "started_at_utc": "2026-09-10T15:06:19.599396+00:00",
+      "elapsed_ns": 60004723897,
+      "status": "timeout",
+      "exit_code": -9,
+      "stdout": "qft20-warmup-0-baseline.stdout",
+      "stderr": "qft20-warmup-0-baseline.stderr",
+      "output": "qft20-warmup-0-baseline.qasm",
+      "output_sha256": null,
+      "metrics": [],
+      "case": "qft20",
+      "label": "baseline",
+      "warmup": true,
+      "round": 0,
+      "slot": 0
+    }
+  ],
+  "cases": {
+    "gf16": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 2703,
+        "2q gates": 1581,
+        "T/Tdg": 1040,
+        "Depth": 491
+      },
+      "output_sha256": "b9da7c55d5e96433c7bee193bf768f30dbf065516e7c77e72b521036312fbbd9"
+    },
+    "gf32": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 10562,
+        "2q gates": 6268,
+        "T/Tdg": 4128,
+        "Depth": 1003
+      },
+      "output_sha256": "574343749f3e9e7fe833cae1e9046f0778ced21344c1c9e525858468a3b9aec9"
+    },
+    "gf64": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 41547,
+        "2q gates": 24765,
+        "T/Tdg": 16448,
+        "Depth": 2027
+      },
+      "output_sha256": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652"
+    },
+    "hwb8": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 13009,
+        "2q gates": 7073,
+        "T/Tdg": 3597,
+        "Depth": 8134
+      },
+      "output_sha256": "0a1c63e96dbc0b52aa919bc14f1f4ab9455c5809cc95ef8a1792c56e06149903"
+    },
+    "chebyshev": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 96343,
+        "2q gates": 20431,
+        "T/Tdg": 31868,
+        "Depth": 42193
+      },
+      "output_sha256": "4f75cdd3692c87be41cc18697d61a2d2f342be28b8c157445dccf27dd8f36e4a"
+    },
+    "qft20": {
+      "successful_invocations": 14,
+      "variants": {
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 259189,
+        "2q gates": 380,
+        "T/Tdg": 122695,
+        "Depth": 49442
+      },
+      "output_sha256": "8a1d80038afa8a6690af0b290ed7e6d7d3dc3f3f0cf4f9ec0e61435eb99943ea"
+    },
+    "gf32-o3": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 10562,
+        "2q gates": 6268,
+        "T/Tdg": 4128,
+        "Depth": 1003
+      },
+      "output_sha256": "574343749f3e9e7fe833cae1e9046f0778ced21344c1c9e525858468a3b9aec9"
+    },
+    "gf64-o3": {
+      "successful_invocations": 21,
+      "variants": {
+        "baseline": 7,
+        "current": 7,
+        "rust": 7
+      },
+      "qasm_bytes_identical": true,
+      "metrics_identical": true,
+      "independently_counted_output": {
+        "Gates": 41547,
+        "2q gates": 24765,
+        "T/Tdg": 16448,
+        "Depth": 2027
+      },
+      "output_sha256": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652"
+    }
+  }
+}

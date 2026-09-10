@@ -1,0 +1,5 @@
+{
+  "status": "accepted",
+  "implementation_commit": "7628452",
+  "reason": "Removes word/bit/word conversion with proved IO equivalence; substantial QFT and Chebyshev gains."
+}

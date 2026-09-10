@@ -1,0 +1,10 @@
+⚡️ tzap v0.6.0
+  Parsed /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm (190.2 KB) in 0.002s
+	└─ 12 qubits · 18,220 gates
+  ┌─ Final result · 28.6% fewer gates · 0.005s ────────────────────────┐
+  │ Gates    ━━━━━━━━━╸────────────────────── ↓28.6% · 18,220 → 13,009 │
+  │ 2q gates ╸─────────────────────────────── ↓ 0.8% ·  7,129 →  7,073 │
+  │ T/Tdg    ━━━━━━━━━━━━╸─────────────────── ↓38.9% ·  5,887 →  3,597 │
+  │ Depth    ━━━━━╸────────────────────────── ↓18.3% ·  9,952 →  8,134 │
+  └────────────────────────────────────────────────────────────────────┘
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-3-rust.qasm

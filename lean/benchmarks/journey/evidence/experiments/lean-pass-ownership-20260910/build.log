@@ -1,0 +1,12 @@
+✔ [5253/5269] Built TzapLean.ExecutableRandPass (1.7s)
+✔ [5254/5269] Built TzapLean.ExecutableRandPass:c.o (137ms)
+✔ [5255/5269] Built TzapLean.PhaseFoldRand (2.9s)
+✔ [5257/5269] Built TzapLean.Pipeline (2.1s)
+✔ [5259/5269] Built TzapLean.PhaseFoldTests (2.0s)
+✔ [5260/5269] Built TzapLean.Optimize (2.5s)
+✔ [5262/5269] Built TzapLean.Cli (2.1s)
+✔ [5264/5269] Built TzapLean.QasmTests (2.3s)
+✔ [5265/5269] Built Main (1.7s)
+✔ [5267/5269] Built TzapLean (1.6s)
+✔ [5269/5269] Built «tzap-lean»:exe (1.0s)
+Build completed successfully (5269 jobs).

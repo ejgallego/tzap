@@ -1,0 +1,7 @@
+  [1mResult[0m  (1.556s)
+    Gates     309,835 → 259,189  (16.3% reduction)
+    2q gates  410 → 380  (7.3% reduction)
+    T/Tdg     167,567 → 122,695  (26.7% reduction)
+    Depth     59,975 → 49,442  (17.5% reduction)
+
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-6-current.qasm

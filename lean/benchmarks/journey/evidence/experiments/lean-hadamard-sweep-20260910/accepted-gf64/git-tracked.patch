@@ -1,0 +1,213 @@
+diff --git a/lean/TzapLean/Cancel.lean b/lean/TzapLean/Cancel.lean
+index 9ec154559a982e0f171e2f0b3acf46719ab0e3e7..2545ad7d516ae1f9ebe51a29e203e0168a31ecf2 100644
+--- a/lean/TzapLean/Cancel.lean
++++ b/lean/TzapLean/Cancel.lean
+@@ -423,17 +423,46 @@ def reduceStep : List Gate → Option (List Gate)
+           | none => (reduceStep gs).map (g :: ·)
+       | _ => (reduceStep gs).map (g :: ·)
+ 
+-/-- Iterate `reduceStep`. Every rewrite removes at least one `h`, so `gs.length` steps
+-always reach the fixpoint (the Rust loop's termination argument, made explicit). -/
++/-- Try a Hadamard rewrite at the head, leaving other gate kinds alone. -/
++def reduceHead (g : Gate) (gs : List Gate) : Option (List Gate) :=
++  match g with
++  | .h q => reduceAtH q gs
++  | _ => none
++
++/-- Reduce every opening Hadamard in one right-to-left sweep. The flag records whether
++any rule fired, including length-preserving rules such as `H·S·H`.
++
++The old driver restarted `reduceStep` at the beginning after each individual rewrite,
++repeatedly scanning the same unchanged prefix. Folding the already processed suffix
++allows multiple rewrites before restarting. `List.foldr` has a stack-safe runtime
++implementation, so a long circuit does not require one native stack frame per gate. -/
++def reduceSweep (gs : List Gate) : Bool × List Gate :=
++  gs.foldr (fun g r =>
++    match reduceHead g r.2 with
++    | some out => (true, out)
++    | none => (r.1, g :: r.2)) (false, [])
++
++theorem reduceSweep_cons (g : Gate) (gs : List Gate) :
++    reduceSweep (g :: gs) =
++      match reduceHead g (reduceSweep gs).2 with
++      | some out => (true, out)
++      | none => ((reduceSweep gs).1, g :: (reduceSweep gs).2) := rfl
++
++/-- Iterate complete sweeps. Every successful sweep removes at least one `h`, so the
++initial gate count bounds the number of successful sweeps. -/
+ def reduceHadamardsFuel : Nat → List Gate → List Gate
+   | 0, gs => gs
+   | fuel + 1, gs =>
+-      match reduceStep gs with
+-      | some gs' => reduceHadamardsFuel fuel gs'
+-      | none => gs
++      let r := reduceSweep gs
++      if r.1 then reduceHadamardsFuel fuel r.2 else gs
+ 
+-/-- Apply the Hadamard-reduction identities to a fixpoint. -/
+-def reduceHadamards (gs : List Gate) : List Gate := reduceHadamardsFuel gs.length gs
++/-- Apply the Hadamard-reduction identities to a fixpoint. Start with the single-rewrite
++scan so an already irreducible circuit returns without allocating a full sweep's array
++and rebuilt list. Once a rewrite is found, batch the remaining work into sweeps. -/
++def reduceHadamards (gs : List Gate) : List Gate :=
++  match reduceStep gs with
++  | none => gs
++  | some gs' => reduceHadamardsFuel gs.length gs'
+ 
+ /-! ### Gates on a single wire -/
+ 
+@@ -1078,21 +1107,41 @@ theorem reduceStep_correct {n m : Nat} : ∀ {gs out : List Gate}, reduceStep gs
+           obtain ⟨out'', hstep, rfl⟩ := h
+           simpa using Equivalent.append_left (n := n) (m := m) [_] (ih hstep)
+ 
+-/-- Iterating the sweep preserves semantics. -/
++theorem reduceHead_correct {n m : Nat} {g : Gate} {gs out : List Gate}
++    (h : reduceHead g gs = some out) : Equivalent n m out (g :: gs) := by
++  cases g <;> simp only [reduceHead] at h <;>
++    first | exact (reduceAtH_correct h).symm | contradiction
++
++/-- A complete sweep preserves semantics, including rewrites exposed by its suffix. -/
++theorem reduceSweep_correct {n m : Nat} (gs : List Gate) :
++    Equivalent n m (reduceSweep gs).2 gs := by
++  induction gs with
++  | nil => exact Equivalent.refl _ _ _
++  | cons g gs ih =>
++      rw [reduceSweep_cons]
++      have htail := Equivalent.append_left (n := n) (m := m) [g] ih
++      split
++      · exact Equivalent.trans (reduceHead_correct ‹_›) htail
++      · exact htail
++
++/-- Iterating complete sweeps preserves semantics. -/
+ theorem reduceHadamardsFuel_correct {n m : Nat} (fuel : Nat) (gs : List Gate) :
+     Equivalent n m (reduceHadamardsFuel fuel gs) gs := by
+   induction fuel generalizing gs with
+   | zero => exact Equivalent.refl _ _ _
+   | succ fuel ih =>
+       rw [reduceHadamardsFuel]
+-      rcases hstep : reduceStep gs with _ | gs'
++      split
++      · exact Equivalent.trans (ih _) (reduceSweep_correct gs)
+       · exact Equivalent.refl _ _ _
+-      · exact Equivalent.trans (ih gs') (reduceStep_correct hstep)
+ 
+ /-- **Sweep 2 is semantics preserving.** -/
+ theorem reduceHadamards_correct {n m : Nat} (gs : List Gate) :
+-    Equivalent n m (reduceHadamards gs) gs :=
+-  reduceHadamardsFuel_correct _ gs
++    Equivalent n m (reduceHadamards gs) gs := by
++  unfold reduceHadamards
++  split
++  · exact Equivalent.refl _ _ _
++  · exact Equivalent.trans (reduceHadamardsFuel_correct _ _) (reduceStep_correct ‹_›)
+ 
+ /-! ## Sweep 3: `CNOT`/`CZ` pairs across commuting gates
+ 
+@@ -1773,6 +1822,22 @@ theorem reduceStep_wf : ∀ {gs out : List Gate}, (∀ g ∈ gs, g.Wf) → reduc
+           · exact hwf _ (by simp)
+           · exact ih hwf' hstep x hx
+ 
++theorem reduceHead_wf {g : Gate} {gs out : List Gate}
++    (hwf : ∀ a ∈ gs, a.Wf) (h : reduceHead g gs = some out) : ∀ a ∈ out, a.Wf := by
++  cases g <;> simp only [reduceHead] at h <;>
++    first | exact reduceAtH_wf hwf h | contradiction
++
++theorem reduceSweep_wf {gs : List Gate} (hwf : ∀ g ∈ gs, g.Wf) :
++    ∀ g ∈ (reduceSweep gs).2, g.Wf := by
++  induction gs with
++  | nil => simp [reduceSweep]
++  | cons g gs ih =>
++      have ht := ih (fun a ha => hwf a (List.mem_cons_of_mem _ ha))
++      rw [reduceSweep_cons]
++      split
++      · exact reduceHead_wf ht ‹_›
++      · simpa only [List.forall_mem_cons] using And.intro (hwf g (by simp)) ht
++
+ theorem reduceHadamardsFuel_wf (fuel : Nat) : ∀ {gs : List Gate}, (∀ g ∈ gs, g.Wf) →
+     ∀ g ∈ reduceHadamardsFuel fuel gs, g.Wf := by
+   induction fuel with
+@@ -1780,12 +1845,16 @@ theorem reduceHadamardsFuel_wf (fuel : Nat) : ∀ {gs : List Gate}, (∀ g ∈ g
+   | succ fuel ih =>
+       intro gs hwf
+       rw [reduceHadamardsFuel]
+-      rcases hstep : reduceStep gs with _ | gs'
++      split
++      · exact ih (reduceSweep_wf hwf)
+       · exact hwf
+-      · exact ih (reduceStep_wf hwf hstep)
+ 
+ theorem reduceHadamards_wf {gs : List Gate} (hwf : ∀ g ∈ gs, g.Wf) :
+-    ∀ g ∈ reduceHadamards gs, g.Wf := reduceHadamardsFuel_wf _ hwf
++    ∀ g ∈ reduceHadamards gs, g.Wf := by
++  unfold reduceHadamards
++  split
++  · exact hwf
++  · exact reduceHadamardsFuel_wf _ (reduceStep_wf hwf ‹_›)
+ 
+ /-! ## Operand ranges
+ 
+@@ -1890,6 +1959,24 @@ theorem reduceStep_inRange {n m : Nat} : ∀ {gs out : List Gate},
+           · exact hwf _ (by simp)
+           · exact ih hwf' hstep x hx
+ 
++theorem reduceHead_inRange {n m : Nat} {g : Gate} {gs out : List Gate}
++    (hg : g.InRange n m) (hwf : ∀ a ∈ gs, a.InRange n m)
++    (h : reduceHead g gs = some out) : ∀ a ∈ out, a.InRange n m := by
++  cases g <;> simp only [reduceHead] at h <;> try contradiction
++  exact reduceAtH_inRange (hg.qubits _ (by simp [Gate.qubitsOf])) hwf h
++
++theorem reduceSweep_inRange {n m : Nat} {gs : List Gate}
++    (hwf : ∀ g ∈ gs, g.InRange n m) : ∀ g ∈ (reduceSweep gs).2, g.InRange n m := by
++  induction gs with
++  | nil => simp [reduceSweep]
++  | cons g gs ih =>
++      have hg := hwf g (by simp)
++      have ht := ih (fun a ha => hwf a (List.mem_cons_of_mem _ ha))
++      rw [reduceSweep_cons]
++      split
++      · exact reduceHead_inRange hg ht ‹_›
++      · simpa only [List.forall_mem_cons] using And.intro hg ht
++
+ theorem reduceHadamardsFuel_inRange {n m : Nat} (fuel : Nat) : ∀ {gs : List Gate},
+     (∀ g ∈ gs, g.InRange n m) → ∀ g ∈ reduceHadamardsFuel fuel gs, g.InRange n m := by
+   induction fuel with
+@@ -1897,12 +1984,16 @@ theorem reduceHadamardsFuel_inRange {n m : Nat} (fuel : Nat) : ∀ {gs : List Ga
+   | succ fuel ih =>
+       intro gs hwf
+       rw [reduceHadamardsFuel]
+-      rcases hstep : reduceStep gs with _ | gs'
++      split
++      · exact ih (reduceSweep_inRange hwf)
+       · exact hwf
+-      · exact ih (reduceStep_inRange hwf hstep)
+ 
+ theorem reduceHadamards_inRange {n m : Nat} {gs : List Gate} (hwf : ∀ g ∈ gs, g.InRange n m) :
+-    ∀ g ∈ reduceHadamards gs, g.InRange n m := reduceHadamardsFuel_inRange _ hwf
++    ∀ g ∈ reduceHadamards gs, g.InRange n m := by
++  unfold reduceHadamards
++  split
++  · exact hwf
++  · exact reduceHadamardsFuel_inRange _ (reduceStep_inRange hwf ‹_›)
+ 
+ theorem cancelCommutingFuel_wf (fuel : Nat) : ∀ {gs : List Gate}, (∀ g ∈ gs, g.Wf) →
+     ∀ g ∈ cancelCommutingFuel fuel gs, g.Wf := by
+diff --git a/lean/TzapLean/Tests.lean b/lean/TzapLean/Tests.lean
+index 4f4d35fe45582fe3e7348b0df1beb23313bb19a9..2a5ab0ab3c74742707ee105fe77ec120cad0c08c 100644
+--- a/lean/TzapLean/Tests.lean
++++ b/lean/TzapLean/Tests.lean
+@@ -37,6 +37,15 @@ def runCancel (c : RawCircuit) : RawCircuit := cancelGatesCircuit c
+ 
+ /-! ## `src/cancel.rs` -/
+ 
++-- One sweep handles both independent, length-preserving HSH rewrites. The change
++-- flag must remain true even though the gate count is unchanged.
++#guard reduceHadamardsFuel 1 [.h 0, .s 0, .h 0, .h 1, .s 1, .h 1] ==
++  [.sdg 0, .h 0, .sdg 0, .sdg 1, .h 1, .sdg 1]
++#guard (reduceSweep [.h 0, .s 0, .h 0]).1
++
++-- An odd diagonal run is already a fixpoint and must not trigger more sweeps.
++#guard reduceSweep [.h 0, .t 0, .h 0] == (false, [.h 0, .t 0, .h 0])
++
+ -- hh_cancel
+ #guard (runCancel (RawCircuit.ofGates 1 0 [Gate.h 0, Gate.h 0])).gates.length = 0
+ 

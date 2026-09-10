@@ -1,0 +1,7 @@
+  [1mResult[0m  (2.444s)
+    Gates     70,075 → 41,547  (40.7% reduction)
+    2q gates  24,765 → 24,765  (0.0% reduction)
+    T/Tdg     28,672 → 16,448  (42.6% reduction)
+    Depth     2,659 → 2,027  (23.7% reduction)
+
+  wrote /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-gf64-b.qasm

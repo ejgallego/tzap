@@ -1,0 +1,35 @@
+{
+  "sha256": "0a9b83980c18b093662ec7543867be2017f7465e4fdf9258a2aadbf87cad6f3a",
+  "bytes": 142528872,
+  "symbols": [
+    {
+      "name": "lp_tzap_x2dlean_TzapLean_reduceHadamards",
+      "bytes": 278
+    },
+    {
+      "name": "lp_tzap_x2dlean_TzapLean_reduceHadamardsFuel",
+      "bytes": 668
+    },
+    {
+      "name": "lp_tzap_x2dlean_TzapLean_reduceHead",
+      "bytes": 227
+    },
+    {
+      "name": "lp_tzap_x2dlean_TzapLean_reduceStep",
+      "bytes": 1250
+    },
+    {
+      "name": "lp_tzap_x2dlean_TzapLean_reduceSweep___closed__0_value",
+      "bytes": 24
+    },
+    {
+      "name": "lp_tzap_x2dlean___private_Init_Data_Array_Basic_0__Array_foldrMUnsafe_fold___at___00List_foldrTR___at___00TzapLean_reduceSweep_spec__0_spec__0",
+      "bytes": 891
+    }
+  ],
+  "source_sha256": {
+    "lean/TzapLean/Cancel.lean": "098d9164207c9751c3b4008b15326a8a098f444930bef25b28b3a4cd2c898259",
+    "lean/TzapLean/Tests.lean": "ad2f177d90f91468e07fc62c509ebe2016f309eb129bf21e619b00adfdd21ce2"
+  },
+  "size": "   text\t   data\t    bss\t    dec\t    hex\tfilename\n91541300\t2604816\t 803056\t94949172\t5a8cf34\texperiments/lean-hadamard-sweep-20260910/baseline\n91543148\t2604816\t 801200\t94949164\t5a8cf2c\texperiments/lean-hadamard-sweep-20260910/candidate-fastfixpoint\n"
+}

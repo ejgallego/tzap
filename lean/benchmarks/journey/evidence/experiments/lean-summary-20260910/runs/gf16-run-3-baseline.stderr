@@ -1,0 +1,7 @@
+  [1mResult[0m  (0.106s)
+    Gates     4,459 → 2,703  (39.3% reduction)
+    2q gates  1,581 → 1,581  (0.0% reduction)
+    T/Tdg     1,792 → 1,040  (41.9% reduction)
+    Depth     643 → 491  (23.6% reduction)
+
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-3-baseline.qasm

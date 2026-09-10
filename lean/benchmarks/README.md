@@ -1,5 +1,10 @@
 # Lean runtime benchmarks
 
+The [performance journey](journey/README.md) brings the accepted improvements,
+rejected experiments, baseline/current/Rust results, and selected evidence into
+a browsable static report. It rebuilds from its bundled observations without
+rerunning benchmarks.
+
 Use Python 3.11 or later on a POSIX system. Run from the repository root after
 building with `(cd lean && lake build)`:
 

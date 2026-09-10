@@ -1,0 +1,5 @@
+{
+  "status": "rejected",
+  "implementation_commit": null,
+  "reason": "No confirmed runtime or peak-memory win; Chebyshev 2.4% slower median in ten-pair confirmation, slower in 9/10 pairs. Restored production source to fe4fd34."
+}

@@ -1,0 +1,75 @@
+{
+  "chebyshev": {
+    "successful_invocations": 22,
+    "metrics_identical": true,
+    "metrics": [
+      [
+        "Gates",
+        "112,554",
+        "96,343"
+      ],
+      [
+        "2q gates",
+        "20,459",
+        "20,431"
+      ],
+      [
+        "T/Tdg",
+        "47,894",
+        "31,868"
+      ],
+      [
+        "Depth",
+        "42,955",
+        "42,193"
+      ]
+    ],
+    "output_sha256": {
+      "a": "4f75cdd3692c87be41cc18697d61a2d2f342be28b8c157445dccf27dd8f36e4a",
+      "b": "4f75cdd3692c87be41cc18697d61a2d2f342be28b8c157445dccf27dd8f36e4a"
+    },
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T14:31:05.507358+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    }
+  },
+  "qft20": {
+    "successful_invocations": 22,
+    "metrics_identical": true,
+    "metrics": [
+      [
+        "Gates",
+        "309,835",
+        "259,189"
+      ],
+      [
+        "2q gates",
+        "410",
+        "380"
+      ],
+      [
+        "T/Tdg",
+        "167,567",
+        "122,695"
+      ],
+      [
+        "Depth",
+        "59,975",
+        "49,442"
+      ]
+    ],
+    "output_sha256": {
+      "a": "8a1d80038afa8a6690af0b290ed7e6d7d3dc3f3f0cf4f9ec0e61435eb99943ea",
+      "b": "8a1d80038afa8a6690af0b290ed7e6d7d3dc3f3f0cf4f9ec0e61435eb99943ea"
+    },
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T14:32:04.097493+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    }
+  },
+  "qft_matches_rust": true
+}

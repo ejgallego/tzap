@@ -1,0 +1,7 @@
+  [1mResult[0m  (0.725s)
+    Gates     17,658 → 10,562  (40.1% reduction)
+    2q gates  6,268 → 6,268  (0.0% reduction)
+    T/Tdg     7,168 → 4,128  (42.4% reduction)
+    Depth     1,315 → 1,003  (23.7% reduction)
+
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-3-current.qasm
