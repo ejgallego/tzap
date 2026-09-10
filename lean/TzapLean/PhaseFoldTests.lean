@@ -93,13 +93,23 @@ def testWords : Nat → Tag := seedWords 63 0
 -- OS entropy is packed little-endian before the tag is exposed as bits.
 #guard natOfBytes (ByteArray.mk #[0x01, 0x02, 0x03]) 0 3 == 0x030201
 
--- Exercise the compiled sampled entry point at the CLI's tag width. These two tags
--- differ only in bit 127; truncating the cached words would merge the middle rotation.
+-- Exercise the sampled nonlinear entry point at the CLI's tag width. These two tags
+-- differ only in bit 127.
 #guard
   let c := Circuit.of (RawCircuit.ofGates 2 0 [.t 0, .t 1, .t 0]) (by decide)
   let sample : Sample (varBound c.raw) 128 :=
     fun i => wordToBits (if i.val = 0 then 0 else 2 ^ 127)
-  (phaseFoldWithSample 128 c sample).raw.gates == [.t 1, .s 0]
+  (phaseFoldNonlinearWithSample 128 c sample).raw.gates ==
+    (phaseFoldNonlinearWithSampleCached 128 c sample).raw.gates
+
+-- The direct packed path keeps the same high bit and masks unused bits in a partial byte.
+#guard
+  let c := Circuit.of (RawCircuit.ofGates 2 0 [.t 0, .t 1, .t 0]) (by decide)
+  (phaseFoldNonlinearWithWords 128 c #[0, 2 ^ 127]).raw.gates ==
+    (phaseFoldNonlinearWithSample 128 c (sampleOfWords #[0, 2 ^ 127])).raw.gates
+#guard
+  normalizeSampleWords 9 #[0x3ff, 0x200, 7] == #[511, 0, 7]
+#guard normalizeSampleWords 0 #[255] == #[0]
 
 /-- Phase folding with those draws. -/
 def pf (n : Nat) (gs : List Gate) : List Gate := phaseFoldGatesNonlinear testWords n gs

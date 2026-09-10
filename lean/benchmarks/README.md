@@ -74,8 +74,9 @@ On machines with different CPU core types, pin both binaries to the same core
 for acceptance measurements (for example, `taskset -c 2` on Linux). The suite
 records its inherited CPU affinity when the operating system exposes it.
 
-See the [Hadamard-sweep experiment](2026-09-10-hadamard-sweeps.md) for the latest
-measurements and the resolved QFT timeout. The
+See the [packed-entropy experiment](2026-09-10-packed-entropy.md) for the latest
+measurements and ownership audit. The
+[Hadamard-sweep experiment](2026-09-10-hadamard-sweeps.md) records the resolved QFT timeout. The
 [tag-state and sample-packing experiment](2026-09-10-tag-state.md) records the
 initial improvements. The [Rust comparison](2026-09-10-rust-comparison.md)
 measures both native CLIs before the Hadamard-sweep change and checks their
