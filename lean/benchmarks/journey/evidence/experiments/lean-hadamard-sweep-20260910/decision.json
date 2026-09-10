@@ -1,0 +1,9 @@
+{
+  "status": "accepted",
+  "commit": "32fbf9e79c96abd7014b7af1d6a905f30188f32e",
+  "benchmark_summary": "accepted-summary.json",
+  "validation": "accepted-validation.json",
+  "profile": "accepted-profile.json",
+  "candidate": "candidate-fastfixpoint",
+  "build": "fastfixpoint-build.log"
+}

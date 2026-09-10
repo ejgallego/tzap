@@ -1,0 +1,57 @@
+diff --git a/lean/TzapLean.lean b/lean/TzapLean.lean
+index 3148865489822a3f3df6c541c3eec2cffc6b1a13..30378e552dc876980a77e9850ffec985a6cfe11b 100644
+--- a/lean/TzapLean.lean
++++ b/lean/TzapLean.lean
+@@ -31,3 +31,4 @@ import TzapLean.Optimize
+ import TzapLean.Cli
+ import TzapLean.SuperOptTests
+ import TzapLean.QasmTests
++import TzapLean.ExecutableRandPassTests
+diff --git a/lean/TzapLean/ExecutableRandPass.lean b/lean/TzapLean/ExecutableRandPass.lean
+index fcb7045b4e5c3c3a8d9ce30fe2efce4a010aa527..cb0c6e60a236f4654e4a2ed8eace436f324aae28 100644
+--- a/lean/TzapLean/ExecutableRandPass.lean
++++ b/lean/TzapLean/ExecutableRandPass.lean
+@@ -69,6 +69,23 @@ def fixpointShrink (p : ExecutableRandPass) : Nat → ExecutableRandPass
+   | fuel + 1 => p.compWhen (p.fixpointShrink fuel)
+       (fun before after => decide (after.raw.gates.length < before.raw.gates.length))
+ 
++/-- Execute only the shrinking fixpoint rounds that run. Preserve `compWhen`'s
++input retention for the length comparison, without constructing a fuel-sized pass
++chain. Zero fuel neither scans the gate list nor invokes the pass. -/
++def runFixpointShrink (p : ExecutableRandPass) : Nat → Circuit n m → IO (Circuit n m)
++  | 0, c => pure c
++  | fuel + 1, c => do
++      let out ← p.run c
++      if out.raw.gates.length < c.raw.gates.length then
++        p.runFixpointShrink fuel out
++      else pure out
++
++theorem runFixpointShrink_eq (p : ExecutableRandPass) (fuel : Nat) (c : Circuit n m) :
++    p.runFixpointShrink fuel c = (p.fixpointShrink fuel).run c := by
++  induction fuel generalizing c with
++  | zero => rfl
++  | succ fuel ih => simp [runFixpointShrink, fixpointShrink, compWhen, ih]
++
+ end ExecutableRandPass
+ 
+ end TzapLean
+diff --git a/lean/TzapLean/Optimize.lean b/lean/TzapLean/Optimize.lean
+index 85e9f8d6ba03a5d02a23c44d59df4c7fbf278529..c6c70da4885c2697e41117fc10c53f573f3a97c3 100644
+--- a/lean/TzapLean/Optimize.lean
++++ b/lean/TzapLean/Optimize.lean
+@@ -350,12 +350,12 @@ def runConfiguredChecked (cfg : SuperOptConfig) (tbl : SynthTable)
+   let names := o.passes.getD o.level.pipeline
+   let round := ExecutableRandPass.pipeline (names.map (executableStep cfg tbl))
+   if o.passes.isSome then
+-    if o.fixpoint then (round.fixpointShrink (roundFuel none c.raw)).run c
++    if o.fixpoint then round.runFixpointShrink (roundFuel none c.raw) c
+     else round.run c
+   else if o.level.usesSuperOpt then
+-    (round.fixpointShrink (roundFuel o.level.maxRounds c.raw)).run c
++    round.runFixpointShrink (roundFuel o.level.maxRounds c.raw) c
+   else if o.fixpoint then
+-    (round.fixpointShrink (roundFuel none c.raw)).run c
++    round.runFixpointShrink (roundFuel none c.raw) c
+   else round.run c
+ 
+ /-- Raw randomized API boundary. Malformed internal circuits are left unchanged; parsed QASM

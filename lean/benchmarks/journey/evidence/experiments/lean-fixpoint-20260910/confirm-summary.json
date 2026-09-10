@@ -1,0 +1,47 @@
+{
+  "gf64-o3": {
+    "baseline": {
+      "count": 10,
+      "max_ns": 4495392337,
+      "mean_ns": 4016600830.9,
+      "median_ns": 3909833052.0,
+      "min_ns": 3759259306,
+      "stdev_ns": 241308046.15124446
+    },
+    "candidate": {
+      "count": 10,
+      "max_ns": 5614347807,
+      "mean_ns": 4233914988.0,
+      "median_ns": 4133369027.5,
+      "min_ns": 3825372224,
+      "stdev_ns": 525296612.92388767
+    },
+    "candidate_minus_baseline_median_ns": 223535975.5,
+    "candidate_minus_baseline_median_percent": 5.7172767360400325,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T14:52:58.695994+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": 68259767.5,
+    "paired_deltas_ns": [
+      -162368004,
+      1707476686,
+      362431784,
+      8348976,
+      68975040,
+      67544495,
+      304637905,
+      65229117,
+      -670020113,
+      420885685
+    ],
+    "warnings": [],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652",
+      "b": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652"
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "artifacts": [
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/baseline",
+      "sha256": "0a9b83980c18b093662ec7543867be2017f7465e4fdf9258a2aadbf87cad6f3a"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/candidate-prepared",
+      "sha256": "6c11e592be8c386613b9636d96291878c3e2e72d4fae518be8eebebeedde6569"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm",
+      "sha256": "cff768648489f3b28e201621a6ecd3b0cea6e08bd300edd75ebe8a674ec58f3e"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFoldRand.lean",
+      "sha256": "476932a249bc032fba7fe947425824437e6a6f1aa5f440423f8134eec63c2f7e"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFoldTests.lean",
+      "sha256": "91b2f154055d964a86fd6c69dd802999dccb8ee87fd394d630ec148ba0ddf16b"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/lean-toolchain",
+      "sha256": "3aac669c7a910ec2389f4e4f921b605adf6ebf2d1e0c9b9cd0be4d33f3f5db71"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/lakefile.lean",
+      "sha256": "8109be39d7bbf60303ad239632a95aa997cfc4fc180dde68d7856e430fb77b59"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/lake-manifest.json",
+      "sha256": "2853f999799db3c84f2159dfcf9c20248aef24ebb05dc13e475536073e7439ef"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFold.lean",
+      "sha256": "7f1ddc2c4082f4a36e1b2c910ddf1716aa8e6d6386f9d5191c8873a358045938"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFoldProof.lean",
+      "sha256": "2cc9a4b3742a99aa76cd5218989307fcc9fd6e495093890ea9433ba53c706cf5"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/scripts/bench-runtime.py",
+      "sha256": "037278dfd6a8e65440b81568fc3860fcee222d349a09d7b038e3467bcfd8e085"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/Cancel.lean",
+      "sha256": "098d9164207c9751c3b4008b15326a8a098f444930bef25b28b3a4cd2c898259"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/Tests.lean",
+      "sha256": "ad2f177d90f91468e07fc62c509ebe2016f309eb129bf21e619b00adfdd21ce2"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/ExecutableRandPass.lean",
+      "sha256": "1aa381f657a4ff08691bf145478dd6cfa6e1fce4f32e6f0b5b4156fbbe87d987"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/context.json",
+      "sha256": "d75591398747f9dc51502ac63ea5e40b07872337ba38d9cff8b02826ed16d552"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/compare-final.py",
+      "sha256": "db8d002cea8d5c11746fa47d9a757bf53d9da02cd57cc4235aecbf5c7313d9e6"
+    }
+  ],
+  "commands": {
+    "baseline": {
+      "argv": [
+        "taskset",
+        "-c",
+        "2",
+        "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/baseline",
+        "/home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm",
+        "-O1",
+        "-o",
+        "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-a.qasm"
+      ],
+      "executable": "/usr/bin/taskset",
+      "executable_sha256": "a431738fadddc2e2326c8ab81843e72f4011658379381aef1502a6ddb1c1115b"
+    },
+    "candidate": {
+      "argv": [
+        "taskset",
+        "-c",
+        "2",
+        "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/candidate-prepared",
+        "/home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm",
+        "-O1",
+        "-o",
+        "/home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-b.qasm"
+      ],
+      "executable": "/usr/bin/taskset",
+      "executable_sha256": "a431738fadddc2e2326c8ab81843e72f4011658379381aef1502a6ddb1c1115b"
+    }
+  },
+  "created_at_utc": "2026-09-10T14:14:12.508760+00:00",
+  "cwd": "/home/egallego/lean/tzap",
+  "elapsed_measurement": {
+    "clock": "time.perf_counter_ns",
+    "scope": "child-process wall time including process startup"
+  },
+  "expected_exit_code": 0,
+  "git": {
+    "head": "32fbf9e79c96abd7014b7af1d6a905f30188f32e",
+    "root": "/home/egallego/lean/tzap",
+    "status_porcelain": [
+      " M lean/TzapLean/PhaseFold.lean",
+      " M lean/TzapLean/PhaseFoldRand.lean",
+      " M lean/TzapLean/PhaseFoldTests.lean"
+    ],
+    "tracked_diff_path": "git-tracked.patch",
+    "tracked_diff_sha256": "b592221c48e34abe79ec4c163c5e858c201bead71c12a947296afa880c0d4d26"
+  },
+  "metadata": {
+    "boundary": "native CLI through checked output and exit",
+    "build": "Lake release defaults",
+    "cache": "unused",
+    "cpu_affinity": "2",
+    "diagnostics": "off",
+    "randomness": "fresh OS 128-bit tags"
+  },
+  "perf": null,
+  "platform": {
+    "machine": "x86_64",
+    "node": "capivara",
+    "processor": "x86_64",
+    "release": "7.2.2-070202-generic",
+    "system": "Linux",
+    "version": "#202608280700 SMP PREEMPT_DYNAMIC Fri Aug 28 07:51:26 UTC 2026"
+  },
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "schedule": {
+    "passes": 6,
+    "warmups_per_command": 1
+  },
+  "schema": "lean-profile-compare-alpha",
+  "timeout_seconds": null,
+  "warnings": []
+}

@@ -1,0 +1,17 @@
+{
+  "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
+  "builder": {
+    "scripts/review_data.py": "d626152dec57d4582e09a2837a8da942f64df615d3139af589dfc93aa00e03f9",
+    "scripts/review_plots.py": "a4f99c71a6208de5f3868c90a17f312b81ba96edf7d0f1de403874c5fa210ef4",
+    "scripts/build_review.py": "6777de6f078acdf5e5d77358ed2e176bd0e2b48047d0be61fb659b7cddf6ae7d",
+    "assets/review.css": "9e3fcb30717c81c4af64cc20b623a5ae4f47604714ff1abd495c72f9512e1c8c",
+    "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
+    "assets/review.js": "e43f60704c47bb2d9c1fd97eb3476c6803940bf490314d00d44152a4d8de1012"
+  },
+  "adapter_sha256": "be394c3e1e09353b4d0b157719506f4be75607d5ab6ad4b5b540dbb6d30566c4",
+  "catalog_sha256": "219d6ca920c91e088a4008504ceabdfab238d88d14716583f4fa3aa7558ec83d",
+  "archive_sha256": "31d0466dfb4f08b632ba0c2ec87f4471079b61727168514a8b4b6e8356bfff9f",
+  "note": "No new measurements. Archived captures are immutable inputs; report-local CSV/model/figures are derived.",
+  "matplotlib": "3.10.9",
+  "plot_style_sha256": "4d2632a52b5fc11eb1beca88f6705cf658c2c35bbfe3942a19de7dab3b791a45"
+}

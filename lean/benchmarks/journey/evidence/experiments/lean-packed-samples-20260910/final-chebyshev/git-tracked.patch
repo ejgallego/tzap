@@ -1,0 +1,150 @@
+diff --git a/lean/TzapLean/PhaseFold.lean b/lean/TzapLean/PhaseFold.lean
+index 6aa9fcd9486c6dd6e32c81e7468ff044f0dc88ac..28152e0e9a9e5d1c6229143f17d698ee93cb9917 100644
+--- a/lean/TzapLean/PhaseFold.lean
++++ b/lean/TzapLean/PhaseFold.lean
+@@ -95,6 +95,16 @@ theorem wordToBits_congr {k : Nat} {a b : Tag} (h : a = b) :
+ @[simp] theorem wordToBits_zero {k : Nat} : wordToBits (k := k) 0 = 0 := by
+   funext j; simp [wordToBits, bit]
+ 
++/-- Repacking a word's bits keeps exactly its low `k` bits. -/
++@[simp] theorem bitsToWord_wordToBits (k w : Nat) :
++    bitsToWord (wordToBits (k := k) w) = w % 2 ^ k := by
++  apply Nat.eq_of_testBit_eq
++  intro i
++  by_cases h : i < k <;> simp [bitsToWord, testBit_bitsToWordAux, wordToBits, h]
++
++@[simp] theorem bitsToWord_zero {k : Nat} : bitsToWord (k := k) 0 = 0 := by
++  simpa using bitsToWord_wordToBits k 0
++
+ /-- XOR of tags is addition of the functions they stand for. -/
+ @[simp] theorem wordToBits_xor {k : Nat} (a b : Tag) :
+     wordToBits (k := k) (a ^^^ b) = wordToBits (k := k) a + wordToBits (k := k) b := by
+@@ -329,15 +339,9 @@ def natOfBytes (bytes : ByteArray) (start count : Nat) : Nat := Id.run do
+     w := w ||| ((bytes[start + i]!).toNat <<< (8 * i))
+   return w
+ 
+-/-- Draw one OS-random `k`-bit tag per variable, as an element of the finite sample space in
+-the failure theorem. Extra high bits in the final byte are ignored when `k` is not a multiple
+-of eight.
+-
+-The implementation makes one entropy request for the entire sample, then exposes its packed
+-rows as bit functions. The proof does not assert that `IO.getRandomBytes` realizes the ideal
+-independent uniform PMF; that is the explicit platform-RNG assumption at the executable
+-boundary. -/
+-def randomSample (m k : Nat) : IO (Sample m k) := do
++/-- Obtain the packed rows for one sample with a single OS entropy request. The last byte
++may contain unused high bits when `k` is not a multiple of eight. -/
++def randomWords (m k : Nat) : IO (Array Tag) := do
+   let bytesPerTag := (k + 7) / 8
+   let totalBytes := m * bytesPerTag
+   if totalBytes ≥ USize.size then
+@@ -346,6 +350,17 @@ def randomSample (m k : Nat) : IO (Sample m k) := do
+   let mut rows : Array Nat := Array.emptyWithCapacity m
+   for i in [0:m] do
+     rows := rows.push (natOfBytes bytes (i * bytesPerTag) bytesPerTag)
+-  return fun i j => bit ((rows[i.val]!).testBit j.val)
++  return rows
++
++/-- Interpret packed rows as the finite sample in the failure theorem. -/
++def sampleOfWords {m k : Nat} (rows : Array Tag) : Sample m k :=
++  fun i => wordToBits (rows[i.val]!)
++
++/-- Draw one OS-random `k`-bit tag per variable, as an element of the finite sample space in
++the failure theorem. Extra high bits in the final byte are ignored when `k` is not a multiple
++of eight. The proof does not assert that `IO.getRandomBytes` realizes the ideal independent
++uniform PMF; that remains the explicit platform-RNG assumption. -/
++def randomSample (m k : Nat) : IO (Sample m k) := do
++  return sampleOfWords (← randomWords m k)
+ 
+ end TzapLean
+diff --git a/lean/TzapLean/PhaseFoldRand.lean b/lean/TzapLean/PhaseFoldRand.lean
+index 6776de67bd28ead063f377feaec0539ebeea121c..c7a7ede1aab08dcee8e99be3f3bf47f3405d40c4 100644
+--- a/lean/TzapLean/PhaseFoldRand.lean
++++ b/lean/TzapLean/PhaseFoldRand.lean
+@@ -334,13 +334,62 @@ def phaseFoldWithSampleCached (k : Nat) (c : Circuit n m) (s : Sample (varBound
+   funext n m k c s
+   simp only [phaseFoldWithSampleCached, sampleWords_eq, phaseFoldWithSample]
+ 
+-/-- The runtime phase-folding pass. Every invocation obtains a fresh sample from
+-`IO.getRandomBytes`; its idealized distribution and failure bound are `PhaseFoldRand k` below. -/
++/-- Discard unused high bits from byte-packed entropy. Return the array itself so
++eta expansion cannot move its preparation inside each draw lookup. -/
++def normalizeSampleWords (k : Nat) (rows : Array Tag) : Array Tag :=
++  let modulus := 2 ^ k
++  rows.map (· % modulus)
++
++theorem normalizeSampleWords_eq (m k : Nat) (rows : Array Tag) :
++    (fun i => if i < m then (normalizeSampleWords k rows)[i]?.getD 0 else 0) =
++      wordsOf k (liftSample (sampleOfWords (m := m) rows)) := by
++  funext i
++  by_cases h : i < m
++  · simp only [normalizeSampleWords, wordsOf, liftSample, sampleOfWords, dif_pos h, if_pos h,
++      bitsToWord_wordToBits, Array.getElem?_map, Array.getElem!_eq_getD,
++      Array.getD_eq_getD_getElem?]
++    cases rows[i]? <;> simp
++  · simp [wordsOf, liftSample, h]
++
++/-- The packed executable transformation, proved to agree with the ideal sample view. -/
++def phaseFoldWithWords (k : Nat) (c : Circuit n m) (rows : Array Tag) : Circuit n m :=
++  let bound := varBound c.raw
++  let words := normalizeSampleWords k rows
++  let draws := fun i => if i < bound then words[i]?.getD 0 else 0
++  ⟨phaseFold k draws c.raw,
++    (phaseFold_numQubits k _ c.raw).trans c.numQubits_eq,
++    (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
++    phaseFoldGates_wf draws c.wf⟩
++
++theorem phaseFoldWithWords_eq_sample (k : Nat) (c : Circuit n m) (rows : Array Tag) :
++    phaseFoldWithWords k c rows = phaseFoldWithSample k c (sampleOfWords rows) := by
++  simp only [phaseFoldWithWords, normalizeSampleWords_eq, phaseFoldWithSample]
++
++/-- The sampled IO specification: every invocation obtains fresh OS entropy. -/
++def phaseFoldRandom (k : Nat) (c : Circuit n m) : IO (Circuit n m) := do
++  let s ← randomSample (varBound c.raw) k
++  return phaseFoldWithSample k c s
++
++/-- Pass the owned packed array directly from the entropy reader to phase folding. -/
++def phaseFoldRandomPacked (k : Nat) (c : Circuit n m) : IO (Circuit n m) := do
++  let rows ← randomWords (varBound c.raw) k
++  return phaseFoldWithWords k c rows
++
++/-- Preserve the entire IO action, including the entropy request and error behavior. -/
++@[csimp] theorem phaseFoldRandom_eq_packed : @phaseFoldRandom = @phaseFoldRandomPacked := by
++  funext n m k c
++  simp only [phaseFoldRandom, randomSample, phaseFoldRandomPacked,
++    phaseFoldWithWords_eq_sample]
++  funext world
++  change EST.bind (EST.bind _ _) _ world = EST.bind _ _ world
++  simp only [EST.bind]
++  cases randomWords (varBound c.raw) k world <;> rfl
++
++/-- The runtime phase-folding pass. Its idealized distribution and failure bound are
++`PhaseFoldRand k` below; compilation uses the proved packed IO action. -/
+ def PhaseFoldRandExec (k : Nat) : ExecutableRandPass where
+   name := "Phase folding"
+-  run := fun c => do
+-    let s ← randomSample (varBound c.raw) k
+-    return phaseFoldWithSample k c s
++  run := phaseFoldRandom k
+ 
+ /-! ## The pass -/
+ 
+diff --git a/lean/TzapLean/PhaseFoldTests.lean b/lean/TzapLean/PhaseFoldTests.lean
+index 2b5c9be7d20b08c5358a32e118d24572a7378928..7c30efaaefc708f25a5633490cb10a30fb05802f 100644
+--- a/lean/TzapLean/PhaseFoldTests.lean
++++ b/lean/TzapLean/PhaseFoldTests.lean
+@@ -44,6 +44,14 @@ def testWords : Nat → Tag := seedWords 63 0
+     fun i => wordToBits (if i.val = 0 then 0 else 2 ^ 127)
+   (phaseFoldWithSample 128 c sample).raw.gates == [.t 1, .s 0]
+ 
++-- The direct packed path keeps the same high bit and masks unused bits in a partial byte.
++#guard
++  let c := Circuit.of (RawCircuit.ofGates 2 0 [.t 0, .t 1, .t 0]) (by decide)
++  (phaseFoldWithWords 128 c #[0, 2 ^ 127]).raw.gates == [.t 1, .s 0]
++#guard
++  normalizeSampleWords 9 #[0x3ff, 0x200, 7] == #[511, 0, 7]
++#guard normalizeSampleWords 0 #[255] == #[0]
++
+ /-- Phase folding with those draws. -/
+ def pf (n : Nat) (gs : List Gate) : List Gate := phaseFoldGates 63 testWords n gs
+ 

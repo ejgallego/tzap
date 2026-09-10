@@ -1,0 +1,78 @@
+diff --git a/lean/TzapLean/Cancel.lean b/lean/TzapLean/Cancel.lean
+index 2545ad7d516ae1f9ebe51a29e203e0168a31ecf2..b7e2f585031bdba006b69bb02f10a1909cfc4a20 100644
+--- a/lean/TzapLean/Cancel.lean
++++ b/lean/TzapLean/Cancel.lean
+@@ -2108,7 +2108,7 @@ theorem cancelGates_correct {n m : Nat} (gs : List Gate) (hwf : ∀ g ∈ gs, g.
+     (cancelPairs_correct _ hwf)
+ 
+ /-- Run gate cancellation on a raw circuit. -/
+-def cancelGatesCircuit (c : RawCircuit) : RawCircuit := c.withGates (cancelGates c.gates)
++def cancelGatesCircuit (c : RawCircuit) : RawCircuit := c.mapGates (fun _ => cancelGates)
+ 
+ /-- **The `CancelGates` pass**, with its correctness proof as a field. -/
+ def CancelGates : Pass where
+diff --git a/lean/TzapLean/Circuit.lean b/lean/TzapLean/Circuit.lean
+index 03715d05f24d4ebc03d4dbbd81fc5fecd27d1d1a..9965e4aa9d7abd25e98a6a3a533557d75c193183 100644
+--- a/lean/TzapLean/Circuit.lean
++++ b/lean/TzapLean/Circuit.lean
+@@ -295,6 +295,18 @@ def withGates (c : RawCircuit) (gs : List Gate) : RawCircuit where
+   hasCcz := gs.any Gate.isCcz
+   hasMeasurement := gs.any Gate.isMeasurement
+ 
++/-- Transform the gate list after extracting the register sizes. Unlike
++`c.withGates (f c.numQubits c.gates)`, this releases the old circuit before
++calling `f`, allowing an exclusively owned gate list to be reused. -/
++@[inline] def mapGates (c : RawCircuit) (f : Nat → List Gate → List Gate) : RawCircuit :=
++  let n := c.numQubits
++  let m := c.numCbits
++  let gs := c.gates
++  ofGates n m (f n gs)
++
++theorem mapGates_eq_withGates (c : RawCircuit) (f : Nat → List Gate → List Gate) :
++    c.mapGates f = c.withGates (f c.numQubits c.gates) := rfl
++
+ @[simp] theorem gates_withGates (c : RawCircuit) (gs : List Gate) : (c.withGates gs).gates = gs := rfl
+ 
+ @[simp] theorem numQubits_withGates (c : RawCircuit) (gs : List Gate) :
+diff --git a/lean/TzapLean/CnotMinProof.lean b/lean/TzapLean/CnotMinProof.lean
+index de2c29ca44215c250a19e15b5642398487330cb3..04c5839e2642d7f9fc0534a33cdd5de12eee8f7d 100644
+--- a/lean/TzapLean/CnotMinProof.lean
++++ b/lean/TzapLean/CnotMinProof.lean
+@@ -1330,7 +1330,7 @@ theorem cnotMinGates_wf {n : Nat} (maxQ maxT : Nat) (gs : List Gate) (hwf : ∀
+ 
+ /-- Run CNOT minimization on a raw circuit. -/
+ def cnotMinCircuit (c : RawCircuit) : RawCircuit :=
+-  c.withGates (cnotMinGates c.numQubits maxChunkQubits maxChunkTerms c.gates)
++  c.mapGates (fun n => cnotMinGates n maxChunkQubits maxChunkTerms)
+ 
+ /-- **The `CnotMin` pass**, with its correctness proof as a field. -/
+ def CnotMin : Pass where
+diff --git a/lean/TzapLean/PhaseFold.lean b/lean/TzapLean/PhaseFold.lean
+index 28152e0e9a9e5d1c6229143f17d698ee93cb9917..f314f25c51f285e99473eefdc161cdbaa2084fb0 100644
+--- a/lean/TzapLean/PhaseFold.lean
++++ b/lean/TzapLean/PhaseFold.lean
+@@ -294,10 +294,10 @@ def phaseFoldGates (k : Nat) (wdraws : Nat → Tag) (n : Nat) (gs : List Gate) :
+ 
+ /-- Phase folding on a circuit.
+ 
+-Through `withGates`, so the cached `has*` flags describe the gates that came out rather than
++Through `mapGates`, so the cached `has*` flags describe the gates that came out rather than
+ the ones that went in. The checked serializer verifies that metadata before emitting QASM. -/
+ def phaseFold (k : Nat) (wdraws : Nat → Tag) (c : RawCircuit) : RawCircuit :=
+-  c.withGates (phaseFoldGates k wdraws c.numQubits c.gates)
++  c.mapGates (phaseFoldGates k wdraws)
+ 
+ @[simp] theorem phaseFold_numQubits (k : Nat) (wdraws : Nat → Tag) (c : RawCircuit) :
+     (phaseFold k wdraws c).numQubits = c.numQubits := rfl
+diff --git a/lean/TzapLean/SuperOpt.lean b/lean/TzapLean/SuperOpt.lean
+index 644f25dc0d1bcd63d8fe62ff4ce95a164c645176..fe9713093c3b84f63f7c053062b51a1875aaa6fb 100644
+--- a/lean/TzapLean/SuperOpt.lean
++++ b/lean/TzapLean/SuperOpt.lean
+@@ -448,6 +448,6 @@ def superOptGates (cfg : SuperOptConfig) (tbl : SynthTable) (n : Nat) (gs : List
+ 
+ /-- Peephole superoptimization of a circuit. -/
+ def superOpt (cfg : SuperOptConfig) (tbl : SynthTable) (c : RawCircuit) : RawCircuit :=
+-  c.withGates (superOptGates cfg tbl c.numQubits c.gates)
++  c.mapGates (superOptGates cfg tbl)
+ 
+ end TzapLean

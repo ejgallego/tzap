@@ -1,0 +1,46 @@
+{
+  "cases": {
+    "gf16": {
+      "runs": 14,
+      "metrics_identical_across_all_runs": true,
+      "outputs_identical": true,
+      "identity_valid": true
+    },
+    "gf32": {
+      "runs": 14,
+      "metrics_identical_across_all_runs": true,
+      "outputs_identical": true,
+      "identity_valid": true
+    },
+    "gf64": {
+      "runs": 14,
+      "metrics_identical_across_all_runs": true,
+      "outputs_identical": true,
+      "identity_valid": true
+    },
+    "hwb8": {
+      "runs": 14,
+      "metrics_identical_across_all_runs": true,
+      "outputs_identical": true,
+      "identity_valid": true
+    },
+    "chebyshev": {
+      "runs": 14,
+      "metrics_identical_across_all_runs": true,
+      "outputs_identical": true,
+      "identity_valid": true
+    },
+    "gf32-o3": {
+      "runs": 14,
+      "metrics_identical_across_all_runs": true,
+      "outputs_identical": true,
+      "identity_valid": true
+    }
+  },
+  "source_sha256": {
+    "lean/TzapLean/PhaseFold.lean": "f5a0849370895bc5b2de364127524575dea735462732720777770598604925b7",
+    "lean/TzapLean/PhaseFoldProof.lean": "2cc9a4b3742a99aa76cd5218989307fcc9fd6e495093890ea9433ba53c706cf5",
+    "lean/TzapLean/PhaseFoldRand.lean": "8214064e3ff63765499b7ba0f94d359d365c4090215bbdfd6c95c47a6340f80c",
+    "lean/TzapLean/PhaseFoldTests.lean": "af03a71b26be6564cfbb6b020834bb9d64cdd529eb3cfc9117cf8992c7ab488d"
+  }
+}

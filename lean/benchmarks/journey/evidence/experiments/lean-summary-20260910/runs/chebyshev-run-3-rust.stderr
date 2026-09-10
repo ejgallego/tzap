@@ -1,0 +1,10 @@
+⚡️ tzap v0.6.0
+  Parsed /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm (1.0 MB) in 0.009s
+	└─ 14 qubits · 112,554 gates
+  ┌─ Final result · 14.4% fewer gates · 0.024s ──────────────────────────┐
+  │ Gates    ━━━━╸─────────────────────────── ↓14.4% · 112,554 →  96,343 │
+  │ 2q gates ╸─────────────────────────────── ↓ 0.1% ·  20,459 →  20,431 │
+  │ T/Tdg    ━━━━━━━━━━╸───────────────────── ↓33.5% ·  47,894 →  31,868 │
+  │ Depth    ╸─────────────────────────────── ↓ 1.8% ·  42,955 →  42,193 │
+  └──────────────────────────────────────────────────────────────────────┘
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-3-rust.qasm

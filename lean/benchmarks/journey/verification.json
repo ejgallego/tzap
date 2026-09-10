@@ -1,0 +1,23 @@
+{
+  "numerical_comparisons": 26,
+  "baselines": 7,
+  "source_projection_exact": true,
+  "timeout_censored": true,
+  "rejected_observations_included": true,
+  "profile_and_figure_hashes_valid": true,
+  "negative_validation_and_corruption_checks": true,
+  "checker_sha256": "72bbc200c683192b7bd0c566912eb3a6cba1bfe52ab7520d7d68f7d2690ae653",
+  "report_html_sha256": "482fe3dcae505c494fa2f1bb50ce5b99d0643474faae8d2231ec8e1551dd0410",
+  "model_sha256": "c8a8aa75ce26f0f3ce1f779678529e9c4dcdb62f9a78cc8e8dfd600e1b465ebd",
+  "browser": {
+    "http_artifacts_checked": 906,
+    "viewports": [
+      1280,
+      768,
+      390
+    ],
+    "browser_errors": [],
+    "experiment_filter": true,
+    "self_profile_toggle_and_filter": true
+  }
+}

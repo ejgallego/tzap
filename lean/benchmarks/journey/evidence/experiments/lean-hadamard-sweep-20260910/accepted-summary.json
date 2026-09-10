@@ -1,0 +1,250 @@
+{
+  "gf16": {
+    "baseline": {
+      "count": 6,
+      "max_ns": 99412569,
+      "mean_ns": 94498352.33333333,
+      "median_ns": 94202300.0,
+      "min_ns": 89459731,
+      "stdev_ns": 3453349.5000155238
+    },
+    "candidate": {
+      "count": 6,
+      "max_ns": 94788364,
+      "mean_ns": 90156823.83333333,
+      "median_ns": 89708991.0,
+      "min_ns": 86819400,
+      "stdev_ns": 3197774.686388859
+    },
+    "candidate_minus_baseline_median_ns": -4493309.0,
+    "candidate_minus_baseline_median_percent": -4.769850629974003,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T13:33:28.374202+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": -5824210.0,
+    "paired_deltas_ns": [
+      -6528992,
+      -5899146,
+      -10112920,
+      5328633,
+      -3087472,
+      -5749274
+    ],
+    "warnings": [
+      "Median runtime is under 100 ms; process startup and timer noise may dominate."
+    ],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "b9da7c55d5e96433c7bee193bf768f30dbf065516e7c77e72b521036312fbbd9",
+      "b": "b9da7c55d5e96433c7bee193bf768f30dbf065516e7c77e72b521036312fbbd9"
+    }
+  },
+  "gf32": {
+    "baseline": {
+      "count": 6,
+      "max_ns": 356659735,
+      "mean_ns": 340787693.3333333,
+      "median_ns": 342649328.0,
+      "min_ns": 326899978,
+      "stdev_ns": 12417709.332988974
+    },
+    "candidate": {
+      "count": 6,
+      "max_ns": 368249203,
+      "mean_ns": 350440325.8333333,
+      "median_ns": 352266244.0,
+      "min_ns": 336990334,
+      "stdev_ns": 11523231.447373804
+    },
+    "candidate_minus_baseline_median_ns": 9616916.0,
+    "candidate_minus_baseline_median_percent": 2.8066350096562864,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T13:33:33.773197+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": 8732520.0,
+    "paired_deltas_ns": [
+      196590,
+      11562979,
+      25102299,
+      -4337275,
+      19489141,
+      5902061
+    ],
+    "warnings": [],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "574343749f3e9e7fe833cae1e9046f0778ced21344c1c9e525858468a3b9aec9",
+      "b": "574343749f3e9e7fe833cae1e9046f0778ced21344c1c9e525858468a3b9aec9"
+    }
+  },
+  "gf64": {
+    "baseline": {
+      "count": 6,
+      "max_ns": 2703307905,
+      "mean_ns": 2466731195.1666665,
+      "median_ns": 2393590640.0,
+      "min_ns": 2339969995,
+      "stdev_ns": 158406062.99174982
+    },
+    "candidate": {
+      "count": 6,
+      "max_ns": 2647466763,
+      "mean_ns": 2458434170.6666665,
+      "median_ns": 2417560194.0,
+      "min_ns": 2351467502,
+      "stdev_ns": 107408542.44657677
+    },
+    "candidate_minus_baseline_median_ns": 23969554.0,
+    "candidate_minus_baseline_median_percent": 1.0014057374489065,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T13:34:08.915612+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": 14503137.0,
+    "paired_deltas_ns": [
+      -24408495,
+      4900899,
+      72347603,
+      58659267,
+      -185386796,
+      24105375
+    ],
+    "warnings": [],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652",
+      "b": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652"
+    }
+  },
+  "hwb8": {
+    "baseline": {
+      "count": 6,
+      "max_ns": 221185120,
+      "mean_ns": 210733231.66666666,
+      "median_ns": 209949212.5,
+      "min_ns": 199741560,
+      "stdev_ns": 8177282.725357676
+    },
+    "candidate": {
+      "count": 6,
+      "max_ns": 221395175,
+      "mean_ns": 206623340.5,
+      "median_ns": 204253193.5,
+      "min_ns": 200618531,
+      "stdev_ns": 7429489.905718932
+    },
+    "candidate_minus_baseline_median_ns": -5696019.0,
+    "candidate_minus_baseline_median_percent": -2.713046137289036,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T13:34:12.485257+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": -4075087.0,
+    "paired_deltas_ns": [
+      -3949696,
+      -4200478,
+      10082080,
+      -15553682,
+      -14884523,
+      3846952
+    ],
+    "warnings": [],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "0a1c63e96dbc0b52aa919bc14f1f4ab9455c5809cc95ef8a1792c56e06149903",
+      "b": "0a1c63e96dbc0b52aa919bc14f1f4ab9455c5809cc95ef8a1792c56e06149903"
+    }
+  },
+  "chebyshev": {
+    "baseline": {
+      "count": 6,
+      "max_ns": 2731775915,
+      "mean_ns": 2590563027.3333335,
+      "median_ns": 2641155881.5,
+      "min_ns": 2280214760,
+      "stdev_ns": 164007791.78764296
+    },
+    "candidate": {
+      "count": 6,
+      "max_ns": 2219187059,
+      "mean_ns": 1974476340.0,
+      "median_ns": 1910222898.5,
+      "min_ns": 1822465656,
+      "stdev_ns": 158657858.09408396
+    },
+    "candidate_minus_baseline_median_ns": -730932983.0,
+    "candidate_minus_baseline_median_percent": -27.674738477945453,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T13:34:44.845503+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": -643635170.5,
+    "paired_deltas_ns": [
+      -457749104,
+      -689823800,
+      -674481248,
+      -787384718,
+      -612789093,
+      -474292161
+    ],
+    "warnings": [],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "4f75cdd3692c87be41cc18697d61a2d2f342be28b8c157445dccf27dd8f36e4a",
+      "b": "4f75cdd3692c87be41cc18697d61a2d2f342be28b8c157445dccf27dd8f36e4a"
+    }
+  },
+  "gf32-o3": {
+    "baseline": {
+      "count": 6,
+      "max_ns": 1127085509,
+      "mean_ns": 1059371026.3333334,
+      "median_ns": 1069043816.0,
+      "min_ns": 951812806,
+      "stdev_ns": 68399601.99923311
+    },
+    "candidate": {
+      "count": 6,
+      "max_ns": 1154300075,
+      "mean_ns": 1074057702.1666667,
+      "median_ns": 1053046683.0,
+      "min_ns": 1014549119,
+      "stdev_ns": 64133210.51771462
+    },
+    "candidate_minus_baseline_median_ns": -15997133.0,
+    "candidate_minus_baseline_median_percent": -1.496396383438787,
+    "identity_check": {
+      "changes": [],
+      "checked_at_utc": "2026-09-10T13:35:00.413467+00:00",
+      "schema": "lean-profile-identity-check-alpha",
+      "valid": true
+    },
+    "paired_delta_median_ns": 11487120.5,
+    "paired_deltas_ns": [
+      -9210901,
+      -24483473,
+      121553628,
+      32185142,
+      -105347189,
+      73422848
+    ],
+    "warnings": [],
+    "outputs_identical": true,
+    "output_sha256": {
+      "a": "574343749f3e9e7fe833cae1e9046f0778ced21344c1c9e525858468a3b9aec9",
+      "b": "574343749f3e9e7fe833cae1e9046f0778ced21344c1c9e525858468a3b9aec9"
+    }
+  }
+}

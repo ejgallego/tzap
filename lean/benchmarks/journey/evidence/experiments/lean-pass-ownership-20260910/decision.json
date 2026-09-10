@@ -1,0 +1,5 @@
+{
+  "status": "accepted",
+  "implementation_commit": "fe4fd34",
+  "reason": "Direct composition removes an unnecessary retained circuit and condition callback; timings largely neutral, full IO equality proved."
+}

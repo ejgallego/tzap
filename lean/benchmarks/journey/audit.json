@@ -1,0 +1,91 @@
+{
+  "campaigns": [
+    {
+      "directory": "experiments/lean-summary-20260910/runs",
+      "rows": 162,
+      "validated_rows": 161,
+      "validation": "experiments/lean-summary-20260910/validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-runtime-20260910/final-gf64",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-runtime-20260910/validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-runtime-20260910/final-chebyshev",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-runtime-20260910/validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-hadamard-sweep-20260910/accepted-chebyshev",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-hadamard-sweep-20260910/accepted-validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-hadamard-sweep-20260910/accepted-gf64",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-hadamard-sweep-20260910/accepted-validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-packed-samples-20260910/final-qft20",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-packed-samples-20260910/validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-packed-samples-20260910/final-chebyshev",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-packed-samples-20260910/validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-pass-ownership-20260910/final-qft20",
+      "rows": 14,
+      "validated_rows": 14,
+      "validation": "experiments/lean-pass-ownership-20260910/validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-fixpoint-20260910/lazy-gf32-o3",
+      "rows": 22,
+      "validated_rows": 22,
+      "validation": "experiments/lean-fixpoint-20260910/lazy-validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-fixpoint-20260910/lazy-gf64-o3",
+      "rows": 22,
+      "validated_rows": 22,
+      "validation": "experiments/lean-fixpoint-20260910/lazy-validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-gate-ownership-20260910/confirm-chebyshev",
+      "rows": 22,
+      "validated_rows": 22,
+      "validation": "experiments/lean-gate-ownership-20260910/confirm-validation.json",
+      "per_run_stderr_metrics_rechecked": true
+    },
+    {
+      "directory": "experiments/lean-fixpoint-20260910/confirm-gf64-o3",
+      "rows": 22,
+      "validated_rows": 22,
+      "validation": "experiments/lean-fixpoint-20260910/confirm-summary.json",
+      "per_run_stderr_metrics_rechecked": true
+    }
+  ],
+  "source_format": "Original JSONL retained",
+  "csv_projection": "All source columns retained; arrays/objects JSON encoded; pair = phase plus original round/pass",
+  "output_validation": "Archived campaign checks plus every successful stderr rechecked; no exit-code-only inference"
+}

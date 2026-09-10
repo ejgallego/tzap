@@ -1,0 +1,11 @@
+✔ [5255/5269] Built TzapLean.PhaseFoldRand (2.0s)
+✔ [5256/5269] Built TzapLean.PhaseFoldRand:c.o (360ms)
+✔ [5257/5269] Built TzapLean.Pipeline (2.2s)
+✔ [5259/5269] Built TzapLean.PhaseFoldTests (2.6s)
+✔ [5260/5269] Built TzapLean.Optimize (2.7s)
+✔ [5262/5269] Built TzapLean.QasmTests (2.2s)
+✔ [5263/5269] Built TzapLean.Cli (2.6s)
+✔ [5265/5269] Built TzapLean (1.8s)
+✔ [5267/5269] Built Main (1.0s)
+✔ [5269/5269] Built «tzap-lean»:exe (1.2s)
+Build completed successfully (5269 jobs).

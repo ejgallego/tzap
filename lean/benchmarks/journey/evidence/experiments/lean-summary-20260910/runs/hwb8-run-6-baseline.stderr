@@ -1,0 +1,7 @@
+  [1mResult[0m  (0.427s)
+    Gates     18,220 → 13,009  (28.6% reduction)
+    2q gates  7,129 → 7,073  (0.7% reduction)
+    T/Tdg     5,887 → 3,597  (38.8% reduction)
+    Depth     9,952 → 8,134  (18.2% reduction)
+
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-6-baseline.qasm
