@@ -429,12 +429,12 @@ def runConfiguredChecked (cfg : SuperOptConfig) (murm : Murm)
   let names := o.passes.getD o.level.pipeline
   let round := ExecutableRandPass.pipeline (names.map (executableStep cfg murm))
   if o.passes.isSome then
-    if o.fixpoint then (round.fixpointShrink (roundFuel none c.raw)).run c
+    if o.fixpoint then round.runFixpointShrink (roundFuel none c.raw) c
     else round.run c
   else if o.level.usesSuperOpt then
-    (round.fixpointShrink (roundFuel o.level.maxRounds c.raw)).run c
+    round.runFixpointShrink (roundFuel o.level.maxRounds c.raw) c
   else if o.fixpoint then
-    (round.fixpointShrink (roundFuel none c.raw)).run c
+    round.runFixpointShrink (roundFuel none c.raw) c
   else round.run c
 
 /-- Raw randomized API boundary. Malformed internal circuits are left unchanged; parsed QASM

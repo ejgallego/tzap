@@ -69,6 +69,23 @@ def fixpointShrink (p : ExecutableRandPass) : Nat → ExecutableRandPass
   | fuel + 1 => p.compWhen (p.fixpointShrink fuel)
       (fun before after => decide (after.raw.gates.length < before.raw.gates.length))
 
+/-- Execute only the shrinking fixpoint rounds that run. Preserve `compWhen`'s
+input retention for the length comparison, without constructing a fuel-sized pass
+chain. Zero fuel neither scans the gate list nor invokes the pass. -/
+def runFixpointShrink (p : ExecutableRandPass) : Nat → Circuit n m → IO (Circuit n m)
+  | 0, c => pure c
+  | fuel + 1, c => do
+      let out ← p.run c
+      if out.raw.gates.length < c.raw.gates.length then
+        p.runFixpointShrink fuel out
+      else pure out
+
+theorem runFixpointShrink_eq (p : ExecutableRandPass) (fuel : Nat) (c : Circuit n m) :
+    p.runFixpointShrink fuel c = (p.fixpointShrink fuel).run c := by
+  induction fuel generalizing c with
+  | zero => rfl
+  | succ fuel ih => simp [runFixpointShrink, fixpointShrink, compWhen, ih]
+
 end ExecutableRandPass
 
 end TzapLean

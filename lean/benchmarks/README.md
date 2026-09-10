@@ -74,7 +74,9 @@ On machines with different CPU core types, pin both binaries to the same core
 for acceptance measurements (for example, `taskset -c 2` on Linux). The suite
 records its inherited CPU affinity when the operating system exposes it.
 
-See the [pass-composition experiment](2026-09-10-pass-ownership.md) for the
+See the [lazy-fixpoint experiment](2026-09-10-lazy-fixpoint.md) for the direct
+iteration loop and its rejected count-only variant. The
+[pass-composition experiment](2026-09-10-pass-ownership.md) records the
 ownership cleanup and its measurements, and the
 [gate-wrapper experiment](2026-09-10-gate-ownership.md) for a rejected ownership
 change and the remaining targets. The
