@@ -74,6 +74,16 @@ On machines with different CPU core types, pin both binaries to the same core
 for acceptance measurements (for example, `taskset -c 2` on Linux). The suite
 records its inherited CPU affinity when the operating system exposes it.
 
+For a fresh original-baseline/current-Lean/Rust comparison, use
+[compare-runtime.py](../scripts/compare-runtime.py). It runs the six O1 cases
+above plus `gf32-o3` and `gf64-o3`, with one warmup and six rounds that balance
+implementation order. Supply preserved executables, build provenance and an
+existing Rust cache directory. It retains every output and checks all four
+metrics and output identity. Baseline timeouts are reported without a completed
+median; current/Rust failures or output mismatches make it exit nonzero.
+The [cumulative runtime summary](2026-09-10-runtime-summary.md) contains the
+command, latest results and validation.
+
 See the [lazy-fixpoint experiment](2026-09-10-lazy-fixpoint.md) for the direct
 iteration loop and its rejected count-only variant. The
 [pass-composition experiment](2026-09-10-pass-ownership.md) records the
