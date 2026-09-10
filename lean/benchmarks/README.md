@@ -75,7 +75,9 @@ for acceptance measurements (for example, `taskset -c 2` on Linux). The suite
 records its inherited CPU affinity when the operating system exposes it.
 
 See the [pass-composition experiment](2026-09-10-pass-ownership.md) for the
-ownership cleanup and its measurements. The
+ownership cleanup and its measurements, and the
+[gate-wrapper experiment](2026-09-10-gate-ownership.md) for a rejected ownership
+change and the remaining targets. The
 [packed-entropy experiment](2026-09-10-packed-entropy.md) records the latest
 substantial runtime improvement and the ownership audit. The
 [Hadamard-sweep experiment](2026-09-10-hadamard-sweeps.md) records the resolved QFT timeout. The
