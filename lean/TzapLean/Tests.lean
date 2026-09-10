@@ -37,6 +37,15 @@ def runCancel (c : RawCircuit) : RawCircuit := cancelGatesCircuit c
 
 /-! ## `src/cancel.rs` -/
 
+-- One sweep handles both independent, length-preserving HSH rewrites. The change
+-- flag must remain true even though the gate count is unchanged.
+#guard reduceHadamardsFuel 1 [.h 0, .s 0, .h 0, .h 1, .s 1, .h 1] ==
+  [.sdg 0, .h 0, .sdg 0, .sdg 1, .h 1, .sdg 1]
+#guard (reduceSweep [.h 0, .s 0, .h 0]).1
+
+-- An odd diagonal run is already a fixpoint and must not trigger more sweeps.
+#guard reduceSweep [.h 0, .t 0, .h 0] == (false, [.h 0, .t 0, .h 0])
+
 -- hh_cancel
 #guard (runCancel (RawCircuit.ofGates 1 0 [Gate.h 0, Gate.h 0])).gates.length = 0
 
