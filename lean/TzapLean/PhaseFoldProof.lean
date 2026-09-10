@@ -29,7 +29,7 @@ open Form
 
 /-- The tag state and the symbolic state agree, wire by wire. -/
 def Sim {k : Nat} (draws : Draws k) (st : AState) (ts : TState k) : Prop :=
-  ts.tags.length = st.par.length ∧ ts.fresh = st.fresh ∧
+  ts.tags.size = st.par.length ∧ ts.fresh = st.fresh ∧
     ∀ q : Qubit, wordToBits (k := k) (ts.tagOf q) = hash draws (st.parOf q)
 
 theorem getD_map_range {α : Type*} (f : Nat → α) (n q : Nat) (d : α) :
@@ -55,7 +55,8 @@ theorem sim_initial {k : Nat} {draws : Draws k} {wdraws : Nat → Tag}
     (hw : ∀ i, wordToBits (k := k) (wdraws i) = draws i) (n : Nat) :
     Sim draws (AState.initial n) (TState.initial (k := k) wdraws n) := by
   refine ⟨by simp [TState.initial, AState.initial], rfl, fun q => ?_⟩
-  rw [AState.initial_parOf, TState.tagOf, TState.initial, getD_map_range]
+  rw [AState.initial_parOf, TState.tagOf, TState.initial, List.getElem?_toArray,
+    ← List.getD_eq_getElem?_getD, getD_map_range]
   by_cases hq : q < n
   · rw [if_pos hq, if_pos hq, hw, hash_var]
   · rw [if_neg hq, if_neg hq, wordToBits_zero, hash_const_false]
@@ -64,21 +65,20 @@ theorem sim_initial {k : Nat} {draws : Draws k} {wdraws : Nat → Tag}
 theorem sim_set {k : Nat} {draws : Draws k} {st : AState} {ts : TState k}
     (hsim : Sim draws st ts) (q : Qubit) (f : Form) (t : Tag)
     (ht : wordToBits (k := k) t = hash draws f) (fr fr' : Nat) (hfr : fr = fr') :
-    Sim draws ⟨st.par.set q f, fr'⟩ ⟨ts.tags.set q t, fr⟩ := by
+    Sim draws ⟨st.par.set q f, fr'⟩ ⟨ts.tags.setIfInBounds q t, fr⟩ := by
   obtain ⟨hlen, -, htag⟩ := hsim
   refine ⟨by simp [hlen], hfr, fun r => ?_⟩
   simp only [TState.tagOf, AState.parOf]
   by_cases hr : r = q
   · subst hr
-    by_cases hlt : r < ts.tags.length
-    · rw [List.getD_eq_getElem?_getD, List.getElem?_set_self hlt,
+    by_cases hlt : r < ts.tags.size
+    · rw [Array.getElem?_setIfInBounds_self_of_lt hlt,
         AState.getD_set_self _ _ _ (hlen ▸ hlt)]
       exact ht
-    · rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by simpa using Nat.le_of_not_lt hlt),
+    · rw [Array.getElem?_eq_none (by simpa using Nat.le_of_not_lt hlt),
         AState.getD_set_out _ _ _ (hlen ▸ hlt), hash_const_false]
       exact wordToBits_zero
-  · rw [List.getD_eq_getElem?_getD, List.getElem?_set, if_neg (by simpa using Ne.symm hr),
-      ← List.getD_eq_getElem?_getD, AState.getD_set_ne _ _ hr]
+  · rw [Array.getElem?_setIfInBounds_ne (Ne.symm hr), AState.getD_set_ne _ _ hr]
     exact htag r
 
 theorem sim_step {k : Nat} {draws : Draws k} {wdraws : Nat → Tag} {st : AState} {ts : TState k}

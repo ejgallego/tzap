@@ -113,29 +113,30 @@ def onesTag (k : Nat) : Tag := 2 ^ k - 1
 
 /-- Per-wire tags, plus the index of the next unused draw. -/
 structure TState (k : Nat) where
-  /-- One tag per wire. -/
-  tags : List Tag
+  /-- One tag per wire, indexed directly by qubit. Arrays avoid traversing and rebuilding
+  a list prefix on every transfer; an exclusively owned state updates in place. -/
+  tags : Array Tag
   /-- The next unused draw index. -/
   fresh : Nat
 
 namespace TState
 
 /-- Wire `q`'s tag (the zero tag for a wire the state does not cover). -/
-def tagOf {k : Nat} (ts : TState k) (q : Qubit) : Tag := ts.tags.getD q 0
+def tagOf {k : Nat} (ts : TState k) (q : Qubit) : Tag := ts.tags[q]?.getD 0
 
 /-- Wire `i` starts out tagged with the `i`-th draw. -/
 def initial {k : Nat} (wdraws : Nat → Tag) (n : Nat) : TState k where
-  tags := (List.range n).map wdraws
+  tags := ((List.range n).map wdraws).toArray
   fresh := n
 
 /-- The Rust transfer functions, on tags. -/
 def step {k : Nat} (wdraws : Nat → Tag) (ts : TState k) (g : Gate) : TState k :=
   match g with
-  | .x q => { ts with tags := ts.tags.set q (ts.tagOf q ^^^ onesTag k) }
-  | .cnot c t => { ts with tags := ts.tags.set t (ts.tagOf t ^^^ ts.tagOf c) }
-  | .h q => { tags := ts.tags.set q (wdraws ts.fresh), fresh := ts.fresh + 1 }
-  | .ccx _ _ t => { tags := ts.tags.set t (wdraws ts.fresh), fresh := ts.fresh + 1 }
-  | .reset q => { tags := ts.tags.set q (wdraws ts.fresh), fresh := ts.fresh + 1 }
+  | .x q => { ts with tags := ts.tags.setIfInBounds q (ts.tagOf q ^^^ onesTag k) }
+  | .cnot c t => { ts with tags := ts.tags.setIfInBounds t (ts.tagOf t ^^^ ts.tagOf c) }
+  | .h q => { tags := ts.tags.setIfInBounds q (wdraws ts.fresh), fresh := ts.fresh + 1 }
+  | .ccx _ _ t => { tags := ts.tags.setIfInBounds t (wdraws ts.fresh), fresh := ts.fresh + 1 }
+  | .reset q => { tags := ts.tags.setIfInBounds q (wdraws ts.fresh), fresh := ts.fresh + 1 }
   | _ => ts
 
 /-- The tag state after a gate list. -/
