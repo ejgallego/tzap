@@ -44,6 +44,14 @@ def testWords : Nat → Tag := seedWords 63 0
     fun i => wordToBits (if i.val = 0 then 0 else 2 ^ 127)
   (phaseFoldWithSample 128 c sample).raw.gates == [.t 1, .s 0]
 
+-- The direct packed path keeps the same high bit and masks unused bits in a partial byte.
+#guard
+  let c := Circuit.of (RawCircuit.ofGates 2 0 [.t 0, .t 1, .t 0]) (by decide)
+  (phaseFoldWithWords 128 c #[0, 2 ^ 127]).raw.gates == [.t 1, .s 0]
+#guard
+  normalizeSampleWords 9 #[0x3ff, 0x200, 7] == #[511, 0, 7]
+#guard normalizeSampleWords 0 #[255] == #[0]
+
 /-- Phase folding with those draws. -/
 def pf (n : Nat) (gs : List Gate) : List Gate := phaseFoldGates 63 testWords n gs
 

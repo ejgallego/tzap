@@ -95,6 +95,16 @@ theorem wordToBits_congr {k : Nat} {a b : Tag} (h : a = b) :
 @[simp] theorem wordToBits_zero {k : Nat} : wordToBits (k := k) 0 = 0 := by
   funext j; simp [wordToBits, bit]
 
+/-- Repacking a word's bits keeps exactly its low `k` bits. -/
+@[simp] theorem bitsToWord_wordToBits (k w : Nat) :
+    bitsToWord (wordToBits (k := k) w) = w % 2 ^ k := by
+  apply Nat.eq_of_testBit_eq
+  intro i
+  by_cases h : i < k <;> simp [bitsToWord, testBit_bitsToWordAux, wordToBits, h]
+
+@[simp] theorem bitsToWord_zero {k : Nat} : bitsToWord (k := k) 0 = 0 := by
+  simpa using bitsToWord_wordToBits k 0
+
 /-- XOR of tags is addition of the functions they stand for. -/
 @[simp] theorem wordToBits_xor {k : Nat} (a b : Tag) :
     wordToBits (k := k) (a ^^^ b) = wordToBits (k := k) a + wordToBits (k := k) b := by
@@ -329,15 +339,9 @@ def natOfBytes (bytes : ByteArray) (start count : Nat) : Nat := Id.run do
     w := w ||| ((bytes[start + i]!).toNat <<< (8 * i))
   return w
 
-/-- Draw one OS-random `k`-bit tag per variable, as an element of the finite sample space in
-the failure theorem. Extra high bits in the final byte are ignored when `k` is not a multiple
-of eight.
-
-The implementation makes one entropy request for the entire sample, then exposes its packed
-rows as bit functions. The proof does not assert that `IO.getRandomBytes` realizes the ideal
-independent uniform PMF; that is the explicit platform-RNG assumption at the executable
-boundary. -/
-def randomSample (m k : Nat) : IO (Sample m k) := do
+/-- Obtain the packed rows for one sample with a single OS entropy request. The last byte
+may contain unused high bits when `k` is not a multiple of eight. -/
+def randomWords (m k : Nat) : IO (Array Tag) := do
   let bytesPerTag := (k + 7) / 8
   let totalBytes := m * bytesPerTag
   if totalBytes ≥ USize.size then
@@ -346,6 +350,17 @@ def randomSample (m k : Nat) : IO (Sample m k) := do
   let mut rows : Array Nat := Array.emptyWithCapacity m
   for i in [0:m] do
     rows := rows.push (natOfBytes bytes (i * bytesPerTag) bytesPerTag)
-  return fun i j => bit ((rows[i.val]!).testBit j.val)
+  return rows
+
+/-- Interpret packed rows as the finite sample in the failure theorem. -/
+def sampleOfWords {m k : Nat} (rows : Array Tag) : Sample m k :=
+  fun i => wordToBits (rows[i.val]!)
+
+/-- Draw one OS-random `k`-bit tag per variable, as an element of the finite sample space in
+the failure theorem. Extra high bits in the final byte are ignored when `k` is not a multiple
+of eight. The proof does not assert that `IO.getRandomBytes` realizes the ideal independent
+uniform PMF; that remains the explicit platform-RNG assumption. -/
+def randomSample (m k : Nat) : IO (Sample m k) := do
+  return sampleOfWords (← randomWords m k)
 
 end TzapLean

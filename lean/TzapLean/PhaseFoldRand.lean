@@ -334,13 +334,62 @@ def phaseFoldWithSampleCached (k : Nat) (c : Circuit n m) (s : Sample (varBound 
   funext n m k c s
   simp only [phaseFoldWithSampleCached, sampleWords_eq, phaseFoldWithSample]
 
-/-- The runtime phase-folding pass. Every invocation obtains a fresh sample from
-`IO.getRandomBytes`; its idealized distribution and failure bound are `PhaseFoldRand k` below. -/
+/-- Discard unused high bits from byte-packed entropy. Return the array itself so
+eta expansion cannot move its preparation inside each draw lookup. -/
+def normalizeSampleWords (k : Nat) (rows : Array Tag) : Array Tag :=
+  let modulus := 2 ^ k
+  rows.map (· % modulus)
+
+theorem normalizeSampleWords_eq (m k : Nat) (rows : Array Tag) :
+    (fun i => if i < m then (normalizeSampleWords k rows)[i]?.getD 0 else 0) =
+      wordsOf k (liftSample (sampleOfWords (m := m) rows)) := by
+  funext i
+  by_cases h : i < m
+  · simp only [normalizeSampleWords, wordsOf, liftSample, sampleOfWords, dif_pos h, if_pos h,
+      bitsToWord_wordToBits, Array.getElem?_map, Array.getElem!_eq_getD,
+      Array.getD_eq_getD_getElem?]
+    cases rows[i]? <;> simp
+  · simp [wordsOf, liftSample, h]
+
+/-- The packed executable transformation, proved to agree with the ideal sample view. -/
+def phaseFoldWithWords (k : Nat) (c : Circuit n m) (rows : Array Tag) : Circuit n m :=
+  let bound := varBound c.raw
+  let words := normalizeSampleWords k rows
+  let draws := fun i => if i < bound then words[i]?.getD 0 else 0
+  ⟨phaseFold k draws c.raw,
+    (phaseFold_numQubits k _ c.raw).trans c.numQubits_eq,
+    (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
+    phaseFoldGates_wf draws c.wf⟩
+
+theorem phaseFoldWithWords_eq_sample (k : Nat) (c : Circuit n m) (rows : Array Tag) :
+    phaseFoldWithWords k c rows = phaseFoldWithSample k c (sampleOfWords rows) := by
+  simp only [phaseFoldWithWords, normalizeSampleWords_eq, phaseFoldWithSample]
+
+/-- The sampled IO specification: every invocation obtains fresh OS entropy. -/
+def phaseFoldRandom (k : Nat) (c : Circuit n m) : IO (Circuit n m) := do
+  let s ← randomSample (varBound c.raw) k
+  return phaseFoldWithSample k c s
+
+/-- Pass the owned packed array directly from the entropy reader to phase folding. -/
+def phaseFoldRandomPacked (k : Nat) (c : Circuit n m) : IO (Circuit n m) := do
+  let rows ← randomWords (varBound c.raw) k
+  return phaseFoldWithWords k c rows
+
+/-- Preserve the entire IO action, including the entropy request and error behavior. -/
+@[csimp] theorem phaseFoldRandom_eq_packed : @phaseFoldRandom = @phaseFoldRandomPacked := by
+  funext n m k c
+  simp only [phaseFoldRandom, randomSample, phaseFoldRandomPacked,
+    phaseFoldWithWords_eq_sample]
+  funext world
+  change EST.bind (EST.bind _ _) _ world = EST.bind _ _ world
+  simp only [EST.bind]
+  cases randomWords (varBound c.raw) k world <;> rfl
+
+/-- The runtime phase-folding pass. Its idealized distribution and failure bound are
+`PhaseFoldRand k` below; compilation uses the proved packed IO action. -/
 def PhaseFoldRandExec (k : Nat) : ExecutableRandPass where
   name := "Phase folding"
-  run := fun c => do
-    let s ← randomSample (varBound c.raw) k
-    return phaseFoldWithSample k c s
+  run := phaseFoldRandom k
 
 /-! ## The pass -/
 
