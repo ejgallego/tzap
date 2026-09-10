@@ -53,6 +53,9 @@ emit.
 The supported OpenQASM gates are `h`, `x`, `z`, `s`, `sdg`, `t`, `tdg`, `rz`, `cx`, `cz`,
 `ccx`, `ccz`, `measure`, and `reset`.
 
+For repeatable native runtime measurements, see the
+[representative benchmark surface](benchmarks/README.md).
+
 ## The obligation
 
 Deterministic passes return a checked circuit that is provably equivalent to their input:
