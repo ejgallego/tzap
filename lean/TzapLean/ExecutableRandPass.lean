@@ -47,9 +47,16 @@ def compWhen (p q : ExecutableRandPass)
     let out ← p.run c
     if cond c out then q.run out else pure out
 
-/-- Run `p`, then `q`. -/
-def comp (p q : ExecutableRandPass) : ExecutableRandPass :=
-  p.compWhen q (fun _ _ => true)
+/-- Run `p`, then `q`, consuming the input without retaining it for a condition. -/
+def comp (p q : ExecutableRandPass) : ExecutableRandPass where
+  name := q.name ++ " ∘? " ++ p.name
+  run := fun c => do
+    let out ← p.run c
+    q.run out
+
+/-- Direct composition preserves the conditional specification, including IO effects. -/
+theorem comp_eq_compWhen (p q : ExecutableRandPass) :
+    p.comp q = p.compWhen q (fun _ _ => true) := rfl
 
 /-- Run a list of executable passes from left to right. -/
 def pipeline : List ExecutableRandPass → ExecutableRandPass
