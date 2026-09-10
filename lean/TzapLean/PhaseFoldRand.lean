@@ -305,6 +305,40 @@ def phaseFoldNonlinearWithSample (k : Nat) (c : Circuit n m)
     (phaseFoldNonlinear_numCbits _ c.raw).trans c.numCbits_eq,
     phaseFoldGatesNonlinear_wf _ c.wf⟩
 
+/-- Pack each sampled tag once. Forward merge scans can visit the same draw many times;
+reconstructing its `k` bits at every visit otherwise repeats multiprecision allocation. -/
+def sampleWords {m k : Nat} (s : Sample m k) : Array Tag :=
+  Array.ofFn fun i => bitsToWord (s i)
+
+/-- Looking up a packed sample gives exactly the original stream, including its zero
+padding outside the finite sample. -/
+theorem sampleWords_eq {m k : Nat} (s : Sample m k) :
+    (fun i => (sampleWords s)[i]?.getD 0) = wordsOf k (liftSample s) := by
+  have hz : bitsToWord (k := k) 0 = 0 := by
+    apply Nat.eq_of_testBit_eq
+    intro i
+    simp [bitsToWord, testBit_bitsToWordAux, unbit]
+  funext i
+  by_cases h : i < m <;> simp [sampleWords, wordsOf, liftSample, h, hz]
+
+/-- The executable implementation keeps the packed array outside the lookup closure,
+so every tag is packed once per pass invocation. -/
+def phaseFoldNonlinearWithSampleCached (k : Nat) (c : Circuit n m)
+    (s : Sample (varBound c.raw) k) :
+    Circuit n m :=
+  let words := sampleWords s
+  ⟨phaseFoldNonlinear (fun i => words[i]?.getD 0) c.raw,
+    (phaseFoldNonlinear_numQubits _ c.raw).trans c.numQubits_eq,
+    (phaseFoldNonlinear_numCbits _ c.raw).trans c.numCbits_eq,
+    phaseFoldGatesNonlinear_wf _ c.wf⟩
+
+/-- A proved compiler rewrite; the ideal randomized model and its sample are unchanged. -/
+@[csimp] theorem phaseFoldNonlinearWithSample_eq_cached :
+    @phaseFoldNonlinearWithSample = @phaseFoldNonlinearWithSampleCached := by
+  funext n m k c s
+  simp only [phaseFoldNonlinearWithSampleCached, sampleWords_eq,
+    phaseFoldNonlinearWithSample]
+
 /-- The runtime nonlinear phase-folding pass. Every invocation obtains a fresh 128-bit sample
 from `IO.getRandomBytes` and calls the same pure transformation as the verified pass. -/
 def PhaseFoldRandExec : ExecutableRandPass where
