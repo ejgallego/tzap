@@ -21,6 +21,9 @@ Optimize an OpenQASM 2.0 circuit and write the result to a file:
 lake exe tzap-lean input.qasm optimized.qasm
 ```
 
+For repeatable native runtime measurements, see the
+[representative benchmark surface](benchmarks/README.md).
+
 ## The obligation
 
 Deterministic passes return a checked circuit that is provably equivalent to their input:
