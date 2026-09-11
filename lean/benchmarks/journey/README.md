@@ -3,9 +3,11 @@
 Open [the generated report](report/index.html). It includes the fresh
 original/current/Rust comparison, eleven selected comparisons from the earlier
 experiments, three searchable native self profiles, and the rejected designs.
-The report is generated from retained observations; no new benchmark runs were
-needed. Its current optimizer identity is `ba401fb`, as measured in the final
-campaign at `5d5f169`.
+The report was regenerated on 2026-09-11 using the updated lean-profile-skill.
+It uses 348 retained observations in 19 shared JSONL datasets, with 26 explicit
+comparisons and eight original-baseline entries. QFT's entry has only a timed-out
+warmup. No new benchmark runs were needed. Its current optimizer identity is
+`ba401fb`, as measured in the final campaign at `5d5f169`.
 
 To browse a checkout locally:
 
@@ -24,14 +26,16 @@ bundled here. No remote assets or uploads are needed to read this report.
 The directly measured totals use the original Lean binary at `2c29be4`, current
 Lean at `ba401fb`, and unchanged Rust at `2c29be4`, all measured in one campaign.
 Each complete series has six observations and one excluded warmup. The original
-QFT warmup was killed at 60 seconds; it is a censored observation, not a median.
+QFT warmup was killed at 60 seconds; it is not a measured baseline or median.
 Current Lean and Rust complete all eight workloads.
 
 The earlier experiments compare each candidate with its own control. Their
 medians must not be combined into a cumulative speedup curve. The two initial
 tag/sample commits were accepted together and share a final controlled
-comparison. Rejected candidates have valid measured distributions: the CSV
-`accepted` field means inclusion in statistics, not approval of the change.
+comparison. Rejected candidates have valid measured distributions: observation
+`included` fields govern statistical inclusion, while `decision_status` describes
+the optimization. Rust comparisons remain unclassified because they do not
+propose a Lean change.
 
 The archived validation records support each inclusion. The adapter also
 rechecks all successful stderr metrics. The final campaign preserves all QASM
@@ -47,13 +51,15 @@ profiles and RSS checks are separate from headline wall-time observations.
 ## Rebuild from the bundled archive
 
 The adapter uses Python 3.10 or newer. It needs the installed
-`lean-profile-skill` report builder; optional plots need Matplotlib. Choose a
-fresh output directory. From the repository root:
+`lean-profile-skill` report builder with the shared-dataset
+`lean-profile-review-alpha` contract; optional plots need Matplotlib. Choose a
+fresh output directory under this bundle to keep HTTP links reachable. From the
+repository root:
 
 ```sh
 python3 lean/scripts/profile-journey.py \
   --skill-dir /path/to/lean-profile-skill \
-  --out /tmp/tzap-review-new
+  --out lean/benchmarks/journey/report-new
 ```
 
 For all standalone SVG/PNG distribution plots and the three-way overview:
@@ -62,9 +68,11 @@ For all standalone SVG/PNG distribution plots and the three-way overview:
 UV_CACHE_DIR=/tmp/tzap-review-uv-cache MPLCONFIGDIR=/tmp/tzap-review-mpl \
   uv run --no-project --with matplotlib python lean/scripts/profile-journey.py \
   --skill-dir /path/to/lean-profile-skill \
-  --out /tmp/tzap-review-new --plots
+  --out lean/benchmarks/journey/report-new --plots
 ```
 
+These are alternative commands; the output directory must not already exist.
+Open `http://localhost:8767/report-new/` after starting the server above.
 `--no-project` prevents uv from trying to build tzap's unrelated Python/Rust
 package just to draw plots. Normal rebuilding reads the bundled evidence, so it
 does not require the original ignored experiment directories. A one-time
@@ -77,30 +85,37 @@ the campaign checks. The original JSONL, source manifests, stderr/stdout,
 validation, code snapshots, patches and build logs remain byte-exact in
 `evidence/`. Original absolute paths are preserved as capture metadata.
 
-The CSV projection retains every original column, with arrays and objects JSON
-encoded. It derives pair IDs from the original round/pass plus phase, never from
-row order. The report builder copies the exact CSV bytes it used, and writes
-the numerical model and figure hashes to `review-data.json`. `generator.json`
+The JSONL normalization retains every original column, including integer
+`elapsed_ns`, nested metrics and array-valued argv. It derives block IDs from the
+original round/pass plus phase, never from row order. The final harness used
+zero-based slots; `source_slot` preserves them while `slot` adds one for the
+skill's positive-slot contract. Warmups stay visible with `included=false`.
+QFT's configured timeout is distinct from the observed elapsed time.
+
+Each workload/campaign has one dataset shared by its baselines and comparisons.
+The report builder copies the exact JSONL bytes it used, and writes the numerical
+model and figure hashes to `review-data.json`. `generator.json`
 records the adapter and installed builder hashes. Plot bytes can depend on
 Matplotlib and fonts; the archived observations and numerical model provide the
 reproducible results.
 
-The small bundled `matplotlibrc` reduces dense x-axis tick-label size in the
-skill's two-panel plots. Its hash and the Matplotlib version are recorded in
-`generator.json`; no installed skill source is modified.
+The updated skill handles units and dense ticks directly, so the earlier local
+`matplotlibrc` workaround was removed. No installed skill source is modified.
 
 ## Validation
 
-The independent checker compares CSV cells back to their original JSONL lines,
-recomputes medians and matched differences, and checks archive hashes, censored
-timeouts and inclusion of valid rejected trials:
+The independent checker compares typed JSONL fields back to their original
+lines, verifies each of the 348 source observations appears exactly once,
+recomputes quartiles, medians and matched differences, and checks evidence/figure
+hashes, warmup timeouts and inclusion of valid rejected trials:
 
 ```sh
 python3 lean/scripts/check-profile-review.py --numerical-only
 ```
 
 With the local server running, the browser check uses a fresh headless Chrome
-instance and exercises filters, profile toggles, symbol search, local HTTP
+instance and exercises text/decision filters, shared tables, timeout records,
+profile toggles, symbol search, local HTTP
 links, and 1280/768/390-pixel viewports:
 
 ```sh
@@ -112,6 +127,24 @@ Browser screenshots are written under `/tmp/tzap-review-browser` by default.
 The completed [verification record](verification.json) includes numerical,
 artifact-hash, negative-input and browser checks. A separate
 [relocated rebuild check](rebuild-verification.json) confirms that copying only
-the bundled evidence and scripts reproduces the statistics and CSV hashes.
+the bundled evidence and scripts reproduces the statistics and JSONL hashes.
+The checker also accepts `--previous /path/to/prior/journey` to compare all
+26 statistics records and seven completed baselines against the former report.
+
+The [skill test record](skill-verification.json) identifies the tested skill by
+source hashes. Its 71 Python tests (including plots) and 10 JavaScript tests
+passed. Tests ran from an isolated copy of the installed skill. The command
+importer was also checked against all eleven retained historical captures:
+
+```sh
+python3 lean/scripts/check-profile-import.py \
+  --skill-dir /path/to/lean-profile-skill --out /tmp/tzap-import-check-new
+```
+
+This integration check revalidates the archived project evidence before making
+hash-bound output-validation assertions, compares imported statistics with the
+journey adapter, and verifies unchecked/incorrectly bound inputs stay excluded
+or fail. It executes no benchmark commands. The main adapter handles both this
+harness and tzap's custom three-way harness and retains portable evidence paths.
 
 See [skill-feedback.md](skill-feedback.md) for suggestions based on this report.

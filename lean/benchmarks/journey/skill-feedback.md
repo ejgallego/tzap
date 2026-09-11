@@ -1,137 +1,85 @@
-# Feedback from the tzap performance journey
+# lean-profile-skill: review after the 2026-09-11 update
 
-The updated builder is useful: it separates baselines, directly measured totals,
-individual decisions and attribution; shares a validated model between tables
-and plots; preserves exact CSV snapshots; and does not infer optimization
-acceptance from positive savings. These choices fit a proof-oriented runtime
-investigation with both successful and rejected experiments.
+The updated skill reproduces tzap's retained results exactly. We tested an
+isolated copy of the installed skill; no installed source files were modified.
+[skill-verification.json](skill-verification.json) records the tested file hashes,
+environment and results. This feedback supersedes the initial suggestions at
+commit `c3e8280`, which remain in git history.
 
-## 1. Accept JSONL observations alongside CSV
+## Confirmed improvements
 
-tzap has two retained JSONL formats: the skill's own `compare_commands.py` output
-and a repository-specific three-way comparison. Both contain structured command
-arrays, statuses, run order, timestamps, artifact paths and validation evidence.
-Converting them to CSV requires nested values to be serialized back into JSON
-strings. Keeping all original columns avoids information loss, but adds work
-and makes the raw data less pleasant to inspect.
+- **JSONL is now a native input.** Integer nanosecond clocks, array-valued argv,
+  nested metrics and typed booleans survive without CSV flattening. JSON metadata
+  plus JSONL observations is a good canonical format for these captures. CSV
+  remains useful for flat input and optional spreadsheet exports.
+- **Shared datasets model the three-way campaign directly.** Nineteen datasets
+  replace 33 duplicated baseline/contrast CSV files. The final eight datasets
+  each retain original Lean, current Lean and Rust, including execution order.
+  Explicit contrasts reproduce all 26 earlier comparison statistics exactly.
+- **Inclusion and decisions are separate.** Warmups have `included=false`;
+  accepted/rejected/inconclusive decisions describe experiments. Both rejected
+  candidates still contribute all ten valid measured pairs. The decision and
+  text filters compose correctly in the browser.
+- **Timeouts remain visible without invented estimates.** Original QFT appears
+  as one 60-second warmup timeout with no measured baseline, median or ratio.
+  The current/Rust contrast in the same dataset remains available. This is more
+  useful than our former separate `censored.json` attachment.
+- **The command importer works on actual historical evidence.** All eleven
+  retained captures imported with exact clocks, argv, order and snapshots. We
+  supplied hash-bound validation only after rechecking the existing project
+  evidence. An unchecked successful capture produced no timing estimate, and a
+  changed validation binding was rejected before output creation.
+- **Units and presentation are clearer.** Millisecond Rust observations no
+  longer lose their spread to three-decimal seconds. Exact commands collapse
+  out of the reading flow. The paired gf32 O3 plot now has readable ticks without
+  our local `matplotlibrc` workaround. General evidence links are also hashed.
 
-Use JSON for report/campaign metadata and JSONL for append-only observations.
-Keep CSV as a supported flat interchange and plotting export. Both readers
-should produce the same validated observation model. A first-party adapter for
-the skill's own comparison helper would remove a common source of schema drift.
+The complete suites passed: **71 Python tests**, including optional Matplotlib
+plots, and **10 JavaScript tests**. Browser checks exercised the actual tzap
+report, its shared tables, timeout record, filters and native self viewers at
+1280, 768 and 390 pixels. The report needs no live Perfetto import; its profiles
+are aggregated native self weights, not chronological traces.
 
-A proposed observation shape is:
+## Remaining suggestions
 
-```json
-{
-  "schema": "lean-profile-observation-v1",
-  "id": "final/gf64/round-3/current",
-  "campaign": "tzap-final-20260910",
-  "workload": "gf64-o1",
-  "configuration": "current",
-  "block": "round-3",
-  "slot": 1,
-  "phase": "measured",
-  "wall_ns": 2145728189,
-  "status": {"kind": "exit", "code": 0},
-  "argv": ["taskset", "-c", "2", "current", "input.qasm", "-O1"],
-  "validation": {
-    "result": "passed",
-    "scope": "reported-metrics-and-retained-qasm",
-    "artifact": "validation.json",
-    "record": "/cases/gf64"
-  },
-  "inclusion": {"include": true, "reason": "validated complete run"}
-}
-```
+### Normalize the serialized model as well as the dataset files
 
-This is a schema sketch, not a new measured observation. Integer nanoseconds
-preserve the source clock values. Validation references should include artifact
-hashes and record selectors, with explicit scope. Missing evidence must fail;
-exit zero alone must not imply output validation.
+`review-data.json` grows from **202,516 to 3,897,406 bytes** for this report.
+There are 348 unique original observations, but 1,648 serialized occurrences of
+records carrying `source_file` and `source_line`: datasets, baseline series,
+comparison series, outcomes and inclusion/exclusion lists repeat them.
 
-## 2. Support multiple configurations and explicit contrasts
+The in-memory references are shared, but ordinary JSON serialization repeats
+those objects. Consider storing observations once per dataset and referring to
+observation IDs from included/excluded sets, baselines and contrasts. Keep
+summary statistics local if convenient. This would make the model easier to
+diff and archive while preserving every outcome. The model is a downloadable
+artifact, so this size increase is not evidence of slower initial page loading.
 
-The final campaign has three configurations and uses all six execution-order
-permutations. Today it becomes separate baseline/current and current/Rust CSVs,
-duplicating the current observations and metadata. A shared multi-configuration
-dataset plus explicit contrast definitions would preserve the full experimental
-block while supporting paired differences. The report could show one compact
-three-way table and overview, then selected contrasts.
+### Make optional portability policy explicit
 
-Retain stable observation IDs, block IDs and execution slots. Do not pair by row
-position or assume that membership in one campaign makes arbitrary series
-comparable. Validation should check membership, missing members, duplicate IDs,
-boundary and cohort. The investigator still owns the comparability judgment.
+The documented linking model is appropriate for large perf captures. General
+links are now hashed, which resolves part of our earlier concern. Small evidence
+bundling and relocation still belong to our adapter: we preserve 831 source
+snapshots, with selected stdout/stderr, validation, source and generated C.
 
-## 3. Treat timeouts as censored outcomes
+A future optional bundle mode could copy selected small artifacts, rewrite links,
+list omitted large captures with hashes, and emit a separate relocatable
+manifest. Preserve the original input manifest byte-for-byte. Absolute paths in
+`review-data.json` currently describe the build location; the HTML links and
+source manifest's relative paths let our complete bundle move correctly.
 
-The original QFT binary was killed at 60 seconds. It has no successful baseline
-distribution. The current format requires a nonempty valid distribution, so we
-keep the censored record separately and annotate the overview manually.
+### Consider a native self-profile attachment
 
-Support a timeout outcome with a bound and clock units. Render it as a bound,
-never as a completed duration, median, zero, or silently missing case. A campaign
-containing only timeouts for one configuration should still have a visible
-baseline row. Mixed complete/censored series need explicit interpretation;
-ordinary medians of only the survivors can mislead.
+The generic trusted HTML viewer works well. A first-class self-profile kind
+could remove our small custom symbol-table generator while retaining capture
+identity, sampling event, coverage and lost-sample information. It must not imply
+caller relationships when only instruction pointers are reliable. Investigator-
+selected generated-C excerpts would also help ownership reviews.
 
-## 4. Separate statistical inclusion from optimization decisions
+### Keep format changes easy to identify
 
-`accepted=true` currently means that a row belongs in a valid distribution.
-The gate-owner and count-only candidates were rejected but their observations
-are valid, so that name invites mistakes. Prefer `included` or
-`inclusion.include` in a future schema. Keep experiment decisions structured and
-separate: accepted, rejected or inconclusive, with an investigator explanation.
-
-The report already preserves our decision text. Structured decisions would also
-make filtering accepted changes and rejected hypotheses more reliable than
-searching free text.
-
-## 5. Provide a portable evidence bundle option
-
-The builder copies observations but links other files at their existing paths.
-That is appropriate for huge perf captures, but a generated report alone is not
-portable. We added an explicit archive containing selected manifests,
-validation, stderr/stdout, generated C, proof sources, patches and profile
-exports, with a hash inventory. Large binaries and captures remain external.
-
-An optional bundle policy could copy selected evidence, rewrite local links,
-hash general links as well as profiles, reject path collisions, and list omitted
-large files with hashes. Preserve the original manifest byte-for-byte and write
-a separate relocatable manifest, so original provenance and usable local paths
-are both available. An HTTP link audit would catch missing artifacts early.
-
-## 6. Improve units and command presentation
-
-Fixed three-decimal seconds obscure 4–8 ms Rust runs: an IQR can display as
-`0.000`. Use adaptive display units or significant digits while preserving exact
-values in the model. Mark descriptive IQR/range clearly; neither is a confidence
-interval. The optional all-observation plots are especially useful here.
-
-Command metadata is a required plain string. This adapter renders exact argv
-arrays as shell-quoted commands; long absolute paths and output names dominate
-small screens. Separate a concise workload label from expandable exact argv and
-environment records. A full command is necessary evidence, but need not occupy
-the main reading flow of every comparison.
-
-The actual browser review also exposed overlapping tick labels on the gf32 O3
-paired-saving axis. The report uses a small local Matplotlib style to reduce
-x-axis label size; a better reusable fix is an adaptive locator with fewer major
-ticks (for example `MaxNLocator(nbins=5)`), together with sensible units. This is
-a presentation issue: the underlying observations and numerical statistics are
-unchanged.
-
-## 7. Add a native self-profile view
-
-tzap's self instruction pointers are reliable while early DWARF callers were
-not. We attached small searchable tables preserving the original symbols,
-process labels, self percentages and source hashes. A native self-profile kind
-could make this common case first-class without implying a flamegraph or
-inventing chronology. Require capture identity, sampling event, coverage,
-lost-sample information, and a clear distinction between full-command and
-timeout-prefix captures.
-
-The workflow also benefits from generated-C excerpts beside the ownership
-explanation. These can be explicit investigator-selected line ranges with a
-source hash; the builder should not infer callers or ownership from symbol names.
+Rejecting the old manifest is deliberate and documented; it is not a test
+failure. A schema revision or feature/version identifier would make future alpha
+changes easier for adapters to diagnose. The tested source hashes currently give
+us the exact implementation identity needed to reproduce this report.

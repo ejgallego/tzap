@@ -1,0 +1,166 @@
+{
+  "date": "2026-09-11",
+  "skill_files_sha256": {
+    ".github/workflows/test.yml": "6780d3903a48057a63213010e63f1d25f31627b2f523e7a9c07e481dc4b6b6d6",
+    ".gitignore": "917d3c33421cf7faf392dc2e168e17ec19ff1a2a793731c361458ac818260631",
+    "LICENSE": "7ef159fd8db5a7a9e8051aac48997353f26d744e25f730a0594a806c126d2114",
+    "README.md": "bd2818e571e844b2d37a48b20f7d0a04dce87f36e8df671ae27349621666eb0a",
+    "SKILL.md": "4c66995adf611192e9c66b3b2eeb099f0280ef1b2aa661bcd00b969f881ddd22",
+    "agents/openai.yaml": "16f36cbfd7880da7f62a23c764a9b90fc863ef72321b96f127e8797ad24c2b5d",
+    "assets/review.css": "17dc903a2cf43bbf64c565f40c60631bd49102e238dfe808b0a38e461673f2e5",
+    "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
+    "assets/review.js": "16178894bb4d5fedc3f3741316682770afdcd5538ba81f758c38698108096da9",
+    "examples/review/baseline.csv": "8ca62c2c40deef7ebc340582f5c0572578ad19b79f07c7a1aa12ace2632076f8",
+    "examples/review/comparison.csv": "04082a564138b13031029028ec7901d87966b0cef5f79aba01edc4f1377f1537",
+    "examples/review/report.json": "15805e0be753719a258ae052c9699241c88595f39b6510b080d057c822b8589c",
+    "examples/review/three-way.jsonl": "c88dae660d3abec11bf742a171bf655da5bb81dfdf0432849039c55c17b29ce6",
+    "examples/review/total.csv": "192263b86b9555cfdb7a7ec49c937f2292e8e38ec10f1b30acb24ac9eabe748d",
+    "examples/review/trace.json": "4710424e9c6cbb87a1ab20adbb138cbab56b4273b3139c9d27c588fac0b2b636",
+    "references/benchmark-design.md": "d7d308de19774619c0cfbb78c54eec1bbfa55f3b5b6b998a48815c64f0c98113",
+    "references/build-and-elaboration.md": "8dd86a8092dbd67a861febfe7f056a2e80c8cb7340a6761364442e6b20b66cf5",
+    "references/command-import.md": "03bd629cb010ef07d327c166360ff563fb46b522923e7b74380be5c8f01ea022",
+    "references/experiment-record.md": "e5d28cbd7fd52fa3ba0ba59d1b0ee9dd279b1921f123ea142eef498a4a8c2ba8",
+    "references/generated-c-ownership.md": "6a205f5f76a4633ca861dea68074876ad41c1426a5d693c5cb13e2b0b52ba994",
+    "references/ml-lab-case-study.md": "5abe83dd7c8d0e6ca96784f9accf6051767f178bdc05b11aabe31e05731a184b",
+    "references/profile-review.md": "9218f42972ed6c11e6c5b05339f535be8e99ba93023e751712f8cf9237ff4654",
+    "references/profiling-loop.md": "a04067410bec10646d7ca59caf3e1262f257f2168ec6e7c309aad504037406f1",
+    "references/review-format.md": "0e09f252251ad5b156fb33734d3ed28157bddc3a7319cf4f6d6604b78bcf59d3",
+    "references/runtime-mechanics.md": "845047fe2871af38be7ee3b658ea25a0edfab57dc9acb3c2fe2c8e9322a3389d",
+    "references/verso-builds.md": "7fb35bc65951248de0472f93c2dccff03078894946c258cc171e6f687325252c",
+    "scripts/build_review.py": "81fd6cd8d348dace39c5e37cf1b5f526bed3ebf7f68a1a24efd885c776582446",
+    "scripts/compare_commands.py": "729e423704720d7ad998c42ca1acebe8997c40ba49951949d8da285d16d5c984",
+    "scripts/import_comparison.py": "e723edada8b50f381a78cde191b9c20fbbf1796cfe42ec51abe7809d75c3aeb2",
+    "scripts/review_data.py": "31e10baa8af52b9c989f35e2fb50a72038a533281b0abeb00e0d59af723d585f",
+    "scripts/review_format.py": "5d000a8543d85515a2f1b534b9e5fa31f9c5a7c0349e94f64388022fda0db87d",
+    "scripts/review_html.py": "6c2bf36897c6bef6a3f2842a753f8f220af032e9d2bc5f2ca7e89c48987c0d9e",
+    "scripts/review_observations.py": "eafb10d2bd17e9d228bb02447c9bfa7e42f0ecf57796500c2ea0ce1afaca259d",
+    "scripts/review_plots.py": "23463e524eb4438fc9e845e3d40c8f4471cfe444d4cbda53f3aa95d3d78278be",
+    "tests/review_helpers.py": "ccb07b1b9a95142203e510a2be04bfa0442d2d985b18e51054b9788d5b33bebf",
+    "tests/test_build_review.py": "5fdcfb7ad95dd92705031ea1d692c01f8259bafba316c580278652fed14753fc",
+    "tests/test_compare_commands.py": "0c2478c32784507e65be44cf15536bea66fdf41fc290b2e850d8de218d099b9e",
+    "tests/test_review_extensions.py": "3bf0029d18ceed4040572fceae570cebba4dfbc976273f6fbf6ea507b1d232da",
+    "tests/test_review_import.py": "f18123641f65cc3549483721d7d9c0a0c7f109007af5820861872ccd4e7b15ca",
+    "tests/test_review_js.cjs": "657ef4e0eeb64d88323b8f676e67f8b5b7b8ab2c50dc4e0aa31c4894ec27f81d",
+    "tests/test_review_observations.py": "3ec7123790804c52c2944d88e89c9c4aea2ff6ece66307b2ae25564af71c06bc"
+  },
+  "isolation": "Installed skill copied to /tmp before testing; installed source files unchanged",
+  "python_tests": {
+    "command": "uv run --no-project --with matplotlib python -m unittest discover -s tests -v",
+    "passed": 71,
+    "failed": 0,
+    "skipped": 0,
+    "duration_s": 5.242,
+    "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
+    "matplotlib": "3.10.9"
+  },
+  "javascript_tests": {
+    "command": "node --test tests/test_review_js.cjs",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "node": "v24.19.0"
+  },
+  "old_manifest": {
+    "schema": "lean-profile-review-v1",
+    "rejected_before_output": true,
+    "expected_format_break": true
+  },
+  "retained_capture_import": {
+    "campaigns": [
+      {
+        "id": "tags-gf64",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "tags-chebyshev",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "sweeps-chebyshev",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "sweeps-gf64",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "packed-qft20",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "packed-chebyshev",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "composition-qft",
+        "observations": 14,
+        "pairs": 6,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "lazy-gf32-o3",
+        "observations": 22,
+        "pairs": 10,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "lazy-gf64-o3",
+        "observations": 22,
+        "pairs": 10,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "rejected-gate-owner",
+        "observations": 22,
+        "pairs": 10,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      },
+      {
+        "id": "rejected-count-only",
+        "observations": 22,
+        "pairs": 10,
+        "statistics_exact": true,
+        "source_snapshots_exact": true
+      }
+    ],
+    "unvalidated_capture_excluded": true,
+    "changed_binding_rejected_before_output": true,
+    "checker_sha256": "56bf84ca108139babb3b0b977121ab94f6779bb4b853b8725ae9050fbd04a35f",
+    "importer_sha256": "e723edada8b50f381a78cde191b9c20fbbf1796cfe42ec51abe7809d75c3aeb2"
+  },
+  "model_size": {
+    "previous_bytes": 202516,
+    "updated_bytes": 3897406,
+    "unique_original_observations": 348,
+    "serialized_source_record_occurrences": 1648,
+    "previous_dataset_files": 33,
+    "updated_dataset_files": 19
+  },
+  "limits": [
+    "No new performance measurements",
+    "Perfetto handoff unit tests passed; no live Perfetto import was needed because tzap has no chronological trace",
+    "Portable bundling and self-profile viewers remain project adapter responsibilities"
+  ]
+}

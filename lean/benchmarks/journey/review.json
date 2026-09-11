@@ -1,83 +1,319 @@
 {
-  "schema": "lean-profile-review-v1",
+  "schema": "lean-profile-review-alpha",
   "title": "tzap: a verified optimizer’s performance journey",
   "summary": "Six implementation commits made the Lean CLI 1.7–10.4× faster on completed original-baseline cases. QFT now finishes in 2.14 seconds, while the original executable reaches the 60-second limit. Rust remains 16–121× faster. The fresh final comparison validates identical outputs; each earlier experiment retains its own control and decision.\n\nThis report reuses the 2026-09-10 evidence. It runs no benchmarks. Start with the baseline and directly measured totals, then inspect individual improvements and rejected ownership experiments. Timings and samples are noisy; hashes, generated code and proof contracts provide different kinds of evidence.",
+  "datasets": [
+    {
+      "id": "final-gf16",
+      "title": "Original Lean, current Lean and Rust · gf16",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-gf16.jsonl"
+    },
+    {
+      "id": "final-gf32",
+      "title": "Original Lean, current Lean and Rust · gf32",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-gf32.jsonl"
+    },
+    {
+      "id": "final-gf64",
+      "title": "Original Lean, current Lean and Rust · gf64",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-gf64.jsonl"
+    },
+    {
+      "id": "final-hwb8",
+      "title": "Original Lean, current Lean and Rust · hwb8",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-hwb8.jsonl"
+    },
+    {
+      "id": "final-chebyshev",
+      "title": "Original Lean, current Lean and Rust · chebyshev",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-chebyshev.jsonl"
+    },
+    {
+      "id": "final-qft20",
+      "title": "Original Lean, current Lean and Rust · qft20",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-warmup-0-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-qft20.jsonl"
+    },
+    {
+      "id": "final-gf32-o3",
+      "title": "Original Lean, current Lean and Rust · gf32-o3",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-gf32-o3.jsonl"
+    },
+    {
+      "id": "final-gf64-o3",
+      "title": "Original Lean, current Lean and Rust · gf64-o3",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
+      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/final-gf64-o3.jsonl"
+    },
+    {
+      "id": "capture-tags-gf64",
+      "title": "1–2. Array tags and cached samples · gf64",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/gf64-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/candidate '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/gf64-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-tags-gf64.jsonl"
+    },
+    {
+      "id": "capture-tags-chebyshev",
+      "title": "1–2. Array tags and cached samples · chebyshev",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/chebyshev-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/candidate /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/chebyshev-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-tags-chebyshev.jsonl"
+    },
+    {
+      "id": "capture-sweeps-chebyshev",
+      "title": "3. Verified Hadamard sweeps · chebyshev",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-chebyshev-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/candidate-fastfixpoint /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-chebyshev-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-sweeps-chebyshev.jsonl"
+    },
+    {
+      "id": "capture-sweeps-gf64",
+      "title": "3. Verified Hadamard sweeps · gf64",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-gf64-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/candidate-fastfixpoint '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-gf64-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-sweeps-gf64.jsonl"
+    },
+    {
+      "id": "capture-packed-qft20",
+      "title": "4. Pass packed entropy directly · qft20",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-qft20-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/candidate-prepared /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-qft20-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-packed-qft20.jsonl"
+    },
+    {
+      "id": "capture-packed-chebyshev",
+      "title": "4. Pass packed entropy directly · chebyshev",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/candidate-prepared /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-packed-chebyshev.jsonl"
+    },
+    {
+      "id": "capture-composition-qft",
+      "title": "5. Consume inputs in unconditional composition · QFT",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "7628452 → fe4fd34; see archived binary identities; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/final-qft20-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/candidate /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/final-qft20-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-composition-qft.jsonl"
+    },
+    {
+      "id": "capture-lazy-gf32-o3",
+      "title": "6. Execute fixpoint rounds on demand · gf32-o3",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
+      "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf32-o3-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/candidate-lazy '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf32-o3-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-lazy-gf32-o3.jsonl"
+    },
+    {
+      "id": "capture-lazy-gf64-o3",
+      "title": "6. Execute fixpoint rounds on demand · gf64-o3",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
+      "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf64-o3-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/candidate-lazy '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf64-o3-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-lazy-gf64-o3.jsonl"
+    },
+    {
+      "id": "capture-rejected-gate-owner",
+      "title": "Rejected: release gate-wrapper owner · Chebyshev",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "fe4fd34 versus rejected mapGates; binaries e9bc0f62 → 2bd99eb6; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/confirm-chebyshev-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/candidate /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/confirm-chebyshev-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-rejected-gate-owner.jsonl"
+    },
+    {
+      "id": "capture-rejected-count-only",
+      "title": "Rejected: retain only the previous gate count · gf64 O3",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
+      "identity": "1d14587 versus rejected count-only loop; binaries e9bc0f62 → 3533d0b1; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/confirm-gf64-o3-a.qasm\ncandidate: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/candidate '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/confirm-gf64-o3-b.qasm",
+      "configurations": [
+        "baseline",
+        "candidate"
+      ],
+      "samples": "inputs/capture-rejected-count-only.jsonl"
+    }
+  ],
   "baselines": [
     {
       "id": "original-gf16",
       "title": "gf16: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-gf16.csv",
+      "dataset": "final-gf16",
       "configuration": "baseline"
     },
     {
       "id": "original-gf32",
       "title": "gf32: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-gf32.csv",
+      "dataset": "final-gf32",
       "configuration": "baseline"
     },
     {
       "id": "original-gf64",
       "title": "gf64: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-gf64.csv",
+      "dataset": "final-gf64",
       "configuration": "baseline"
     },
     {
       "id": "original-hwb8",
       "title": "hwb8: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-hwb8.csv",
+      "dataset": "final-hwb8",
       "configuration": "baseline"
     },
     {
       "id": "original-chebyshev",
       "title": "chebyshev: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-chebyshev.csv",
+      "dataset": "final-chebyshev",
+      "configuration": "baseline"
+    },
+    {
+      "id": "original-qft20",
+      "title": "qft20: original Lean",
+      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.",
+      "dataset": "final-qft20",
       "configuration": "baseline"
     },
     {
       "id": "original-gf32-o3",
       "title": "gf32-o3: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-gf32-o3.csv",
+      "dataset": "final-gf32-o3",
       "configuration": "baseline"
     },
     {
       "id": "original-gf64-o3",
       "title": "gf64-o3: original Lean",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Original Lean 2c29be4, fresh final campaign; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-baseline.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/original-gf64-o3.csv",
+      "dataset": "final-gf64-o3",
       "configuration": "baseline"
     }
   ],
@@ -85,25 +321,18 @@
     {
       "id": "total-gf16",
       "title": "Total improvement · gf16",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-gf16.csv",
+      "dataset": "final-gf16",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-gf16",
       "title": "Rust comparison · gf16",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-gf16.csv",
+      "dataset": "final-gf16",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -111,25 +340,18 @@
     {
       "id": "total-gf32",
       "title": "Total improvement · gf32",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-gf32.csv",
+      "dataset": "final-gf32",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-gf32",
       "title": "Rust comparison · gf32",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-gf32.csv",
+      "dataset": "final-gf32",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -137,25 +359,18 @@
     {
       "id": "total-gf64",
       "title": "Total improvement · gf64",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-gf64.csv",
+      "dataset": "final-gf64",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-gf64",
       "title": "Rust comparison · gf64",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-gf64.csv",
+      "dataset": "final-gf64",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -163,25 +378,18 @@
     {
       "id": "total-hwb8",
       "title": "Total improvement · hwb8",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-hwb8.csv",
+      "dataset": "final-hwb8",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-hwb8",
       "title": "Rust comparison · hwb8",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-hwb8.csv",
+      "dataset": "final-hwb8",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -189,25 +397,18 @@
     {
       "id": "total-chebyshev",
       "title": "Total improvement · chebyshev",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-chebyshev.csv",
+      "dataset": "final-chebyshev",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-chebyshev",
       "title": "Rust comparison · chebyshev",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-chebyshev.csv",
+      "dataset": "final-chebyshev",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -215,12 +416,8 @@
     {
       "id": "rust-qft20",
       "title": "Rust comparison · qft20",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no median. Current/Rust alone alternate AB/BA over six measured rounds.",
-      "samples": "inputs/rust-qft20.csv",
+      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.",
+      "dataset": "final-qft20",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -228,25 +425,18 @@
     {
       "id": "total-gf32-o3",
       "title": "Total improvement · gf32-o3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-gf32-o3.csv",
+      "dataset": "final-gf32-o3",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-gf32-o3",
       "title": "Rust comparison · gf32-o3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-gf32-o3.csv",
+      "dataset": "final-gf32-o3",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -254,25 +444,18 @@
     {
       "id": "total-gf64-o3",
       "title": "Total improvement · gf64-o3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Original 2c29be4 → combined ba401fb; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-baseline.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-current.qasm",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/total-gf64-o3.csv",
+      "dataset": "final-gf64-o3",
       "control": "baseline",
       "candidate": "current",
+      "decision_status": "accepted",
       "decision": "Measured cumulative improvement; all six implementation commits combined"
     },
     {
       "id": "rust-gf64-o3",
       "title": "Rust comparison · gf64-o3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-current.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
-      "samples": "inputs/rust-gf64-o3.csv",
+      "dataset": "final-gf64-o3",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
@@ -280,145 +463,112 @@
     {
       "id": "tags-gf64",
       "title": "1–2. Array tags and cached samples · gf64",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/gf64-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/candidate '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/gf64-b.qasm",
       "note": "List indexing and prefix reconstruction were visible in the original gf64 self profile. Array indexing removed those paths; generated C releases the old state before mutation. The simulation invariant relates array entries to the symbolic list. A second profile identified repeated packing of bit-function samples. Preparing a finite array once, before capturing it in the lookup closure, is selected by a proved csimp equality. The ideal randomized model remains unchanged.\n\nThe earlier array-only screen was unpinned and inconclusive on Chebyshev. This final paired result measures the two changes together, not an isolated timing claim for each commit. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/tags-gf64.csv",
+      "dataset": "capture-tags-gf64",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted together; controlled comparison covers both commits"
+      "decision": "Accepted together; controlled comparison covers both commits",
+      "decision_status": "accepted"
     },
     {
       "id": "tags-chebyshev",
       "title": "1–2. Array tags and cached samples · chebyshev",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/chebyshev-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-runtime-20260910/candidate /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-runtime-20260910/chebyshev-b.qasm",
       "note": "List indexing and prefix reconstruction were visible in the original gf64 self profile. Array indexing removed those paths; generated C releases the old state before mutation. The simulation invariant relates array entries to the symbolic list. A second profile identified repeated packing of bit-function samples. Preparing a finite array once, before capturing it in the lookup closure, is selected by a proved csimp equality. The ideal randomized model remains unchanged.\n\nThe earlier array-only screen was unpinned and inconclusive on Chebyshev. This final paired result measures the two changes together, not an isolated timing claim for each commit. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/tags-chebyshev.csv",
+      "dataset": "capture-tags-chebyshev",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted together; controlled comparison covers both commits"
+      "decision": "Accepted together; controlled comparison covers both commits",
+      "decision_status": "accepted"
     },
     {
       "id": "sweeps-chebyshev",
       "title": "3. Verified Hadamard sweeps · chebyshev",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-chebyshev-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/candidate-fastfixpoint /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-chebyshev-b.qasm",
       "note": "The old driver restarted a whole-list search after each rewrite. A right-to-left sweep now applies several verified rewrites, with a change flag for length-preserving rules. The existing semantic, operand-range and well-formedness contracts are preserved. An initial single-rewrite check avoids allocating a full sweep for an already irreducible circuit.\n\nThe earlier always-sweep candidate was rejected after a noisy but persistent gf64 slowdown. For QFT, the accepted candidate had six completed runs with a 6.368 s median versus a reused 60-second baseline timeout. That result is censored and is not included as a paired comparison here. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/sweeps-chebyshev.csv",
+      "dataset": "capture-sweeps-chebyshev",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat"
+      "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat",
+      "decision_status": "accepted"
     },
     {
       "id": "sweeps-gf64",
       "title": "3. Verified Hadamard sweeps · gf64",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-gf64-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/candidate-fastfixpoint '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-hadamard-sweep-20260910/accepted-gf64-b.qasm",
       "note": "The old driver restarted a whole-list search after each rewrite. A right-to-left sweep now applies several verified rewrites, with a change flag for length-preserving rules. The existing semantic, operand-range and well-formedness contracts are preserved. An initial single-rewrite check avoids allocating a full sweep for an already irreducible circuit.\n\nThe earlier always-sweep candidate was rejected after a noisy but persistent gf64 slowdown. For QFT, the accepted candidate had six completed runs with a 6.368 s median versus a reused 60-second baseline timeout. That result is censored and is not included as a paired comparison here. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/sweeps-gf64.csv",
+      "dataset": "capture-sweeps-gf64",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat"
+      "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat",
+      "decision_status": "accepted"
     },
     {
       "id": "packed-qft20",
       "title": "4. Pass packed entropy directly · qft20",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-qft20-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/candidate-prepared /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-qft20-b.qasm",
       "note": "The runner already reads random words, but exposed them through bit functions before packing them again. It now normalizes the owned word array once and captures it for indexed lookup. Proofs establish the word/bit/word identity, masking and zero-padding behavior, and equality of IO actions including errors. The high-bit and partial-width guards pass.\n\nA rejected function-returning helper was eta-expanded: normalization moved into every lookup. Adding inline did not solve that code shape. Returning the prepared array before creating the closure did. Generated C confirms the placement; the final QFT self profile no longer samples bitsToWordAux. Profile percentages describe separate noisy captures, not exact allocation counts. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/packed-qft20.csv",
+      "dataset": "capture-packed-qft20",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted: removes redundant conversion with IO equality"
+      "decision": "Accepted: removes redundant conversion with IO equality",
+      "decision_status": "accepted"
     },
     {
       "id": "packed-chebyshev",
       "title": "4. Pass packed entropy directly · chebyshev",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/candidate-prepared /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-b.qasm",
       "note": "The runner already reads random words, but exposed them through bit functions before packing them again. It now normalizes the owned word array once and captures it for indexed lookup. Proofs establish the word/bit/word identity, masking and zero-padding behavior, and equality of IO actions including errors. The high-bit and partial-width guards pass.\n\nA rejected function-returning helper was eta-expanded: normalization moved into every lookup. Adding inline did not solve that code shape. Returning the prepared array before creating the closure did. Generated C confirms the placement; the final QFT self profile no longer samples bitsToWordAux. Profile percentages describe separate noisy captures, not exact allocation counts. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/packed-chebyshev.csv",
+      "dataset": "capture-packed-chebyshev",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted: removes redundant conversion with IO equality"
+      "decision": "Accepted: removes redundant conversion with IO equality",
+      "decision_status": "accepted"
     },
     {
       "id": "composition-qft",
       "title": "5. Consume inputs in unconditional composition · QFT",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "7628452 → fe4fd34; see archived binary identities; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/final-qft20-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/candidate /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-pass-ownership-20260910/final-qft20-b.qasm",
       "note": "Unconditional composition previously used the conditional combinator with an always-true predicate. It retained the input while invoking the pass even though the predicate did not need it. A direct monadic composition removes that owner. The equality theorem preserves IO behavior, and generated C confirms the changed ownership. The measured effect is mostly neutral; fewer retained owners alone do not establish a runtime win. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "samples": "inputs/composition-qft.csv",
+      "dataset": "capture-composition-qft",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted ownership cleanup; no substantial timing gain claimed"
+      "decision": "Accepted ownership cleanup; no substantial timing gain claimed",
+      "decision_status": "accepted"
     },
     {
       "id": "lazy-gf32-o3",
       "title": "6. Execute fixpoint rounds on demand · gf32-o3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf32-o3-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/candidate-lazy '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf32-o3-b.qasm",
       "note": "The old fixpoint constructor eagerly built a pass/name chain for the entire fuel budget. The direct runner constructs only rounds that execute. Generated C has a tail-loop back edge. The original circuit remains owned during the post-pass length comparison. runFixpointShrink_eq proves equality of the IO action; tests check zero fuel, exhaustion, equal-length changed results, convergence, and error/effect counts.\n\nTen alternating AB/BA pairs were collected because the expected effect was small. gf32 stays flat; gf64 has a 2.7% lower median, but only six of ten pairs improve and its mean changes little. The distributions overlap. The concrete benefit is removing unused fuel-sized construction and its recursive stack. Both compared binaries produce identical retained QASM and per-run metrics.",
-      "samples": "inputs/lazy-gf32-o3.csv",
+      "dataset": "capture-lazy-gf32-o3",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted direct loop; incremental runtime benefit is small and noisy"
+      "decision": "Accepted direct loop; incremental runtime benefit is small and noisy",
+      "decision_status": "accepted"
     },
     {
       "id": "lazy-gf64-o3",
       "title": "6. Execute fixpoint rounds on demand · gf64-o3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf64-o3-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/candidate-lazy '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/lazy-gf64-o3-b.qasm",
       "note": "The old fixpoint constructor eagerly built a pass/name chain for the entire fuel budget. The direct runner constructs only rounds that execute. Generated C has a tail-loop back edge. The original circuit remains owned during the post-pass length comparison. runFixpointShrink_eq proves equality of the IO action; tests check zero fuel, exhaustion, equal-length changed results, convergence, and error/effect counts.\n\nTen alternating AB/BA pairs were collected because the expected effect was small. gf32 stays flat; gf64 has a 2.7% lower median, but only six of ten pairs improve and its mean changes little. The distributions overlap. The concrete benefit is removing unused fuel-sized construction and its recursive stack. Both compared binaries produce identical retained QASM and per-run metrics.",
-      "samples": "inputs/lazy-gf64-o3.csv",
+      "dataset": "capture-lazy-gf64-o3",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Accepted direct loop; incremental runtime benefit is small and noisy"
+      "decision": "Accepted direct loop; incremental runtime benefit is small and noisy",
+      "decision_status": "accepted"
     },
     {
       "id": "rejected-gate-owner",
       "title": "Rejected: release gate-wrapper owner · Chebyshev",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "fe4fd34 versus rejected mapGates; binaries e9bc0f62 → 2bd99eb6; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/confirm-chebyshev-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/candidate /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-gate-ownership-20260910/confirm-chebyshev-b.qasm",
       "note": "Generated C confirms that extracting fields and releasing the old circuit before the gate transformation removes a real retained owner. The candidate is equivalent to the old wrapper and passed batch builds. It nevertheless failed to improve representative runtime or peak RSS. In ten confirmation pairs Chebyshev is slower in nine, with a 2.4% higher median. The production wrappers were restored.\n\nThe independent RSS runs are instrumented observations, excluded from the wall-time distributions. Their ranges overlap; they are not allocation counts. The patch, original records, final retained-output validation and native-code snapshots are archived. Ten AB/BA pairs support rejecting this trial; they do not explain its causal slowdown.",
-      "samples": "inputs/rejected-gate-owner.csv",
+      "dataset": "capture-rejected-gate-owner",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Rejected: no material RSS saving and persistent Chebyshev slowdown"
+      "decision": "Rejected: no material RSS saving and persistent Chebyshev slowdown",
+      "decision_status": "rejected"
     },
     {
       "id": "rejected-count-only",
       "title": "Rejected: retain only the previous gate count · gf64 O3",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
-      "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "1d14587 versus rejected count-only loop; binaries e9bc0f62 → 3533d0b1; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "taskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/confirm-gf64-o3-a.qasm\ntaskset -c 2 /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/candidate '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-fixpoint-20260910/confirm-gf64-o3-b.qasm",
       "note": "A simple let-binding did not release the input: compilation deferred the pure gate-length computation until after the pass. An explicit count argument forced the intended ownership order. Generated C and the IO equality proof confirmed the candidate, but its larger O3 case slowed in the initial comparison and in eight of ten confirmation pairs. The confirmation median is 5.7% higher, with substantial noise.\n\nNo material peak-RSS saving appeared in separate instrumented checks. We retained the lazy-only loop instead. The chart includes the rejected candidate’s valid observations: inclusion in statistics does not mean acceptance of the optimization. Per-run stderr metrics are rechecked and the recorded final QASM hashes agree.",
-      "samples": "inputs/rejected-count-only.csv",
+      "dataset": "capture-rejected-count-only",
       "control": "baseline",
       "candidate": "candidate",
-      "decision": "Rejected: no measured runtime or memory benefit"
+      "decision": "Rejected: no measured runtime or memory benefit",
+      "decision_status": "rejected"
     }
   ],
   "profiles": [
@@ -427,7 +577,7 @@
       "title": "Fresh three-way comparison",
       "kind": "image",
       "path": "views/overview.svg",
-      "boundary": "Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "identity": "Single final campaign; baseline 2c29be4, current ba401fb, Rust 2c29be4",
       "note": "Six measured observations per completed series, black median ticks, full ranges. Logarithmic seconds. The > marker is the original QFT 60-second timeout, not a completed sample or median."
     },
@@ -606,8 +756,8 @@
       "path": "skill-feedback.md"
     },
     {
-      "title": "Censored QFT observation",
-      "path": "inputs/censored.json"
+      "title": "Skill test results",
+      "path": "skill-verification.json"
     }
   ]
 }
