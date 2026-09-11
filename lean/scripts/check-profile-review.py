@@ -2,7 +2,6 @@
 """Check the archived report's numerical provenance and its actual browser UI."""
 
 import argparse
-import csv
 import hashlib
 import importlib.util
 import json
@@ -25,46 +24,98 @@ def digest(path):
 def numerical_check(root):
     report = root / 'report'
     model = json.loads((report / 'review-data.json').read_text())
-    for profile in model['profiles']:
-        require(digest(root / profile['path']) == profile['sha256'], 'Profile/viewer changed: '+profile['id'])
+    manifest = json.loads((report / 'source-manifest.json').read_text())
+    require(digest(report / 'source-manifest.json') == model['manifest_sha256'], 'Changed manifest')
+    for kind in ['profiles', 'links']:
+        for item in model[kind]:
+            source = next(p for p in manifest[kind] if
+                          (p['id'] == item['id'] if kind == 'profiles' else p['title'] == item['title']))
+            require(digest(root / source['path']) == item['sha256'], 'Linked artifact changed: '+item['title'])
     for figure in model.get('figures', []):
         require(digest(report / figure['path']) == figure['sha256'], 'Figure changed: '+figure['path'])
     inventory = json.loads((root / 'evidence/archive.json').read_text())
     for entry in inventory['files']:
         require(digest(root / 'evidence' / entry['path']) == entry['sha256'], entry['path'])
     original_cache = {}
+    seen_sources = set()
     def check_projection(item):
         path = report / item['copied_samples']
         require(digest(path) == item['samples_sha256'], str(path))
-        with path.open(newline='') as stream:
-            rows = list(csv.DictReader(stream))
+        require(path.read_bytes() == (root / item['samples']).read_bytes(), 'Dataset snapshot differs')
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
         for row in rows:
             path = root / 'evidence' / row['source_file']
             if path not in original_cache:
                 original_cache[path] = [json.loads(line) for line in path.read_text().splitlines()]
             original = original_cache[path][int(row['source_line']) - 1]
-            require(float(row['wall_s']) == original['elapsed_ns'] / 1e9, 'Changed original elapsed time')
-            require(json.loads(row['argv']) == original['argv'], 'Changed original command')
-            require(row['pair'] == row['phase'] + '-' + str(original.get('round', original.get('pass'))), 'Changed pair identity')
+            source_id = (row['source_file'], row['source_line'])
+            require(source_id not in seen_sources, 'Duplicated source observation')
+            seen_sources.add(source_id)
+            for key, value in original.items():
+                retained = row['source_slot'] if key == 'slot' and 'source_slot' in row else row[key]
+                require(retained == value and type(retained) is type(value), 'Changed original field: '+key)
+            require(row['block'] == row['phase'] + '-' + str(original.get('round', original.get('pass'))), 'Changed block identity')
             require(row['configuration'] == original['label'], 'Changed configuration')
-        return [r for r in rows if r['phase'] == 'measured' and r['accepted'] == 'true']
+            require(digest(root / 'evidence' / row['validation_record']) == row['validation_sha256'], 'Changed validation record')
+            if 'source_slot' in row:
+                require(row['slot'] == original['slot'] + 1, 'Changed execution order')
+        return rows
+
+    def check_statistics(values, actual):
+        if not values:
+            require(actual is None, 'Invented completion statistics')
+            return
+        quartiles = statistics.quantiles(values, n=4, method='inclusive') if len(values)>1 else [values[0]]*3
+        expected = dict(n=len(values), median=statistics.median(values), q1=quartiles[0],
+                        q3=quartiles[2], iqr=quartiles[2]-quartiles[0], min=min(values), max=max(values))
+        for key, value in expected.items():
+            require(abs(actual[key] - value) <= 1e-12 * max(1, abs(value)), 'Statistic mismatch: '+key)
+
+    datasets = {}
+    for item in model['datasets']:
+        rows = check_projection(item)
+        datasets[item['id']] = rows
+        for name, series in item['series'].items():
+            selected = [r for r in rows if r['configuration'] == name and r['included']]
+            require(series['observation_ids'] == [r['id'] for r in selected], 'Changed included IDs')
+            require(len(series['outcomes']) == sum(r['configuration'] == name for r in rows), 'Dropped outcome')
+            check_statistics([r['elapsed_ns']/1e9 for r in selected], series['statistics'].get('wall_s'))
+    audit = json.loads((root / 'audit.json').read_text())
+    expected_sources = {(c['directory']+'/runs.jsonl', line) for c in audit['campaigns'] for line in range(1,c['rows']+1)}
+    require(seen_sources == expected_sources and len(seen_sources) == 348, 'Incomplete original observation coverage')
     for item in model['baselines']:
-        rows = check_projection(item)
-        require(statistics.median(float(r['wall_s']) for r in rows) == item['series']['statistics']['wall_s']['median'], 'Baseline median mismatch')
+        rows = [r for r in datasets[item['dataset']] if r['configuration'] == item['configuration'] and r['included']]
+        check_statistics([r['elapsed_ns']/1e9 for r in rows], item['series']['statistics'].get('wall_s'))
     for item in model['comparisons']:
-        rows = check_projection(item)
-        sides = {side:{r['pair']:float(r['wall_s']) for r in rows if r['configuration'] == item[side]} for side in ['control','candidate']}
+        rows = [r for r in datasets[item['dataset']] if r['included']]
+        sides = {side:{r['block']:r['elapsed_ns']/1e9 for r in rows if r['configuration'] == item[side]} for side in ['control','candidate']}
         require(sides['control'].keys() == sides['candidate'].keys(), 'Incomplete matched pairs')
         for side, values in sides.items():
-            require(statistics.median(values.values()) == item['statistics'][side]['median'], 'Comparison median mismatch')
+            check_statistics(list(values.values()), item['statistics'][side])
         saving = [value - sides['candidate'][pair] for pair,value in sides['control'].items()]
-        require(statistics.median(saving) == item['statistics']['paired_saving_s']['median'], 'Paired median mismatch')
-    censored = json.loads((root / 'inputs/censored.json').read_text())
-    require(len(censored) == 1 and censored[0]['case'] == 'qft20' and censored[0]['accepted'] == 'false', 'Missing QFT censoring')
-    require(censored[0]['wall_s'] >= 60 and censored[0]['validated'] == 'false', 'Timeout treated as validated completion')
-    rejected = [c for c in model['comparisons'] if c['id'].startswith('rejected-')]
+        check_statistics(saving, item['statistics']['paired_saving_s'])
+        require(item['statistics']['candidate_faster'] == sum(s>0 for s in saving), 'Changed paired wins')
+    censored = [r for rows in datasets.values() for r in rows if r['outcome'] == 'timeout']
+    require(len(censored) == 1 and censored[0]['case'] == 'qft20' and not censored[0]['included'], 'Missing QFT timeout')
+    require(censored[0]['phase'] == 'warmup' and censored[0]['timeout_s'] == 60 and not censored[0]['validated'], 'Timeout treated as measured completion')
+    qft = next(b for b in model['baselines'] if b['id'] == 'original-qft20')['series']
+    require(not qft['statistics'] and not qft['censored'], 'Invented measured QFT baseline')
+    rejected = [c for c in model['comparisons'] if c['decision_status'] == 'rejected']
     require(len(rejected) == 2 and all(c['statistics']['candidate']['n'] == 10 for c in rejected), 'Rejected valid observations dropped')
     return model
+
+
+def compare_previous(model, previous):
+    old = json.loads((previous / 'report/review-data.json').read_text())
+    for item in old['comparisons']:
+        current = next(c for c in model['comparisons'] if c['id'] == item['id'])
+        for key in ['control', 'candidate', 'paired_saving_s', 'candidate_faster', 'pair_ids', 'savings', 'median_reduction_pct']:
+            require(current['statistics'][key] == item['statistics'][key], 'Changed retained comparison: '+item['id']+'/'+key)
+    for item in old['baselines']:
+        current = next(b for b in model['baselines'] if b['id'] == item['id'])
+        require(current['series']['statistics'] == item['series']['statistics'], 'Changed retained baseline')
+    return dict(comparisons=len(old['comparisons']), completed_baselines=len(old['baselines']),
+                statistics_exact=True, previous_model_sha256=digest(previous / 'report/review-data.json'))
 
 
 def negative_checks():
@@ -106,6 +157,12 @@ def browser_check(root, url, screenshots):
         page.goto(url, wait_until='networkidle')
         require(page.locator('article.comparison').count() == 26, 'Missing comparison cards')
         require(page.locator('h1').inner_text().startswith('tzap:'), 'Wrong report')
+        require(page.locator('#datasets article').count() == 8, 'Missing three-way workload tables')
+        require('warmup: 1 timeout' in page.locator('#original-qft20').inner_text(), 'Warmup timeout missing from baseline UI')
+        exact = page.locator('#original-gf16 details').filter(has=page.get_by_text('Exact command', exact=True))
+        exact.locator('summary').click()
+        require(exact.locator('pre').is_visible() and 'taskset' in exact.inner_text(), 'Exact argv did not expand')
+        exact.locator('summary').click()
         page.screenshot(path=str(screenshots / 'desktop.png'))
         # Evidence and source/profile links must resolve from a standalone bundle.
         for relative in ['report/index.html','evidence/index.html','views/original-self.html','views/packed-self.html','views/lazy-self.html']:
@@ -130,6 +187,17 @@ def browser_check(root, url, screenshots):
         require(page.locator('article.comparison:visible').count() == 0, 'Empty filter failed')
         search.fill('')
         require(page.locator('article.comparison:visible').count() == 26, 'Filter reset failed')
+        decision = page.get_by_label('Decision', exact=True)
+        decision.select_option('rejected')
+        require(page.locator('article.comparison:visible').count() == 2, 'Decision filter failed')
+        search.fill('Chebyshev')
+        require(page.locator('article.comparison:visible').count() == 1, 'Combined filters failed')
+        search.fill('')
+        decision.select_option('accepted')
+        require(page.locator('article.comparison:visible').count() == 16, 'Accepted filter failed')
+        decision.select_option('unclassified')
+        require(page.locator('article.comparison:visible').count() == 8, 'Rust comparisons misclassified')
+        decision.select_option('all')
         page.locator('#rejected-gate-owner').scroll_into_view_if_needed()
         page.screenshot(path=str(screenshots / 'rejected.png'))
         page.locator('#lazy-gf32-o3').scroll_into_view_if_needed()
@@ -154,7 +222,8 @@ def browser_check(root, url, screenshots):
         require(not errors, 'Browser errors: '+str(errors))
         browser.close()
     return {'http_artifacts_checked':len(http_paths),'viewports':[1280,768,390],'browser_errors':errors,
-            'experiment_filter':True,'self_profile_toggle_and_filter':True}
+            'experiment_and_decision_filters':True,'self_profile_toggle_and_filter':True,
+            'three_way_tables_and_warmup_timeout':True}
 
 
 def main():
@@ -163,16 +232,20 @@ def main():
     parser.add_argument('--url',default='http://localhost:8769/report/')
     parser.add_argument('--screenshots',type=Path,default=Path('/tmp/tzap-review-browser'))
     parser.add_argument('--numerical-only',action='store_true')
+    parser.add_argument('--previous',type=Path,help='Prior journey bundle; compare every retained statistic exactly')
     parser.add_argument('--output',type=Path,help='Write the completed verification record as JSON')
     args=parser.parse_args()
     model=numerical_check(args.root)
     negative_checks()
     result={'numerical_comparisons':len(model['comparisons']),'baselines':len(model['baselines']),
+            'datasets':len(model['datasets']),'original_observations':348,
             'source_projection_exact':True,'timeout_censored':True,'rejected_observations_included':True,
             'profile_and_figure_hashes_valid':True,'negative_validation_and_corruption_checks':True,
             'checker_sha256':digest(Path(__file__)),
             'report_html_sha256':digest(args.root / 'report/index.html'),
             'model_sha256':digest(args.root / 'report/review-data.json')}
+    if args.previous:
+        result['previous_report']=compare_previous(model,args.previous)
     if not args.numerical_only:
         result['browser']=browser_check(args.root,args.url,args.screenshots)
     print(json.dumps(result,indent=2))

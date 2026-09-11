@@ -27,7 +27,8 @@
       "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5",
       "decision": "Accepted together; controlled comparison covers both commits",
       "note": "List indexing and prefix reconstruction were visible in the original gf64 self profile. Array indexing removed those paths; generated C releases the old state before mutation. The simulation invariant relates array entries to the symbolic list. A second profile identified repeated packing of bit-function samples. Preparing a finite array once, before capturing it in the lookup closure, is selected by a proved csimp equality. The ideal randomized model remains unchanged.\n\nThe earlier array-only screen was unpinned and inconclusive on Chebyshev. This final paired result measures the two changes together, not an isolated timing claim for each commit. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "tags-chebyshev",
@@ -39,7 +40,8 @@
       "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5",
       "decision": "Accepted together; controlled comparison covers both commits",
       "note": "List indexing and prefix reconstruction were visible in the original gf64 self profile. Array indexing removed those paths; generated C releases the old state before mutation. The simulation invariant relates array entries to the symbolic list. A second profile identified repeated packing of bit-function samples. Preparing a finite array once, before capturing it in the lookup closure, is selected by a proved csimp equality. The ideal randomized model remains unchanged.\n\nThe earlier array-only screen was unpinned and inconclusive on Chebyshev. This final paired result measures the two changes together, not an isolated timing claim for each commit. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "sweeps-chebyshev",
@@ -51,7 +53,8 @@
       "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398",
       "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat",
       "note": "The old driver restarted a whole-list search after each rewrite. A right-to-left sweep now applies several verified rewrites, with a change flag for length-preserving rules. The existing semantic, operand-range and well-formedness contracts are preserved. An initial single-rewrite check avoids allocating a full sweep for an already irreducible circuit.\n\nThe earlier always-sweep candidate was rejected after a noisy but persistent gf64 slowdown. For QFT, the accepted candidate had six completed runs with a 6.368 s median versus a reused 60-second baseline timeout. That result is censored and is not included as a paired comparison here. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "sweeps-gf64",
@@ -63,7 +66,8 @@
       "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398",
       "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat",
       "note": "The old driver restarted a whole-list search after each rewrite. A right-to-left sweep now applies several verified rewrites, with a change flag for length-preserving rules. The existing semantic, operand-range and well-formedness contracts are preserved. An initial single-rewrite check avoids allocating a full sweep for an already irreducible circuit.\n\nThe earlier always-sweep candidate was rejected after a noisy but persistent gf64 slowdown. For QFT, the accepted candidate had six completed runs with a 6.368 s median versus a reused 60-second baseline timeout. That result is censored and is not included as a paired comparison here. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": false
+      "highlight": false,
+      "decision_status": "accepted"
     },
     {
       "id": "packed-qft20",
@@ -75,7 +79,8 @@
       "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592",
       "decision": "Accepted: removes redundant conversion with IO equality",
       "note": "The runner already reads random words, but exposed them through bit functions before packing them again. It now normalizes the owned word array once and captures it for indexed lookup. Proofs establish the word/bit/word identity, masking and zero-padding behavior, and equality of IO actions including errors. The high-bit and partial-width guards pass.\n\nA rejected function-returning helper was eta-expanded: normalization moved into every lookup. Adding inline did not solve that code shape. Returning the prepared array before creating the closure did. Generated C confirms the placement; the final QFT self profile no longer samples bitsToWordAux. Profile percentages describe separate noisy captures, not exact allocation counts. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "packed-chebyshev",
@@ -87,7 +92,8 @@
       "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592",
       "decision": "Accepted: removes redundant conversion with IO equality",
       "note": "The runner already reads random words, but exposed them through bit functions before packing them again. It now normalizes the owned word array once and captures it for indexed lookup. Proofs establish the word/bit/word identity, masking and zero-padding behavior, and equality of IO actions including errors. The high-bit and partial-width guards pass.\n\nA rejected function-returning helper was eta-expanded: normalization moved into every lookup. Adding inline did not solve that code shape. Returning the prepared array before creating the closure did. Generated C confirms the placement; the final QFT self profile no longer samples bitsToWordAux. Profile percentages describe separate noisy captures, not exact allocation counts. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "composition-qft",
@@ -99,7 +105,8 @@
       "identity": "7628452 → fe4fd34; see archived binary identities",
       "decision": "Accepted ownership cleanup; no substantial timing gain claimed",
       "note": "Unconditional composition previously used the conditional combinator with an always-true predicate. It retained the input while invoking the pass even though the predicate did not need it. A direct monadic composition removes that owner. The equality theorem preserves IO behavior, and generated C confirms the changed ownership. The measured effect is mostly neutral; fewer retained owners alone do not establish a runtime win. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "lazy-gf32-o3",
@@ -111,7 +118,8 @@
       "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05",
       "decision": "Accepted direct loop; incremental runtime benefit is small and noisy",
       "note": "The old fixpoint constructor eagerly built a pass/name chain for the entire fuel budget. The direct runner constructs only rounds that execute. Generated C has a tail-loop back edge. The original circuit remains owned during the post-pass length comparison. runFixpointShrink_eq proves equality of the IO action; tests check zero fuel, exhaustion, equal-length changed results, convergence, and error/effect counts.\n\nTen alternating AB/BA pairs were collected because the expected effect was small. gf32 stays flat; gf64 has a 2.7% lower median, but only six of ten pairs improve and its mean changes little. The distributions overlap. The concrete benefit is removing unused fuel-sized construction and its recursive stack. Both compared binaries produce identical retained QASM and per-run metrics.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "lazy-gf64-o3",
@@ -123,7 +131,8 @@
       "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05",
       "decision": "Accepted direct loop; incremental runtime benefit is small and noisy",
       "note": "The old fixpoint constructor eagerly built a pass/name chain for the entire fuel budget. The direct runner constructs only rounds that execute. Generated C has a tail-loop back edge. The original circuit remains owned during the post-pass length comparison. runFixpointShrink_eq proves equality of the IO action; tests check zero fuel, exhaustion, equal-length changed results, convergence, and error/effect counts.\n\nTen alternating AB/BA pairs were collected because the expected effect was small. gf32 stays flat; gf64 has a 2.7% lower median, but only six of ten pairs improve and its mean changes little. The distributions overlap. The concrete benefit is removing unused fuel-sized construction and its recursive stack. Both compared binaries produce identical retained QASM and per-run metrics.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "accepted"
     },
     {
       "id": "rejected-gate-owner",
@@ -135,7 +144,8 @@
       "identity": "fe4fd34 versus rejected mapGates; binaries e9bc0f62 → 2bd99eb6",
       "decision": "Rejected: no material RSS saving and persistent Chebyshev slowdown",
       "note": "Generated C confirms that extracting fields and releasing the old circuit before the gate transformation removes a real retained owner. The candidate is equivalent to the old wrapper and passed batch builds. It nevertheless failed to improve representative runtime or peak RSS. In ten confirmation pairs Chebyshev is slower in nine, with a 2.4% higher median. The production wrappers were restored.\n\nThe independent RSS runs are instrumented observations, excluded from the wall-time distributions. Their ranges overlap; they are not allocation counts. The patch, original records, final retained-output validation and native-code snapshots are archived. Ten AB/BA pairs support rejecting this trial; they do not explain its causal slowdown.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "rejected"
     },
     {
       "id": "rejected-count-only",
@@ -147,7 +157,8 @@
       "identity": "1d14587 versus rejected count-only loop; binaries e9bc0f62 → 3533d0b1",
       "decision": "Rejected: no measured runtime or memory benefit",
       "note": "A simple let-binding did not release the input: compilation deferred the pure gate-length computation until after the pass. An explicit count argument forced the intended ownership order. Generated C and the IO equality proof confirmed the candidate, but its larger O3 case slowed in the initial comparison and in eight of ten confirmation pairs. The confirmation median is 5.7% higher, with substantial noise.\n\nNo material peak-RSS saving appeared in separate instrumented checks. We retained the lazy-only loop instead. The chart includes the rejected candidate’s valid observations: inclusion in statistics does not mean acceptance of the optimization. Per-run stderr metrics are rechecked and the recorded final QASM hashes agree.",
-      "highlight": true
+      "highlight": true,
+      "decision_status": "rejected"
     }
   ],
   "progress_note": "The cumulative rows come from one fresh three-way campaign: original Lean 2c29be4, combined Lean ba401fb and unchanged Rust 2c29be4. Each completed series has six measured runs; every retained output agrees within its case. The earlier selected rows compare each experiment with its own control. They are not a cumulative curve and their savings must not be added or multiplied. Rejected trials remain visible. QFT’s original 60.0047-second timeout has no completed median; its current median is 2.1391 s and Rust’s is 0.07336 s. Current/Rust comparisons for all eight cases appear under Experiments.",
