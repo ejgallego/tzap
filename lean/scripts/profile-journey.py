@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """Adapt archived tzap observations for lean-profile-skill; never run benchmarks.
 
-The original JSONL and stderr records remain authoritative. CSV is a lossless
-projection for the current builder, with nested cells encoded as JSON.
+The original JSONL and stderr records remain authoritative. Shared JSONL datasets
+preserve integer clocks, nested values and original block/order identifiers.
 """
 
 import argparse
-import csv
 import hashlib
 import html
-import io
 import json
 import os
 from pathlib import Path
@@ -20,9 +18,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 JOURNEY = ROOT / 'lean/benchmarks/journey'
-BOUNDARY = 'Native CLI launch through parsing, optimization, reporting, checked serialization, file write and exit'
+BOUNDARY = 'Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip'
 HOST = 'Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine'
-REQUIRED = ['configuration', 'pair', 'wall_s', 'exit_status', 'phase', 'validated', 'accepted', 'exclude_reason']
 
 
 def require(condition, message):
@@ -116,6 +113,7 @@ def validation_node(evidence, campaign, case):
 
 def load_campaign(evidence, campaign, audit):
     directory = evidence / records_directory(campaign)
+    capture_manifest = read_json(directory / 'manifest.json')
     identity = read_json(directory / 'identity-check.json')
     require(identity.get('valid') is True or identity == {'drift': []}, f'Invalid identity: {directory}')
     originals = jsonl(directory / 'runs.jsonl')
@@ -126,6 +124,8 @@ def load_campaign(evidence, campaign, audit):
         case = row.get('case', campaign.get('case'))
         timed_out = row.get('timed_out', False) or row.get('status') == 'timeout'
         success = row['exit_code'] == 0 and not timed_out
+        require(not any(row.get(key) for key in ['evidence_error', 'launch_error', 'interrupted']),
+                f'Harness failure: {directory}:{line}')
         require(success or (campaign['validation_kind'] == 'final' and case == 'qft20'
                             and row['label'] == 'baseline' and timed_out),
                 f'Unexpected unsuccessful observation: {directory}:{line}')
@@ -151,49 +151,51 @@ def load_campaign(evidence, campaign, audit):
         require(pair is not None, f'Missing original pairing: {directory}:{line}')
         # Preserve every original column; required fields are explicitly derived.
         normalized = dict(row)
-        normalized.update(configuration=row['label'], pair=f'{phase}-{pair}',
-                          wall_s=row['elapsed_ns'] / 1e9, exit_status=row['exit_code'], phase=phase,
-                          validated=str(success).lower(), accepted=str(success).lower(),
-                          exclude_reason='' if success else 'Baseline QFT killed at 60 seconds; right-censored, no output',
+        normalized.update(id=f'{phase}-{pair}-{row["label"]}', configuration=row['label'], block=f'{phase}-{pair}',
+                          exit_status=row['exit_code'], phase=phase, outcome='completed' if success else 'timeout',
+                          validated=success, included=success and not warmup,
+                          exclude_reason=('warmup' if warmup else '') if success else 'Original QFT warmup timed out; no measured baseline or output',
                           source_file=str(records_directory(campaign) / 'runs.jsonl'), source_line=line,
                           validation_record=campaign['validation'], case=case,
+                          validation_sha256=digest(evidence / campaign['validation']),
                           validation_scope='All retained QASM and metrics' if campaign['validation_kind'] == 'final'
                           else 'Every run reported metrics; final retained QASM pair')
+        if campaign['validation_kind'] == 'final':
+            # The tzap three-way harness uses zero-based slots; the skill requires positive slots.
+            normalized.update(source_slot=row['slot'], slot=row['slot'] + 1)
+        if timed_out:
+            normalized['timeout_s'] = capture_manifest['timeout_seconds']
         result.append(normalized)
     for case in cases:
-        n = sum(r['case'] == case and r['accepted'] == 'true' for r in result)
+        n = sum(r['case'] == case and r['validated'] for r in result)
         node = validated[case]
         recorded = next((node[key] for key in ['successful_invocations', 'runs', 'invocations'] if key in node), None)
         if recorded is not None:
             require(n == recorded, f'Validation count mismatch: {case}')
     audit.append(dict(directory=str(records_directory(campaign)), rows=len(result),
-                      validated_rows=sum(r['validated'] == 'true' for r in result),
+                      validated_rows=sum(r['validated'] for r in result),
                       validation=campaign['validation'], per_run_stderr_metrics_rechecked=True))
     return result
 
 
-def write_csv(path, rows):
-    fields = REQUIRED + sorted({key for row in rows for key in row} - set(REQUIRED))
-    stream = io.StringIO(newline='')
-    writer = csv.DictWriter(stream, fieldnames=fields)
-    writer.writeheader()
-    for row in rows:
-        writer.writerow({k: json.dumps(v, ensure_ascii=False, separators=(',', ':'))
-                         if isinstance(v, (dict, list, bool)) or v is None else v for k, v in row.items()})
+def write_jsonl(path, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(stream.getvalue())
+    path.write_text(''.join(json.dumps(r, ensure_ascii=False, allow_nan=False) + '\n' for r in rows))
 
 
-def metadata(rows, title, identity, note, cid):
-    sample = next(r for r in rows if r['accepted'] == 'true' and r['phase'] == 'measured')
+def metadata(rows, title, identity, cid):
+    sample = next(r for r in rows if r['included'])
     level = '-O3' if '-O3' in sample['argv'] else '-O1'
     commands = []
     for label in dict.fromkeys(r['label'] for r in rows):
-        commands.append(shlex.join(next(r['argv'] for r in rows if r['label'] == label and r['phase'] == 'measured')))
+        variants = [r for r in rows if r['label'] == label]
+        command_row = next((r for r in variants if r['phase'] == 'measured'), variants[0])
+        commands.append(label + ': ' + shlex.join(command_row['argv']))
     return dict(id=cid, title=title, boundary=BOUNDARY, cohort=f'{level}; CPU 2; ' +
                 ('warm synthesis tables' if level == '-O3' else 'synthesis tables unused') + '; fresh OS entropy',
-                identity=identity + '; ' + HOST, command='\n'.join(commands), note=note,
-                samples=f'inputs/{cid}.csv')
+                identity=identity + '; ' + HOST, command='\n'.join(commands),
+                configurations=list(dict.fromkeys(r['label'] for r in rows)),
+                samples=f'inputs/{cid}.jsonl')
 
 
 def evidence_index(evidence, inventory):
@@ -239,8 +241,8 @@ def build_inputs(evidence, catalog):
     audit = []
     final = load_campaign(evidence, catalog['final'], audit)
     experiments = [(c, load_campaign(evidence, c, audit)) for c in catalog['experiments']]
-    manifest = dict(schema='lean-profile-review-v1', title=catalog['title'], summary=catalog['summary'],
-                    baselines=[], comparisons=[], profiles=[], attribution=catalog['attribution'],
+    manifest = dict(schema='lean-profile-review-alpha', title=catalog['title'], summary=catalog['summary'],
+                    datasets=[], baselines=[], comparisons=[], profiles=[], attribution=catalog['attribution'],
                     progress=dict(note=catalog['progress_note'], selected=[], totals=[]), links=[])
     common_note = ('One warmup per binary; six measured rounds use all six permutations of the three implementations. '
                    'Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. '
@@ -248,33 +250,36 @@ def build_inputs(evidence, catalog):
                    'Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.')
     for case in catalog['cases']:
         rows = [r for r in final if r['case'] == case]
-        if case != 'qft20':
-            original = [r for r in rows if r['label'] == 'baseline']
-            item = metadata(original, f'{case}: original Lean', 'Original Lean 2c29be4, fresh final campaign', common_note, f'original-{case}')
-            item['configuration'] = 'baseline'
-            manifest['baselines'].append(item)
-            write_csv(JOURNEY / item['samples'], original)
-            paired = [r for r in rows if r['label'] in ['baseline', 'current']]
-            item = metadata(paired, f'Total improvement · {case}', 'Original 2c29be4 → combined ba401fb', common_note, f'total-{case}')
-            item.update(control='baseline', candidate='current', decision='Measured cumulative improvement; all six implementation commits combined')
-            manifest['comparisons'].append(item)
-            manifest['progress']['totals'].append(item['id'])
-            write_csv(JOURNEY / item['samples'], paired)
-        paired = [r for r in rows if r['label'] in ['current', 'rust']]
+        dataset = metadata(rows, f'Original Lean, current Lean and Rust · {case}',
+                           'Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release',
+                           f'final-{case}')
+        manifest['datasets'].append(dataset)
+        write_jsonl(JOURNEY / dataset['samples'], rows)
         note = common_note
         if case == 'qft20':
-            note += ' The original Lean warmup timed out at 60.0047 s without output; it has no median. Current/Rust alone alternate AB/BA over six measured rounds.'
-        item = metadata(paired, f'Rust comparison · {case}', 'Current Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release', note, f'rust-{case}')
-        item.update(control='current', candidate='rust', decision='Application comparison: Rust is faster; this is not an additional Lean optimization')
+            note += ' The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.'
+        manifest['baselines'].append(dict(id=f'original-{case}', title=f'{case}: original Lean',
+                                          note=note, dataset=dataset['id'], configuration='baseline'))
+        if case != 'qft20':
+            item = dict(id=f'total-{case}', title=f'Total improvement · {case}', note=note, dataset=dataset['id'],
+                        control='baseline', candidate='current', decision_status='accepted',
+                        decision='Measured cumulative improvement; all six implementation commits combined')
+            manifest['comparisons'].append(item)
+            manifest['progress']['totals'].append(item['id'])
+        item = dict(id=f'rust-{case}', title=f'Rust comparison · {case}', note=note, dataset=dataset['id'],
+                    control='current', candidate='rust',
+                    decision='Application comparison: Rust is faster; this is not an additional Lean optimization')
         manifest['comparisons'].append(item)
-        write_csv(JOURNEY / item['samples'], paired)
     for campaign, rows in experiments:
-        item = metadata(rows, campaign['title'], campaign['identity'], campaign['note'], campaign['id'])
-        item.update(control='baseline', candidate='candidate', decision=campaign['decision'])
+        dataset = metadata(rows, campaign['title'], campaign['identity'], 'capture-' + campaign['id'])
+        manifest['datasets'].append(dataset)
+        write_jsonl(JOURNEY / dataset['samples'], rows)
+        item = dict(id=campaign['id'], title=campaign['title'], note=campaign['note'], dataset=dataset['id'],
+                    control='baseline', candidate='candidate', decision=campaign['decision'],
+                    decision_status=campaign['decision_status'])
         manifest['comparisons'].append(item)
         if campaign.get('highlight', False):
             manifest['progress']['selected'].append(item['id'])
-        write_csv(JOURNEY / item['samples'], rows)
     for profile in catalog['profiles']:
         item = {k:v for k,v in profile.items() if k != 'source'}
         source = evidence / profile['source']
@@ -284,12 +289,12 @@ def build_inputs(evidence, catalog):
             item['path'] = str(Path('evidence') / profile['source'])
         manifest['profiles'].append(item)
     for title, path in [('Evidence archive', 'evidence/index.html'), ('Adapter audit', 'audit.json'),
-                        ('Journey and reproduction', 'README.md'), ('Skill feedback', 'skill-feedback.md')]:
+                        ('Journey and reproduction', 'README.md'), ('Skill feedback', 'skill-feedback.md'),
+                        ('Skill test results', 'skill-verification.json')]:
         manifest['links'].append(dict(title=title, path=path))
-    write_json(JOURNEY / 'inputs/censored.json', [r for r in final if r['accepted'] == 'false'])
-    manifest['links'].append(dict(title='Censored QFT observation', path='inputs/censored.json'))
     write_json(JOURNEY / 'audit.json', dict(campaigns=audit, source_format='Original JSONL retained',
-               csv_projection='All source columns retained; arrays/objects JSON encoded; pair = phase plus original round/pass',
+               jsonl_normalization='Integer elapsed_ns and nested fields preserved; block = phase plus original round/pass; final-harness slot = source_slot + 1',
+               observations=sum(c['rows'] for c in audit), datasets=len(manifest['datasets']),
                output_validation='Archived campaign checks plus every successful stderr rechecked; no exit-code-only inference'))
     write_json(JOURNEY / 'review.json', manifest)
     return manifest, final
@@ -306,7 +311,7 @@ def overview(final):
     names = {'baseline':'Original Lean', 'current':'Current Lean', 'rust':'Rust'}
     for i, case in enumerate(cases):
         for label, offset in [('baseline',-.22),('current',0),('rust',.22)]:
-            values = [r['wall_s'] for r in final if r['case']==case and r['label']==label and r['phase']=='measured' and r['accepted']=='true']
+            values = [r['elapsed_ns'] / 1e9 for r in final if r['case']==case and r['label']==label and r['included']]
             y = i + offset
             if values:
                 ax.hlines(y,min(values),max(values),color=colors[label],linewidth=1)
@@ -314,11 +319,11 @@ def overview(final):
                 ax.scatter([statistics.median(values)],[y],marker='|',s=140,color='black',zorder=3)
             else:
                 ax.scatter([60],[y],marker='>',s=65,color=colors[label])
-                ax.annotate('60 s timeout',(60,y),xytext=(-6,10),textcoords='offset points',ha='right',fontsize=9)
+                ax.annotate('warmup timeout: 60 s',(60,y),xytext=(-6,10),textcoords='offset points',ha='right',fontsize=9)
     ax.set_xscale('log'); ax.set_xlim(.0025,85)
     ax.set_yticks(range(len(cases)), cases); ax.invert_yaxis()
     ax.set_xlabel('Whole CLI wall time (seconds, logarithmic scale)')
-    ax.set_title('tzap · original Lean, current Lean and Rust\nSix measured runs per completed series; QFT baseline is censored',loc='left')
+    ax.set_title('tzap · original Lean, current Lean and Rust\nSix measured runs per completed series; no measured original QFT baseline',loc='left')
     ax.grid(axis='x',alpha=.2); ax.legend(loc='lower right')
     ax.spines[['top','right']].set_visible(False)
     (JOURNEY / 'views').mkdir(exist_ok=True)
@@ -342,7 +347,6 @@ def main():
     inventory = verify_archive(evidence)
     manifest, final = build_inputs(evidence, catalog)
     if args.plots:
-        os.environ['MATPLOTLIBRC'] = str(JOURNEY)
         overview(final)
         manifest['profiles'].insert(0,dict(id='overview',title='Fresh three-way comparison',kind='image',path='views/overview.svg',
             boundary=BOUNDARY,identity='Single final campaign; baseline 2c29be4, current ba401fb, Rust 2c29be4',
@@ -358,10 +362,10 @@ def main():
         builder={str(p.relative_to(args.skill_dir)):digest(p) for p in tool_files},
         adapter_sha256=digest(Path(__file__)), catalog_sha256=digest(JOURNEY / 'catalog.json'),
         archive_sha256=digest(evidence / 'archive.json'),
-        note='No new measurements. Archived captures are immutable inputs; report-local CSV/model/figures are derived.')
+        note='No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.')
     if args.plots:
         import matplotlib
-        generator.update(matplotlib=matplotlib.__version__, plot_style_sha256=digest(JOURNEY / 'matplotlibrc'))
+        generator.update(matplotlib=matplotlib.__version__)
     write_json(args.out / 'generator.json', generator)
     print(f'Validated {sum(c["rows"] for c in read_json(JOURNEY / "audit.json")["campaigns"])} original observations; {len(manifest["comparisons"])} comparisons.')
 
