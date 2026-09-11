@@ -86,6 +86,8 @@
     }
   ],
   "source_format": "Original JSONL retained",
-  "csv_projection": "All source columns retained; arrays/objects JSON encoded; pair = phase plus original round/pass",
+  "jsonl_normalization": "Integer elapsed_ns and nested fields preserved; block = phase plus original round/pass; final-harness slot = source_slot + 1",
+  "observations": 348,
+  "datasets": 19,
   "output_validation": "Archived campaign checks plus every successful stderr rechecked; no exit-code-only inference"
 }
