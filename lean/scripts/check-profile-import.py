@@ -18,6 +18,7 @@ def main():
     sys.path.insert(0, str(args.skill_dir / 'scripts'))
     from import_comparison import import_comparison
     from build_review import build
+    from compare_commands import summarize_comparison
     from review_observations import observations, series, paired
 
     spec = importlib.util.spec_from_file_location('journey', Path(__file__).with_name('profile-journey.py'))
@@ -66,8 +67,16 @@ def main():
         actual = model['comparisons'][0]['statistics']
         for key in ['control','candidate','paired_saving_s','candidate_faster','savings','median_reduction_pct']:
             journey.require(expected[key] == actual[key], 'Importer statistics differ: '+key)
+        # Recompute the new harness summary from retained runs, without replacing
+        # archived summaries that used the older, opposite-sign field names.
+        summary = summarize_comparison(journey.jsonl(capture / 'runs.jsonl'))
+        journey.require(len(summary['paired_savings_ns']) == len(actual['savings']), 'Summary lost pairs')
+        for nanoseconds, seconds in zip(summary['paired_savings_ns'], actual['savings']):
+            journey.require(abs(nanoseconds / 1e9 - seconds) < 1e-12, 'Harness/report savings disagree')
+        journey.require(abs(summary['median_reduction_pct'] - actual['median_reduction_pct']) < 1e-12,
+                        'Harness/report percent reductions disagree')
         results.append(dict(id=campaign['id'], observations=len(rows), pairs=actual['control']['n'],
-                            statistics_exact=True, source_snapshots_exact=True))
+                            statistics_exact=True, source_snapshots_exact=True, harness_savings_agree=True))
 
     # A real successful capture without correctness evidence must stay unvalidated.
     manifest = import_comparison(capture, args.out/'unchecked', boundary=journey.BOUNDARY, cohort=campaign['case'])
