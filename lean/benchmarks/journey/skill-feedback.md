@@ -1,12 +1,37 @@
-# lean-profile-skill: review after the 2026-09-11 update
+# lean-profile-skill: review after the 2026-09-12 update
 
-The updated skill reproduces tzap's retained results exactly. We tested an
-isolated copy of the installed skill; no installed source files were modified.
+The updated skill reproduces tzap's retained results exactly. We tested source
+revision `f14b45ad47b88d30e3706d6da8854491906ba9cc` from an isolated copy of
+`/home/egallego/lean/lean-profile-skill`. The installed skill still matched all
+41 hashes from yesterday's review, so it could not test the intended update.
+Neither the source checkout nor the installed copy was modified.
 [skill-verification.json](skill-verification.json) records the tested file hashes,
 environment and results. This feedback supersedes the initial suggestions at
 commit `c3e8280`, which remain in git history.
 
-## Confirmed improvements
+## This revision
+
+All **78 Python tests**, including optional plots, and **10 JavaScript tests**
+passed. Logs are retained under `testing/`. Eleven historical captures imported
+successfully, and all 26 report comparisons retain exactly the previous results.
+
+The new harness summary uses positive savings for faster candidates, agreeing
+with the report. We recomputed it from each historical capture's raw runs and
+checked paired savings and percent reductions against the imported report.
+Archived summaries retain their original field names and signs; no evidence was
+rewritten. This resolves a useful interpretation hazard between the two tools.
+
+The new tests also cover strict CSV quoting, physical-line diagnostics and
+invalid UTF-8, as well as nonfinite timeout rejection before execution. The
+observation reader now consumes records without an additional full input list.
+That source change does not resolve the serialized-model duplication below;
+we make no new report-generation performance claim from it.
+
+One practical improvement would be an explicit source revision in installed
+skill metadata. This review needed a 41-file hash comparison and a source
+checkout search to distinguish the installed version from the intended update.
+
+## Improvements confirmed in the previous revision and retained here
 
 - **JSONL is now a native input.** Integer nanosecond clocks, array-valued argv,
   nested metrics and typed booleans survive without CSV flattening. JSON metadata
@@ -34,8 +59,7 @@ commit `c3e8280`, which remain in git history.
   out of the reading flow. The paired gf32 O3 plot now has readable ticks without
   our local `matplotlibrc` workaround. General evidence links are also hashed.
 
-The complete suites passed: **71 Python tests**, including optional Matplotlib
-plots, and **10 JavaScript tests**. Browser checks exercised the actual tzap
+Browser checks exercised the actual tzap
 report, its shared tables, timeout record, filters and native self viewers at
 1280, 768 and 390 pixels. The report needs no live Perfetto import; its profiles
 are aggregated native self weights, not chronological traces.
