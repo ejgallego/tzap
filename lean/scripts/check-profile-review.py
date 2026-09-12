@@ -179,7 +179,12 @@ def browser_check(root, url, screenshots):
                 row = rows.nth(index)
                 source = (series['observations'] or series['outcomes'])[0]
                 code = row.locator('.command code')
-                require(code.is_visible() and code.inner_text() == shlex.join(source['argv']), 'Exact command hidden or altered')
+                description = row.locator('.command summary')
+                require(description.is_visible() and len(description.inner_text()) < 65, 'Missing compact benchmark description')
+                require(not code.is_visible(), 'Long command still shown by default')
+                description.click()
+                require(code.is_visible() and code.inner_text() == shlex.join(source['argv']), 'Exact command unavailable or altered')
+                description.click()
                 if series['statistics'].get('wall_s'):
                     for metric, column in [('median',0),('iqr',1)]:
                         value = row.locator('.timing').nth(column).inner_text()
@@ -191,6 +196,12 @@ def browser_check(root, url, screenshots):
         visible_text = page.locator('body').inner_text()
         for removed in ['synthesis tables unused', 'measured: 6 completed', 'One warmup per binary']:
             require(removed not in visible_text, 'Repeated metadata still visible: '+removed)
+        plots = page.locator('section.test .plots img')
+        require(plots.count() == 28, 'Missing distribution or overview plot')
+        require(plots.evaluate_all('els => els.every(e => !e.closest("details"))'), 'Plots are still collapsed')
+        for plot in plots.all():
+            require(plot.is_visible(), 'Plot not displayed by default')
+        page.evaluate('window.scrollTo(0,0)')
         page.screenshot(path=str(screenshots / 'desktop.png'))
         # Evidence and source/profile links must resolve from a standalone bundle.
         for relative in ['report/index.html','evidence/index.html','views/original-self.html','views/packed-self.html','views/lazy-self.html']:
@@ -251,7 +262,8 @@ def browser_check(root, url, screenshots):
         browser.close()
     return {'http_artifacts_checked':len(http_paths),'viewports':[1280,768,390],'browser_errors':errors,
             'test_and_decision_filters':True,'self_profile_toggle_and_filter':True,
-            'grouped_benchmarks_and_warmup_timeout':True, 'visible_exact_commands_and_timings':True}
+            'grouped_benchmarks_and_warmup_timeout':True, 'compact_descriptions_and_exact_command_toggles':True,
+            'plots_visible_by_default':True, 'displayed_timings_match_evidence':True}
 
 
 def main():

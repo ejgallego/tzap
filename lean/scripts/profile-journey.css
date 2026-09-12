@@ -17,16 +17,19 @@ button,summary { cursor:pointer; }
 .decision { font-size:12px; font-weight:normal; color:#874016; margin-left:12px; }
 table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:13px; }
 thead th { text-align:left; color:#555; font-size:12px; padding:8px 10px; border-bottom:1px solid #aaa; }
-thead th:first-child { width:105px; } thead th:nth-last-child(-n+2) { width:115px; }
+thead th:nth-child(2) { width:110px; } thead th:nth-last-child(-n+2) { width:115px; }
 td { padding:9px 10px; border-bottom:1px solid #eee; vertical-align:top; }
-.bench-title th { text-align:left; padding:9px 10px 5px; background:#f5f6f7; border-top:1px solid #d8dce0; font-size:13px; }
+.benchmark { border-top:1px solid #d8dce0; }
+.benchmark:nth-child(even) { background:#f8f9fa; }
 .version { color:#555; font-size:12px; }
-.command code { font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+.command summary { color:#164e91; }
+.command code { display:block; margin-top:10px; font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
 .timing { font-variant-numeric:tabular-nums; font-weight:600; }
 small { display:block; font-size:11px; font-weight:normal; color:#666; }
 .attachments { margin:12px 0; font-size:13px; color:#555; }
 .attachments summary { color:#164e91; }
-.attachments img { display:block; max-width:100%; height:auto; }
+.attachments img,.plots img { display:block; width:100%; height:auto; }
+.plots { margin:20px 0; }
 figure { margin:20px 0; } figcaption { font-weight:600; }
 .profile { margin:25px 0; color:#333; } .profile p { overflow-wrap:anywhere; }
 iframe { display:block; width:100%; height:720px; border:1px solid #ccc; margin-top:12px; }
@@ -37,7 +40,6 @@ iframe { display:block; width:100%; height:720px; border:1px solid #ccc; margin-
  main { padding:0 16px; margin-top:20px; } h1 { font-size:23px; }
  table,tbody { display:block; } thead { display:none; }
  tr.run { display:grid; grid-template-columns:1fr 1fr; padding:8px 0 12px; border-bottom:1px solid #ddd; }
- tr.bench-title { display:block; } .bench-title th { display:block; }
  .version,.command { grid-column:1/-1; } td { border:0; padding:3px 8px; }
  .version { font-weight:600; } .timing::before { content:attr(data-label) ': '; color:#666; font-weight:normal; font-size:11px; }
  .filters { gap:10px; } .filters label { max-width:100%; }
