@@ -9,6 +9,26 @@ Neither the source checkout nor the installed copy was modified.
 environment and results. This feedback supersedes the initial suggestions at
 commit `c3e8280`, which remain in git history.
 
+## Developer review: group benchmarks into tests
+
+The report needs a test above the individual benchmark: baseline is one test
+containing the circuit suite, and each optimization is another test containing
+its representative circuits. Group membership should be explicit and should
+not combine distributions from different circuits or campaigns.
+
+The primary table should show **command, timings**. Exact commands must be
+visible by default. Repeated cohort strings, environment descriptions, successful
+run/warmup counts and methodology paragraphs distract from those two columns.
+Keep that information in the captured evidence; keep exceptional outcomes such
+as QFT's timeout visible beside the affected command. Put plots and profiles
+below the grouped table so readers can open them as needed.
+
+tzap now implements this in a local presentation layer over the skill's unchanged
+numerical model. Ten explicitly defined tests contain all eight baseline entries
+and 26 comparisons. The browser check verifies every displayed command and timing
+against the source model. This grouping and presentation would be useful as a
+native skill feature.
+
 ## This revision
 
 All **78 Python tests**, including optional plots, and **10 JavaScript tests**
@@ -55,8 +75,7 @@ checkout search to distinguish the installed version from the intended update.
   evidence. An unchecked successful capture produced no timing estimate, and a
   changed validation binding was rejected before output creation.
 - **Units and presentation are clearer.** Millisecond Rust observations no
-  longer lose their spread to three-decimal seconds. Exact commands collapse
-  out of the reading flow. The paired gf32 O3 plot now has readable ticks without
+  longer lose their spread to three-decimal seconds. The paired gf32 O3 plot now has readable ticks without
   our local `matplotlibrc` workaround. General evidence links are also hashed.
 
 Browser checks exercised the actual tzap

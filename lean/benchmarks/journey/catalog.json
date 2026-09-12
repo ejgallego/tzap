@@ -382,5 +382,114 @@
     "experiments/lean-hadamard-sweep-20260910/accepted-qft.perf.data",
     "experiments/lean-packed-samples-20260910/final-qft.perf.data",
     "experiments/lean-fixpoint-20260910/lazy-o3.perf.data"
+  ],
+  "tests": [
+    {
+      "id": "test-baseline",
+      "title": "Baseline",
+      "short_title": "Baseline",
+      "benchmarks": [
+        "original-gf16",
+        "original-gf32",
+        "original-gf64",
+        "original-hwb8",
+        "original-chebyshev",
+        "original-qft20",
+        "original-gf32-o3",
+        "original-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-tags",
+      "title": "1–2. Array tags and cached samples",
+      "short_title": "Tags & samples",
+      "benchmarks": [
+        "tags-gf64",
+        "tags-chebyshev"
+      ]
+    },
+    {
+      "id": "test-sweeps",
+      "title": "3. Hadamard sweeps",
+      "short_title": "Sweeps",
+      "benchmarks": [
+        "sweeps-chebyshev",
+        "sweeps-gf64"
+      ]
+    },
+    {
+      "id": "test-packed",
+      "title": "4. Packed entropy",
+      "short_title": "Packed entropy",
+      "benchmarks": [
+        "packed-qft20",
+        "packed-chebyshev"
+      ]
+    },
+    {
+      "id": "test-composition",
+      "title": "5. Direct composition",
+      "short_title": "Composition",
+      "benchmarks": [
+        "composition-qft"
+      ]
+    },
+    {
+      "id": "test-lazy",
+      "title": "6. Lazy fixpoint rounds",
+      "short_title": "Fixpoint",
+      "note": "Removes unused round construction. Runtime is flat on gf32; the small gf64 improvement is noisy.",
+      "benchmarks": [
+        "lazy-gf32-o3",
+        "lazy-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-combined",
+      "title": "Combined changes vs baseline",
+      "short_title": "Combined",
+      "note": "Original Lean 2c29be4 → current Lean ba401fb, measured together.",
+      "benchmarks": [
+        "total-gf16",
+        "total-gf32",
+        "total-gf64",
+        "total-hwb8",
+        "total-chebyshev",
+        "total-gf32-o3",
+        "total-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-rust",
+      "title": "Current Lean vs Rust",
+      "short_title": "Rust",
+      "note": "Complete CLI timings. Lean includes its serialization round-trip check; Rust runs sequentially.",
+      "benchmarks": [
+        "rust-gf16",
+        "rust-gf32",
+        "rust-gf64",
+        "rust-hwb8",
+        "rust-chebyshev",
+        "rust-qft20",
+        "rust-gf32-o3",
+        "rust-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-gate-owner",
+      "title": "Release the gate-wrapper owner",
+      "short_title": "Gate owner",
+      "benchmarks": [
+        "rejected-gate-owner"
+      ]
+    },
+    {
+      "id": "test-count-only",
+      "title": "Retain only the previous gate count",
+      "short_title": "Gate count",
+      "benchmarks": [
+        "rejected-count-only"
+      ]
+    }
   ]
 }
