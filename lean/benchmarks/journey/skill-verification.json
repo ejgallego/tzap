@@ -1,5 +1,10 @@
 {
-  "date": "2026-09-11",
+  "date": "2026-09-12",
+  "skill_source": {
+    "path": "/home/egallego/lean/lean-profile-skill",
+    "commit": "f14b45ad47b88d30e3706d6da8854491906ba9cc",
+    "tracked_status": ""
+  },
   "skill_files_sha256": {
     ".github/workflows/test.yml": "6780d3903a48057a63213010e63f1d25f31627b2f523e7a9c07e481dc4b6b6d6",
     ".gitignore": "917d3c33421cf7faf392dc2e168e17ec19ff1a2a793731c361458ac818260631",
@@ -18,52 +23,70 @@
     "examples/review/trace.json": "4710424e9c6cbb87a1ab20adbb138cbab56b4273b3139c9d27c588fac0b2b636",
     "references/benchmark-design.md": "d7d308de19774619c0cfbb78c54eec1bbfa55f3b5b6b998a48815c64f0c98113",
     "references/build-and-elaboration.md": "8dd86a8092dbd67a861febfe7f056a2e80c8cb7340a6761364442e6b20b66cf5",
-    "references/command-import.md": "03bd629cb010ef07d327c166360ff563fb46b522923e7b74380be5c8f01ea022",
-    "references/experiment-record.md": "e5d28cbd7fd52fa3ba0ba59d1b0ee9dd279b1921f123ea142eef498a4a8c2ba8",
+    "references/command-import.md": "36191be54d334a9ddc8f92d20ba712de9bdffa06ab5b296af05bf358ea5c77b5",
+    "references/experiment-record.md": "bce26cec84602315dbd8ccdb265333a24aca2567bd69c3ae84a2a42a4fa3c3ea",
     "references/generated-c-ownership.md": "6a205f5f76a4633ca861dea68074876ad41c1426a5d693c5cb13e2b0b52ba994",
     "references/ml-lab-case-study.md": "5abe83dd7c8d0e6ca96784f9accf6051767f178bdc05b11aabe31e05731a184b",
     "references/profile-review.md": "9218f42972ed6c11e6c5b05339f535be8e99ba93023e751712f8cf9237ff4654",
-    "references/profiling-loop.md": "a04067410bec10646d7ca59caf3e1262f257f2168ec6e7c309aad504037406f1",
-    "references/review-format.md": "0e09f252251ad5b156fb33734d3ed28157bddc3a7319cf4f6d6604b78bcf59d3",
+    "references/profiling-loop.md": "6c21198e9cba91d2fc6a42bda89cc2979903b9561b143f415251072efd8a6b1e",
+    "references/review-format.md": "65cc2a14e1e37dec2f39c912746376ea0c8585e89c16e40dc572689adcacd8fa",
     "references/runtime-mechanics.md": "845047fe2871af38be7ee3b658ea25a0edfab57dc9acb3c2fe2c8e9322a3389d",
-    "references/verso-builds.md": "7fb35bc65951248de0472f93c2dccff03078894946c258cc171e6f687325252c",
+    "references/verso-builds.md": "4afbada7a7fe65ff6fc1c96b51f199f2f2d363927efaba1656c2892e5cc4d4e3",
     "scripts/build_review.py": "81fd6cd8d348dace39c5e37cf1b5f526bed3ebf7f68a1a24efd885c776582446",
-    "scripts/compare_commands.py": "729e423704720d7ad998c42ca1acebe8997c40ba49951949d8da285d16d5c984",
+    "scripts/compare_commands.py": "b40c0a8b3f9031ff669043a324d54605938d578dac99dd5bc32939c7ac122853",
     "scripts/import_comparison.py": "e723edada8b50f381a78cde191b9c20fbbf1796cfe42ec51abe7809d75c3aeb2",
     "scripts/review_data.py": "31e10baa8af52b9c989f35e2fb50a72038a533281b0abeb00e0d59af723d585f",
     "scripts/review_format.py": "5d000a8543d85515a2f1b534b9e5fa31f9c5a7c0349e94f64388022fda0db87d",
     "scripts/review_html.py": "6c2bf36897c6bef6a3f2842a753f8f220af032e9d2bc5f2ca7e89c48987c0d9e",
-    "scripts/review_observations.py": "eafb10d2bd17e9d228bb02447c9bfa7e42f0ecf57796500c2ea0ce1afaca259d",
+    "scripts/review_observations.py": "7ab9179603310fd04e521eaa32b0720177b28c833d30c7b8055cc97163d8f036",
     "scripts/review_plots.py": "23463e524eb4438fc9e845e3d40c8f4471cfe444d4cbda53f3aa95d3d78278be",
     "tests/review_helpers.py": "ccb07b1b9a95142203e510a2be04bfa0442d2d985b18e51054b9788d5b33bebf",
     "tests/test_build_review.py": "5fdcfb7ad95dd92705031ea1d692c01f8259bafba316c580278652fed14753fc",
-    "tests/test_compare_commands.py": "0c2478c32784507e65be44cf15536bea66fdf41fc290b2e850d8de218d099b9e",
-    "tests/test_review_extensions.py": "3bf0029d18ceed4040572fceae570cebba4dfbc976273f6fbf6ea507b1d232da",
-    "tests/test_review_import.py": "f18123641f65cc3549483721d7d9c0a0c7f109007af5820861872ccd4e7b15ca",
+    "tests/test_compare_commands.py": "3df8499fa27c853dd8da51925712013c3ac268d170fe2c85ca173e4a3aa7dae5",
+    "tests/test_review_extensions.py": "dfb2b0eedc57a5ba818cfe40ff4a9ecd448b5a3dac5285218586d5e76ebfb74b",
+    "tests/test_review_import.py": "8ddde7889069348b651edd20e46f06a3057c901390a2039976c126bda94b28f6",
     "tests/test_review_js.cjs": "657ef4e0eeb64d88323b8f676e67f8b5b7b8ab2c50dc4e0aa31c4894ec27f81d",
-    "tests/test_review_observations.py": "3ec7123790804c52c2944d88e89c9c4aea2ff6ece66307b2ae25564af71c06bc"
+    "tests/test_review_observations.py": "c61ee5d2b34f14cbe68f8590a53fe4d2332744301b25da3a4e84de17820fa912"
   },
-  "isolation": "Installed skill copied to /tmp before testing; installed source files unchanged",
+  "installed_copy": {
+    "path": "/home/egallego/.codex/skills/lean-profile-skill",
+    "matches_previous_test": true,
+    "files_checked": 41,
+    "used_for_this_test": false
+  },
+  "changed_since_previous_test": [
+    "references/command-import.md",
+    "references/experiment-record.md",
+    "references/profiling-loop.md",
+    "references/review-format.md",
+    "references/verso-builds.md",
+    "scripts/compare_commands.py",
+    "scripts/review_observations.py",
+    "tests/test_compare_commands.py",
+    "tests/test_review_extensions.py",
+    "tests/test_review_import.py",
+    "tests/test_review_observations.py"
+  ],
+  "isolation": "Tracked files copied from clean source checkout to /tmp; source checkout and installed skill unchanged",
   "python_tests": {
     "command": "uv run --no-project --with matplotlib python -m unittest discover -s tests -v",
-    "passed": 71,
+    "passed": 78,
     "failed": 0,
     "skipped": 0,
-    "duration_s": 5.242,
+    "duration_s": 6.352,
     "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
-    "matplotlib": "3.10.9"
+    "matplotlib": "3.10.9",
+    "path": "testing/python-tests.log",
+    "sha256": "339b5827f72d39a75da96afbec2a237d35390a78476b66ac0c290bca1a39344b"
   },
   "javascript_tests": {
     "command": "node --test tests/test_review_js.cjs",
     "passed": 10,
     "failed": 0,
     "skipped": 0,
-    "node": "v24.19.0"
-  },
-  "old_manifest": {
-    "schema": "lean-profile-review-v1",
-    "rejected_before_output": true,
-    "expected_format_break": true
+    "node": "v24.19.0",
+    "path": "testing/javascript-tests.log",
+    "sha256": "91f3d9dcd91019c55a25284d51c816f105417af22a87d46b975fc08875f0804a"
   },
   "retained_capture_import": {
     "campaigns": [
@@ -72,95 +95,98 @@
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "tags-chebyshev",
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "sweeps-chebyshev",
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "sweeps-gf64",
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "packed-qft20",
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "packed-chebyshev",
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "composition-qft",
         "observations": 14,
         "pairs": 6,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "lazy-gf32-o3",
         "observations": 22,
         "pairs": 10,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "lazy-gf64-o3",
         "observations": 22,
         "pairs": 10,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "rejected-gate-owner",
         "observations": 22,
         "pairs": 10,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       },
       {
         "id": "rejected-count-only",
         "observations": 22,
         "pairs": 10,
         "statistics_exact": true,
-        "source_snapshots_exact": true
+        "source_snapshots_exact": true,
+        "harness_savings_agree": true
       }
     ],
     "unvalidated_capture_excluded": true,
     "changed_binding_rejected_before_output": true,
-    "checker_sha256": "56bf84ca108139babb3b0b977121ab94f6779bb4b853b8725ae9050fbd04a35f",
+    "checker_sha256": "f132ace6ab1ee249afa1bdbe6b3011a3e647e9aa4884db76c428c80086fbd93f",
     "importer_sha256": "e723edada8b50f381a78cde191b9c20fbbf1796cfe42ec51abe7809d75c3aeb2"
-  },
-  "model_size": {
-    "previous_bytes": 202516,
-    "updated_bytes": 3897406,
-    "unique_original_observations": 348,
-    "serialized_source_record_occurrences": 1648,
-    "previous_dataset_files": 33,
-    "updated_dataset_files": 19
   },
   "limits": [
     "No new performance measurements",
-    "Perfetto handoff unit tests passed; no live Perfetto import was needed because tzap has no chronological trace",
+    "No live Perfetto import: tzap has native self profiles, not chronological traces",
     "Portable bundling and self-profile viewers remain project adapter responsibilities"
   ]
 }

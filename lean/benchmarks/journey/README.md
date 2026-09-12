@@ -3,7 +3,8 @@
 Open [the generated report](report/index.html). It includes the fresh
 original/current/Rust comparison, eleven selected comparisons from the earlier
 experiments, three searchable native self profiles, and the rejected designs.
-The report was regenerated on 2026-09-11 using the updated lean-profile-skill.
+The report was regenerated on 2026-09-12 using lean-profile-skill source revision
+`f14b45ad47b88d30e3706d6da8854491906ba9cc`.
 It uses 348 retained observations in 19 shared JSONL datasets, with 26 explicit
 comparisons and eight original-baseline entries. QFT's entry has only a timed-out
 warmup. No new benchmark runs were needed. Its current optimizer identity is
@@ -50,7 +51,7 @@ profiles and RSS checks are separate from headline wall-time observations.
 
 ## Rebuild from the bundled archive
 
-The adapter uses Python 3.10 or newer. It needs the installed
+The adapter uses Python 3.10 or newer. It needs the
 `lean-profile-skill` report builder with the shared-dataset
 `lean-profile-review-alpha` contract; optional plots need Matplotlib. Choose a
 fresh output directory under this bundle to keep HTTP links reachable. From the
@@ -61,6 +62,11 @@ python3 lean/scripts/profile-journey.py \
   --skill-dir /path/to/lean-profile-skill \
   --out lean/benchmarks/journey/report-new
 ```
+
+Use the tested source checkout for `--skill-dir`: the installed copy under
+`~/.codex/skills/lean-profile-skill` still matched the previous report's version
+when this review ran. We tested an isolated copy of the clean source checkout
+at `/home/egallego/lean/lean-profile-skill`; the installed copy was unchanged.
 
 For all standalone SVG/PNG distribution plots and the three-way overview:
 
@@ -95,7 +101,7 @@ QFT's configured timeout is distinct from the observed elapsed time.
 Each workload/campaign has one dataset shared by its baselines and comparisons.
 The report builder copies the exact JSONL bytes it used, and writes the numerical
 model and figure hashes to `review-data.json`. `generator.json`
-records the adapter and installed builder hashes. Plot bytes can depend on
+records the adapter and selected builder hashes. Plot bytes can depend on
 Matplotlib and fonts; the archived observations and numerical model provide the
 reproducible results.
 
@@ -132,8 +138,9 @@ The checker also accepts `--previous /path/to/prior/journey` to compare all
 26 statistics records and seven completed baselines against the former report.
 
 The [skill test record](skill-verification.json) identifies the tested skill by
-source hashes. Its 71 Python tests (including plots) and 10 JavaScript tests
-passed. Tests ran from an isolated copy of the installed skill. The command
+source commit and file hashes. Its [78 Python tests](testing/python-tests.log)
+(including plots) and [10 JavaScript tests](testing/javascript-tests.log) passed.
+Tests ran from an isolated copy of the source checkout. The command
 importer was also checked against all eleven retained historical captures:
 
 ```sh
@@ -144,7 +151,10 @@ python3 lean/scripts/check-profile-import.py \
 This integration check revalidates the archived project evidence before making
 hash-bound output-validation assertions, compares imported statistics with the
 journey adapter, and verifies unchecked/incorrectly bound inputs stay excluded
-or fail. It executes no benchmark commands. The main adapter handles both this
+or fail. It also recomputes the new harness summaries from retained runs and
+checks that positive savings mean faster in both the harness and report. Old
+summary files remain byte-exact in the archive. It executes no benchmark
+commands. The main adapter handles both this
 harness and tzap's custom three-way harness and retains portable evidence paths.
 
 See [skill-feedback.md](skill-feedback.md) for suggestions based on this report.

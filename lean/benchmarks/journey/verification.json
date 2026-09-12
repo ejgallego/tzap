@@ -8,14 +8,15 @@
   "rejected_observations_included": true,
   "profile_and_figure_hashes_valid": true,
   "negative_validation_and_corruption_checks": true,
-  "checker_sha256": "f749f23e86ce630189d55572b4f220c2ad110bd338f66c99f151f830b48b7a11",
+  "checker_sha256": "422940033dc239fd8751fb42aaefce7d98c314a35b30ae2b1ad611f5a7350616",
   "report_html_sha256": "1e3e304fc57c8f1eb774900894231dbb65e237d4ee30e146d66d14ed769e10d6",
-  "model_sha256": "f0f64bcd50d1a275e27ecfc403cde1eaa892f4a9fd69da456be745f4398caa68",
+  "model_sha256": "fd3bdfdbe1932c690ba60604e1bc407a8a32f23dd9a1a3b13cdba2b32546d989",
   "previous_report": {
     "comparisons": 26,
+    "baseline_entries": 8,
     "completed_baselines": 7,
     "statistics_exact": true,
-    "previous_model_sha256": "c8a8aa75ce26f0f3ce1f779678529e9c4dcdb62f9a78cc8e8dfd600e1b465ebd"
+    "previous_model_sha256": "f0f64bcd50d1a275e27ecfc403cde1eaa892f4a9fd69da456be745f4398caa68"
   },
   "browser": {
     "http_artifacts_checked": 892,
