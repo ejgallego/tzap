@@ -114,7 +114,8 @@ def compare_previous(model, previous):
     for item in old['baselines']:
         current = next(b for b in model['baselines'] if b['id'] == item['id'])
         require(current['series']['statistics'] == item['series']['statistics'], 'Changed retained baseline')
-    return dict(comparisons=len(old['comparisons']), completed_baselines=len(old['baselines']),
+    return dict(comparisons=len(old['comparisons']), baseline_entries=len(old['baselines']),
+                completed_baselines=sum(bool(b['series']['statistics'].get('wall_s')) for b in old['baselines']),
                 statistics_exact=True, previous_model_sha256=digest(previous / 'report/review-data.json'))
 
 
