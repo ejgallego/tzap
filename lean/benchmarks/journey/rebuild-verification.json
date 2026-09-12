@@ -8,19 +8,20 @@
   "baselines": 8,
   "comparisons": 26,
   "browser": {
-    "http_artifacts_checked": 892,
+    "http_artifacts_checked": 893,
     "viewports": [
       1280,
       768,
       390
     ],
     "browser_errors": [],
-    "experiment_and_decision_filters": true,
+    "test_and_decision_filters": true,
     "self_profile_toggle_and_filter": true,
-    "three_way_tables_and_warmup_timeout": true
+    "grouped_benchmarks_and_warmup_timeout": true,
+    "visible_exact_commands_and_timings": true
   },
-  "original_model_sha256": "fd3bdfdbe1932c690ba60604e1bc407a8a32f23dd9a1a3b13cdba2b32546d989",
-  "rebuilt_model_sha256": "87cb012695b5ae0ad1a8c718f175b7e60fbded7d20b25f8ce9451b5a641edac3",
+  "original_model_sha256": "5337d7c3a7d180187f11555ff48a70f20fee6521eb0d63adb504b34305fbdceb",
+  "rebuilt_model_sha256": "1b333805cdec05cc83578274bae9d7f6c30bbb4a40a1d4bb802991b8578e16c8",
   "original_generator": {
     "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
     "builder": {
@@ -34,11 +35,23 @@
       "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
       "assets/review.js": "16178894bb4d5fedc3f3741316682770afdcd5538ba81f758c38698108096da9"
     },
-    "adapter_sha256": "b99cb2d8d4ddd041411345563a2315e2e8f0a52dc9b75d56a61b1a4a7423f04e",
-    "catalog_sha256": "5bd0cd36fa7c1663765f92b9dc87cccc221eefe6c209e6b19312efa928901476",
+    "adapter_sha256": "73f3e067827e54ef703bd29d8696c0728e452d57228e82efcda0ccc49cbaf999",
+    "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
     "archive_sha256": "31d0466dfb4f08b632ba0c2ec87f4471079b61727168514a8b4b6e8356bfff9f",
     "note": "No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.",
-    "matplotlib": "3.10.9"
+    "matplotlib": "3.10.9",
+    "presentation": {
+      "renderer_sha256": "b064746582214506ac070ef8805016f387421254eb4b0b24c714a772fa32d357",
+      "css_sha256": "a01cbcb206ad3885da7a8f7d81dfa87cf78f37882b289be8d3febad153894252",
+      "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
+      "tests": 10,
+      "files_sha256": {
+        "index.html": "144d07d8971549995f9194c84e2491f38059e64a86c26def01399db8b5204b71",
+        "review.css": "a01cbcb206ad3885da7a8f7d81dfa87cf78f37882b289be8d3febad153894252",
+        "review.js": "ebcf9b833bf7706694c1fd9f31528ba819191f743b2330bac8c88d5fa6716f66",
+        "presentation.json": "1ad8cf4d52d56e9688b9b8f40e86ae5f79d8bd894ddccfb0d6d465b70bf6b7af"
+      }
+    }
   },
   "rebuilt_generator": {
     "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
@@ -53,11 +66,23 @@
       "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
       "assets/review.js": "16178894bb4d5fedc3f3741316682770afdcd5538ba81f758c38698108096da9"
     },
-    "adapter_sha256": "b99cb2d8d4ddd041411345563a2315e2e8f0a52dc9b75d56a61b1a4a7423f04e",
-    "catalog_sha256": "5bd0cd36fa7c1663765f92b9dc87cccc221eefe6c209e6b19312efa928901476",
+    "adapter_sha256": "73f3e067827e54ef703bd29d8696c0728e452d57228e82efcda0ccc49cbaf999",
+    "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
     "archive_sha256": "31d0466dfb4f08b632ba0c2ec87f4471079b61727168514a8b4b6e8356bfff9f",
     "note": "No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.",
-    "matplotlib": "3.10.9"
+    "matplotlib": "3.10.9",
+    "presentation": {
+      "renderer_sha256": "b064746582214506ac070ef8805016f387421254eb4b0b24c714a772fa32d357",
+      "css_sha256": "a01cbcb206ad3885da7a8f7d81dfa87cf78f37882b289be8d3febad153894252",
+      "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
+      "tests": 10,
+      "files_sha256": {
+        "index.html": "144d07d8971549995f9194c84e2491f38059e64a86c26def01399db8b5204b71",
+        "review.css": "a01cbcb206ad3885da7a8f7d81dfa87cf78f37882b289be8d3febad153894252",
+        "review.js": "ebcf9b833bf7706694c1fd9f31528ba819191f743b2330bac8c88d5fa6716f66",
+        "presentation.json": "1ad8cf4d52d56e9688b9b8f40e86ae5f79d8bd894ddccfb0d6d465b70bf6b7af"
+      }
+    }
   },
   "note": "Model paths identify each build location and figure hashes may differ; shared observations and statistics are identical."
 }

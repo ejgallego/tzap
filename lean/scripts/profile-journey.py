@@ -367,6 +367,8 @@ def main():
         import matplotlib
         generator.update(matplotlib=matplotlib.__version__)
     write_json(args.out / 'generator.json', generator)
+    from profile_journey_view import render
+    render(JOURNEY, args.out)
     print(f'Validated {sum(c["rows"] for c in read_json(JOURNEY / "audit.json")["campaigns"])} original observations; {len(manifest["comparisons"])} comparisons.')
 
 

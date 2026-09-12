@@ -8,26 +8,27 @@
   "rejected_observations_included": true,
   "profile_and_figure_hashes_valid": true,
   "negative_validation_and_corruption_checks": true,
-  "checker_sha256": "422940033dc239fd8751fb42aaefce7d98c314a35b30ae2b1ad611f5a7350616",
-  "report_html_sha256": "1e3e304fc57c8f1eb774900894231dbb65e237d4ee30e146d66d14ed769e10d6",
-  "model_sha256": "fd3bdfdbe1932c690ba60604e1bc407a8a32f23dd9a1a3b13cdba2b32546d989",
+  "checker_sha256": "3564ae153f9cfcb1c204c1d97887fc9f7ad8e7d573c39e19f3e23d9d5c0913d8",
+  "report_html_sha256": "144d07d8971549995f9194c84e2491f38059e64a86c26def01399db8b5204b71",
+  "model_sha256": "5337d7c3a7d180187f11555ff48a70f20fee6521eb0d63adb504b34305fbdceb",
   "previous_report": {
     "comparisons": 26,
     "baseline_entries": 8,
     "completed_baselines": 7,
     "statistics_exact": true,
-    "previous_model_sha256": "f0f64bcd50d1a275e27ecfc403cde1eaa892f4a9fd69da456be745f4398caa68"
+    "previous_model_sha256": "fd3bdfdbe1932c690ba60604e1bc407a8a32f23dd9a1a3b13cdba2b32546d989"
   },
   "browser": {
-    "http_artifacts_checked": 892,
+    "http_artifacts_checked": 893,
     "viewports": [
       1280,
       768,
       390
     ],
     "browser_errors": [],
-    "experiment_and_decision_filters": true,
+    "test_and_decision_filters": true,
     "self_profile_toggle_and_filter": true,
-    "three_way_tables_and_warmup_timeout": true
+    "grouped_benchmarks_and_warmup_timeout": true,
+    "visible_exact_commands_and_timings": true
   }
 }

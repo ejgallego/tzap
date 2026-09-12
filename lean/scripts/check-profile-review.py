@@ -7,6 +7,8 @@ import importlib.util
 import json
 from pathlib import Path
 import statistics
+import shlex
+import re
 import tempfile
 from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
@@ -24,6 +26,9 @@ def digest(path):
 def numerical_check(root):
     report = root / 'report'
     model = json.loads((report / 'review-data.json').read_text())
+    generator = json.loads((report / 'generator.json').read_text())
+    for name, expected in generator.get('presentation', {}).get('files_sha256', {}).items():
+        require(digest(report / name) == expected, 'Presentation asset changed: '+name)
     manifest = json.loads((report / 'source-manifest.json').read_text())
     require(digest(report / 'source-manifest.json') == model['manifest_sha256'], 'Changed manifest')
     for kind in ['profiles', 'links']:
@@ -156,14 +161,36 @@ def browser_check(root, url, screenshots):
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(url, wait_until='networkidle')
-        require(page.locator('article.comparison').count() == 26, 'Missing comparison cards')
+        require(page.locator('section.test').count() == 10, 'Missing grouped tests')
         require(page.locator('h1').inner_text().startswith('tzap:'), 'Wrong report')
-        require(page.locator('#datasets article').count() == 8, 'Missing three-way workload tables')
-        require('warmup: 1 timeout' in page.locator('#original-qft20').inner_text(), 'Warmup timeout missing from baseline UI')
-        exact = page.locator('#original-gf16 details').filter(has=page.get_by_text('Exact command', exact=True))
-        exact.locator('summary').click()
-        require(exact.locator('pre').is_visible() and 'taskset' in exact.inner_text(), 'Exact argv did not expand')
-        exact.locator('summary').click()
+        require(page.locator('#test-baseline tbody.benchmark').count() == 8, 'Baseline is not one group of eight benchmarks')
+        require('Warmup; no median' in page.locator('#original-qft20').inner_text(), 'Timeout lost its scope')
+        model = json.loads((root/'report/review-data.json').read_text())
+        tests = json.loads((root/'report/presentation.json').read_text())['tests']
+        for test in tests:
+            actual = page.locator('#'+test['id']+' tbody.benchmark').evaluate_all('els => els.map(e => e.id)')
+            require(actual == test['benchmarks'], 'Benchmark grouping changed')
+        for record in model['baselines'] + model['comparisons']:
+            sides = ([record['series']] if 'configuration' in record else
+                     [record['statistics']['series'][side] for side in ['control','candidate']])
+            rows = page.locator('#'+record['id']+' tr.run')
+            require(rows.count() == len(sides), 'Missing command/timing row')
+            for index, series in enumerate(sides):
+                row = rows.nth(index)
+                source = (series['observations'] or series['outcomes'])[0]
+                code = row.locator('.command code')
+                require(code.is_visible() and code.inner_text() == shlex.join(source['argv']), 'Exact command hidden or altered')
+                if series['statistics'].get('wall_s'):
+                    for metric, column in [('median',0),('iqr',1)]:
+                        value = row.locator('.timing').nth(column).inner_text()
+                        match = re.fullmatch(r'([\d.]+) (s|ms|µs|ns)', value)
+                        require(match is not None, 'Unreadable timing: '+value)
+                        seconds = float(match[1]) * {'s':1,'ms':1e-3,'µs':1e-6,'ns':1e-9}[match[2]]
+                        expected = series['statistics']['wall_s'][metric]
+                        require(abs(seconds-expected) <= max(abs(expected)*.0005,1e-12), 'Displayed timing differs from evidence')
+        visible_text = page.locator('body').inner_text()
+        for removed in ['synthesis tables unused', 'measured: 6 completed', 'One warmup per binary']:
+            require(removed not in visible_text, 'Repeated metadata still visible: '+removed)
         page.screenshot(path=str(screenshots / 'desktop.png'))
         # Evidence and source/profile links must resolve from a standalone bundle.
         for relative in ['report/index.html','evidence/index.html','views/original-self.html','views/packed-self.html','views/lazy-self.html']:
@@ -181,27 +208,27 @@ def browser_check(root, url, screenshots):
             with urlopen(Request(target,method='HEAD')) as response:
                 require(response.status == 200, 'Missing HTTP evidence: '+target)
         page.goto(url, wait_until='networkidle')
-        search = page.get_by_label('Find an experiment')
-        search.fill('Rejected:')
-        require(page.locator('article.comparison:visible').count() == 2, 'Experiment filter failed')
+        search = page.get_by_label('Find a test')
+        search.fill('rejected')
+        require(page.locator('section.test:visible').count() == 2, 'Test filter failed')
         search.fill('there-is-no-such-experiment')
-        require(page.locator('article.comparison:visible').count() == 0, 'Empty filter failed')
+        require(page.locator('section.test:visible').count() == 0, 'Empty filter failed')
         search.fill('')
-        require(page.locator('article.comparison:visible').count() == 26, 'Filter reset failed')
+        require(page.locator('section.test:visible').count() == 10, 'Filter reset failed')
         decision = page.get_by_label('Decision', exact=True)
         decision.select_option('rejected')
-        require(page.locator('article.comparison:visible').count() == 2, 'Decision filter failed')
+        require(page.locator('section.test:visible').count() == 2, 'Decision filter failed')
         search.fill('Chebyshev')
-        require(page.locator('article.comparison:visible').count() == 1, 'Combined filters failed')
+        require(page.locator('section.test:visible').count() == 1, 'Combined filters failed')
         search.fill('')
         decision.select_option('accepted')
-        require(page.locator('article.comparison:visible').count() == 16, 'Accepted filter failed')
-        decision.select_option('unclassified')
-        require(page.locator('article.comparison:visible').count() == 8, 'Rust comparisons misclassified')
+        require(page.locator('section.test:visible').count() == 6, 'Accepted filter failed')
+        decision.select_option('reference')
+        require(page.locator('section.test:visible').count() == 2, 'Reference filter failed')
         decision.select_option('all')
-        page.locator('#rejected-gate-owner').scroll_into_view_if_needed()
+        page.locator('#test-gate-owner').scroll_into_view_if_needed()
         page.screenshot(path=str(screenshots / 'rejected.png'))
-        page.locator('#lazy-gf32-o3').scroll_into_view_if_needed()
+        page.locator('#test-lazy > details > summary').click()
         profile = page.locator('#lazy-self')
         button = profile.locator('button[data-viewer]')
         button.click()
@@ -223,8 +250,8 @@ def browser_check(root, url, screenshots):
         require(not errors, 'Browser errors: '+str(errors))
         browser.close()
     return {'http_artifacts_checked':len(http_paths),'viewports':[1280,768,390],'browser_errors':errors,
-            'experiment_and_decision_filters':True,'self_profile_toggle_and_filter':True,
-            'three_way_tables_and_warmup_timeout':True}
+            'test_and_decision_filters':True,'self_profile_toggle_and_filter':True,
+            'grouped_benchmarks_and_warmup_timeout':True, 'visible_exact_commands_and_timings':True}
 
 
 def main():

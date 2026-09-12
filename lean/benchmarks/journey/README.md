@@ -10,6 +10,12 @@ comparisons and eight original-baseline entries. QFT's entry has only a timed-ou
 warmup. No new benchmark runs were needed. Its current optimizer identity is
 `ba401fb`, as measured in the final campaign at `5d5f169`.
 
+The developer view groups these benchmarks into ten tests: baseline, five
+optimization steps, combined changes, Rust, and two rejected designs. Each test
+has one table with visible exact commands, medians and IQRs. Plots and profiles
+are collapsed below that table. Setup, warmup counts and full interpretation
+remain in the linked evidence instead of repeating alongside every command.
+
 To browse a checkout locally:
 
 ```sh
@@ -86,6 +92,8 @@ does not require the original ignored experiment directories. A one-time
 when `evidence/` does not yet exist.
 
 `catalog.json` explicitly selects comparisons and supplies the interpretation.
+Its `tests` entries partition the baseline and comparison records into groups
+of benchmarks; this presentation grouping never pools their measurements.
 `evidence/archive.json` hashes every archived source file. `audit.json` records
 the campaign checks. The original JSONL, source manifests, stderr/stdout,
 validation, code snapshots, patches and build logs remain byte-exact in
@@ -105,6 +113,12 @@ records the adapter and selected builder hashes. Plot bytes can depend on
 Matplotlib and fonts; the archived observations and numerical model provide the
 reproducible results.
 
+`lean/scripts/profile_journey_view.py` and `profile-journey.css` provide the tzap
+presentation after the skill builds its numerical model and plots. The adapter
+applies this view automatically. `report/presentation.json` records the test
+groups, and `generator.json` hashes the renderer, stylesheet and final assets.
+Include these two files when copying the scripts for a relocated rebuild.
+
 The updated skill handles units and dense ticks directly, so the earlier local
 `matplotlibrc` workaround was removed. No installed skill source is modified.
 
@@ -120,7 +134,7 @@ python3 lean/scripts/check-profile-review.py --numerical-only
 ```
 
 With the local server running, the browser check uses a fresh headless Chrome
-instance and exercises text/decision filters, shared tables, timeout records,
+instance and exercises test/decision filters, grouped tables, timeout records,
 profile toggles, symbol search, local HTTP
 links, and 1280/768/390-pixel viewports:
 
@@ -130,6 +144,8 @@ UV_CACHE_DIR=/tmp/tzap-review-uv-cache uv run --no-project --with playwright \
 ```
 
 Browser screenshots are written under `/tmp/tzap-review-browser` by default.
+The check also matches every visible command against its original argv and
+every displayed median/IQR against the numerical model.
 The completed [verification record](verification.json) includes numerical,
 artifact-hash, negative-input and browser checks. A separate
 [relocated rebuild check](rebuild-verification.json) confirms that copying only
