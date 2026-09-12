@@ -1,4 +1,4 @@
-"""Command-first presentation of tzap tests over the skill's unchanged model."""
+"""Compact benchmark descriptions and plots over the skill's unchanged model."""
 
 import argparse
 import hashlib
@@ -9,6 +9,16 @@ import shlex
 import shutil
 
 E = html.escape
+DESCRIPTIONS = {
+    'gf16': 'gf16 · 16-bit field multiplication',
+    'gf32': 'gf32 · 32-bit field multiplication',
+    'gf64': 'gf64 · 64-bit field multiplication',
+    'hwb8': 'hwb8 circuit',
+    'chebyshev': 'Chebyshev circuit',
+    'qft20': 'QFT · 20 qubits',
+    'gf32-o3': 'gf32 · 32-bit field multiplication · O3',
+    'gf64-o3': 'gf64 · 64-bit field multiplication · O3',
+}
 
 
 def duration(value):
@@ -57,7 +67,7 @@ def render(root, report):
 
     sections = []
     for test in tests:
-        rows, attachments = [], []
+        rows, plots, attachments = [], [], []
         statuses = {records[bid].get('decision_status') for bid in test['benchmarks']}
         decision = next(iter(statuses)) if len(statuses) == 1 else None
         decision = decision or 'reference'
@@ -69,7 +79,7 @@ def render(root, report):
                 sides = [(b[key], b['statistics']['series'][key]) for key in ['control', 'candidate']]
             first = sides[0][1]['outcomes'][0]
             case = first['case']
-            bench = f'<tbody class="benchmark" id="{bid}"><tr class="bench-title"><th colspan="4">{E(case)}</th></tr>'
+            bench = f'<tbody class="benchmark" id="{bid}">'
             for configuration, series in sides:
                 observation = (series['observations'] or series['outcomes'])[0]
                 command = shlex.join(observation['argv'])
@@ -79,23 +89,26 @@ def render(root, report):
                     timing = f'Timeout {duration(observation["timeout_s"])}<small>Warmup; no median</small>'
                 label = {'baseline': 'Baseline', 'candidate': 'Candidate', 'current': 'Current Lean', 'rust': 'Rust'}[configuration]
                 bench += (f'<tr class="run" data-configuration="{configuration}">'
-                          f'<td class="version">{label}</td><td class="command"><code>{E(command)}</code></td>'
+                          f'<td class="command"><details><summary>{E(DESCRIPTIONS[case])}</summary><code>{E(command)}</code></details></td><td class="version">{label}</td>'
                           f'<td class="timing" data-label="Median">{timing}</td>'
                           f'<td class="timing" data-label="IQR">{duration(stats["iqr"]) if stats else "—"}</td></tr>')
             rows.append(bench + '</tbody>')
             chart = report / 'figures' / (bid + '.svg')
             if chart.exists():
-                attachments.append(f'<figure><img loading="lazy" src="figures/{bid}.svg" alt="{E(b["title"], quote=True)}"><figcaption>{E(case)}</figcaption></figure>')
+                plots.append(f'<figure><figcaption>{E(case)}</figcaption><img loading="lazy" src="figures/{bid}.svg" alt="{E(b["title"], quote=True)}"></figure>')
             attachments.extend(profile(p) for p in model['profiles'] if p.get('comparison') == bid)
         if test['id'] == 'test-baseline' and (report / 'figures/baselines.svg').exists():
-            attachments.insert(0, '<img loading="lazy" src="figures/baselines.svg" alt="Baseline distributions">')
+            plots.insert(0, '<img loading="lazy" src="figures/baselines.svg" alt="Baseline distributions">')
         if test['id'] == 'test-combined':
-            attachments.extend(profile(p) for p in model['profiles'] if 'comparison' not in p)
-        table = '<div class="table-wrap"><table><thead><tr><th>Version</th><th>Command</th><th>Median</th><th>IQR</th></tr></thead>' + ''.join(rows) + '</table></div>'
-        details = ('<details class="attachments"><summary>Plots and profiles</summary><p>Intervals show the IQR and range; black ticks mark medians. Paired savings use matched runs.</p>' + ''.join(attachments) + '</details>') if attachments else ''
+            for p in model['profiles']:
+                if 'comparison' not in p:
+                    (plots if p['kind'] == 'image' else attachments).append(profile(p))
+        table = '<div class="table-wrap"><table><thead><tr><th>Benchmark</th><th>Version</th><th>Median</th><th>IQR</th></tr></thead>' + ''.join(rows) + '</table></div>'
+        charts = '<div class="plots">' + ''.join(plots) + '</div>' if plots else ''
+        details = ('<details class="attachments"><summary>Profiles and code</summary>' + ''.join(attachments) + '</details>') if attachments else ''
         badge = f'<span class="decision">{decision}</span>' if decision == 'rejected' else ''
         sections.append(f'<section class="test" id="{test["id"]}" data-decision="{decision}"><h2>{E(test["title"])}{badge}</h2>'
-                        + (f'<p class="test-note">{E(test["note"])}</p>' if test.get('note') else '') + table + details + '</section>')
+                        + (f'<p class="test-note">{E(test["note"])}</p>' if test.get('note') else '') + table + charts + details + '</section>')
     nav = ' · '.join(f'<a href="#{t["id"]}">{E(t["short_title"])}</a>' for t in tests)
     links = ' · '.join(f'<a href="{link(p["path"])}">{E(p["title"])}</a>' for p in manifest['links'])
     datasets = '<details><summary>Captured benchmark runs</summary><ul>' + ''.join(
@@ -108,7 +121,7 @@ def render(root, report):
             '<option value="rejected">Rejected</option><option value="reference">Reference</option></select></div><span id="count" aria-live="polite"></span></div>'
             + ''.join(sections) + '<section id="evidence"><h2>Evidence</h2><p>' + links + '</p>'
             '<p><a href="review-data.json">Measurements and provenance</a> · <a href="source-manifest.json">Capture manifest</a> · <a href="presentation.json">Test groups</a></p>'
-            '<p>Commands are the first measured invocation for each version, or the timed-out warmup when no measured invocation exists. Full run order, validation and environment records are retained in the linked datasets.</p>' + datasets + '</section></main><script src="review.js"></script></html>')
+            '<p>Open a benchmark description for its full command: the first measured invocation, or the timed-out warmup when no measured invocation exists. Plots show IQR, median and range. Full run order, validation and environment records remain in the captured datasets.</p>' + datasets + '</section></main><script src="review.js"></script></html>')
     (report / 'index.html').write_text(page)
     shutil.copyfile(Path(__file__).with_name('profile-journey.css'), report / 'review.css')
     (report / 'review.js').write_text(JS)

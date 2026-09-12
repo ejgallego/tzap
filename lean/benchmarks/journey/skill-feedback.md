@@ -16,17 +16,19 @@ containing the circuit suite, and each optimization is another test containing
 its representative circuits. Group membership should be explicit and should
 not combine distributions from different circuits or campaigns.
 
-The primary table should show **command, timings**. Exact commands must be
-visible by default. Repeated cohort strings, environment descriptions, successful
-run/warmup counts and methodology paragraphs distract from those two columns.
-Keep that information in the captured evidence; keep exceptional outcomes such
-as QFT's timeout visible beside the affected command. Put plots and profiles
-below the grouped table so readers can open them as needed.
+The primary table should show a **short benchmark description and timings on
+the same row**. Showing exact commands first exposed how much space absolute
+paths consume. The revised design makes the description expandable to reveal
+the full command and shows the plots by default. Native profiles and code can
+remain expandable. Repeated cohort strings, environment descriptions, successful
+run/warmup counts and methodology paragraphs belong in captured evidence;
+exceptional outcomes such as QFT's timeout stay visible in the affected row.
 
 tzap now implements this in a local presentation layer over the skill's unchanged
 numerical model. Ten explicitly defined tests contain all eight baseline entries
-and 26 comparisons. The browser check verifies every displayed command and timing
-against the source model. This grouping and presentation would be useful as a
+and 26 comparisons. The browser check opens every command, verifies it and the
+displayed timings against the source model, and checks that all plots are shown.
+This grouping and presentation would be useful as a
 native skill feature.
 
 ## This revision
