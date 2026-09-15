@@ -12,10 +12,13 @@ warmup. No new benchmark runs were needed. Its current optimizer identity is
 
 The developer view groups these benchmarks into ten tests: baseline, five
 optimization steps, combined changes, Rust, and two rejected designs. Each test
-has one table with a short benchmark description, version, median and IQR on
-each row. Open the description to see its exact command. Plots are always shown
-below the table; native profiles and code remain expandable. Setup, warmup counts
-and full interpretation stay in the linked evidence.
+has one table with a short benchmark description per row. Comparison rows show
+baseline and candidate medians together, their IQRs, and relative performance:
+the median ratio plus percent less/more wall time. Open the description to see
+both exact commands. Plots remain visible below the table: Compact uses two
+columns on wide screens, Large enlarges them, and clicking a plot opens its SVG.
+Native profiles and code remain expandable. Setup, warmup counts and full
+interpretation stay in the linked evidence.
 
 To browse a checkout locally:
 
@@ -147,7 +150,8 @@ UV_CACHE_DIR=/tmp/tzap-review-uv-cache uv run --no-project --with playwright \
 Browser screenshots are written under `/tmp/tzap-review-browser` by default.
 The check opens every benchmark description and matches its full command against
 the original argv, verifies plots are visible by default, and checks every
-displayed median/IQR against the numerical model.
+displayed median/IQR and relative ratio/percentage against the numerical model.
+It also verifies the paired row layout and plot-size control.
 The completed [verification record](verification.json) includes numerical,
 artifact-hash, negative-input and browser checks. A separate
 [relocated rebuild check](rebuild-verification.json) confirms that copying only

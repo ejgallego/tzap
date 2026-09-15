@@ -173,26 +173,42 @@ def browser_check(root, url, screenshots):
         for record in model['baselines'] + model['comparisons']:
             sides = ([record['series']] if 'configuration' in record else
                      [record['statistics']['series'][side] for side in ['control','candidate']])
-            rows = page.locator('#'+record['id']+' tr.run')
-            require(rows.count() == len(sides), 'Missing command/timing row')
+            row = page.locator('#'+record['id']+' tr.run')
+            require(row.count() == 1, 'Baseline and candidate must share one benchmark row')
+            description = row.locator('.command summary')
+            require(description.is_visible() and len(description.inner_text()) < 65, 'Missing compact benchmark description')
+            codes = row.locator('.command code')
+            require(codes.count() == len(sides), 'Missing captured command')
+            require(not codes.first.is_visible(), 'Long command still shown by default')
+            description.click()
             for index, series in enumerate(sides):
-                row = rows.nth(index)
                 source = (series['observations'] or series['outcomes'])[0]
-                code = row.locator('.command code')
-                description = row.locator('.command summary')
-                require(description.is_visible() and len(description.inner_text()) < 65, 'Missing compact benchmark description')
-                require(not code.is_visible(), 'Long command still shown by default')
-                description.click()
+                code = codes.nth(index)
                 require(code.is_visible() and code.inner_text() == shlex.join(source['argv']), 'Exact command unavailable or altered')
-                description.click()
                 if series['statistics'].get('wall_s'):
-                    for metric, column in [('median',0),('iqr',1)]:
-                        value = row.locator('.timing').nth(column).inner_text()
+                    for metric in ['median','iqr']:
+                        value = row.locator('.'+metric).nth(index).inner_text()
                         match = re.fullmatch(r'([\d.]+) (s|ms|µs|ns)', value)
                         require(match is not None, 'Unreadable timing: '+value)
                         seconds = float(match[1]) * {'s':1,'ms':1e-3,'µs':1e-6,'ns':1e-9}[match[2]]
                         expected = series['statistics']['wall_s'][metric]
                         require(abs(seconds-expected) <= max(abs(expected)*.0005,1e-12), 'Displayed timing differs from evidence')
+            description.click()
+            if 'statistics' in record:
+                stats = record['statistics']
+                before, after = stats['control']['median'], stats['candidate']['median']
+                factor = row.locator('.relative strong').inner_text()
+                match = re.fullmatch(r'([\d.]+)× (faster|slower)', factor)
+                require(match is not None, 'Missing relative performance: '+factor)
+                faster = before > after
+                require(match[2] == ('faster' if faster else 'slower'), 'Relative direction reversed')
+                expected = max(before,after) / min(before,after)
+                require(abs(float(match[1])-expected) <= expected*.005, 'Incorrect speedup factor')
+                percent = row.locator('.relative small').inner_text()
+                match = re.fullmatch(r'([\d.]+)% (less|more) time', percent)
+                require(match is not None and match[2] == ('less' if faster else 'more'), 'Ambiguous percent change')
+                expected = abs(100*(after/before-1))
+                require(abs(float(match[1])-expected) <= max(expected*.005,1e-12), 'Incorrect percentage change')
         visible_text = page.locator('body').inner_text()
         for removed in ['synthesis tables unused', 'measured: 6 completed', 'One warmup per binary']:
             require(removed not in visible_text, 'Repeated metadata still visible: '+removed)
@@ -201,6 +217,15 @@ def browser_check(root, url, screenshots):
         require(plots.evaluate_all('els => els.every(e => !e.closest("details"))'), 'Plots are still collapsed')
         for plot in plots.all():
             require(plot.is_visible(), 'Plot not displayed by default')
+        plot = page.locator('#test-tags .plots figure').first
+        compact_width = plot.bounding_box()['width']
+        page.get_by_label('Plots', exact=True).select_option('large')
+        require(plot.bounding_box()['width'] > compact_width*1.4, 'Plot size control has no effect')
+        page.locator('#test-tags').scroll_into_view_if_needed()
+        page.screenshot(path=str(screenshots / 'plots-large.png'))
+        page.get_by_label('Plots', exact=True).select_option('compact')
+        page.locator('#test-tags').scroll_into_view_if_needed()
+        page.screenshot(path=str(screenshots / 'paired.png'))
         page.evaluate('window.scrollTo(0,0)')
         page.screenshot(path=str(screenshots / 'desktop.png'))
         # Evidence and source/profile links must resolve from a standalone bundle.
@@ -263,7 +288,8 @@ def browser_check(root, url, screenshots):
     return {'http_artifacts_checked':len(http_paths),'viewports':[1280,768,390],'browser_errors':errors,
             'test_and_decision_filters':True,'self_profile_toggle_and_filter':True,
             'grouped_benchmarks_and_warmup_timeout':True, 'compact_descriptions_and_exact_command_toggles':True,
-            'plots_visible_by_default':True, 'displayed_timings_match_evidence':True}
+            'plots_visible_by_default':True, 'displayed_timings_match_evidence':True, 'paired_benchmark_rows':True,
+            'relative_performance_verified':True, 'plot_size_control':True}
 
 
 def main():
