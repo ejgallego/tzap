@@ -6,6 +6,9 @@ function filter() {
  document.querySelector('#count').textContent = `${tests.filter(t => !t.hidden).length} tests`;
 }
 search.addEventListener('input', filter); decision.addEventListener('change', filter); filter();
+document.querySelector('#plot-size').addEventListener('change', event => {
+ document.documentElement.dataset.plotSize = event.target.value;
+});
 for (const button of document.querySelectorAll('[data-viewer]')) button.addEventListener('click', () => {
  const frame = document.getElementById(button.dataset.viewer);
  frame.hidden = !frame.hidden;

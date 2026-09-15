@@ -16,10 +16,15 @@ containing the circuit suite, and each optimization is another test containing
 its representative circuits. Group membership should be explicit and should
 not combine distributions from different circuits or campaigns.
 
-The primary table should show a **short benchmark description and timings on
-the same row**. Showing exact commands first exposed how much space absolute
+The primary table should show a **short benchmark description, baseline and
+candidate timings on the same row**, followed by their relative performance.
+Give both the ratio and an unambiguous time reduction (5× faster = 80% less
+time); label regressions as slower with more time. These are ratios of measured
+group medians, not claims of significance or compounded incremental gains.
+Showing exact commands first exposed how much space absolute
 paths consume. The revised design makes the description expandable to reveal
-the full command and shows the plots by default. Native profiles and code can
+both full commands and shows the plots by default. Compact/large plot sizing and
+full-size SVG links let readers choose density without hiding plots. Native profiles and code can
 remain expandable. Repeated cohort strings, environment descriptions, successful
 run/warmup counts and methodology paragraphs belong in captured evidence;
 exceptional outcomes such as QFT's timeout stay visible in the affected row.

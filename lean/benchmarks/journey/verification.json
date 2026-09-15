@@ -8,15 +8,15 @@
   "rejected_observations_included": true,
   "profile_and_figure_hashes_valid": true,
   "negative_validation_and_corruption_checks": true,
-  "checker_sha256": "69328731d97c62492056c438da6b42d11d886659375e056be08da9b2a8fd5bab",
-  "report_html_sha256": "7cec64217696827a6d3f750d29e1d04452ab3992e559baa44d85189c11a40aca",
-  "model_sha256": "13f49d2d7d4f7ad5aa269f0d98ea03c5d361e501f582d1ca35e5c2b527c40951",
+  "checker_sha256": "0f2eaa77672a3b0a00db32ad611e676595495630943af0b8a7ec12bd983d975a",
+  "report_html_sha256": "634bbbf4adea62e81af55697d1a373db8cbd7acd6ed8e80e7ef0145040b9de46",
+  "model_sha256": "435ad5cee7ceca6b94e8ecf3d79522a62eb75e86cd4c2956aec6cff98951b29c",
   "previous_report": {
     "comparisons": 26,
     "baseline_entries": 8,
     "completed_baselines": 7,
     "statistics_exact": true,
-    "previous_model_sha256": "5337d7c3a7d180187f11555ff48a70f20fee6521eb0d63adb504b34305fbdceb"
+    "previous_model_sha256": "13f49d2d7d4f7ad5aa269f0d98ea03c5d361e501f582d1ca35e5c2b527c40951"
   },
   "browser": {
     "http_artifacts_checked": 893,
@@ -31,6 +31,9 @@
     "grouped_benchmarks_and_warmup_timeout": true,
     "compact_descriptions_and_exact_command_toggles": true,
     "plots_visible_by_default": true,
-    "displayed_timings_match_evidence": true
+    "displayed_timings_match_evidence": true,
+    "paired_benchmark_rows": true,
+    "relative_performance_verified": true,
+    "plot_size_control": true
   }
 }

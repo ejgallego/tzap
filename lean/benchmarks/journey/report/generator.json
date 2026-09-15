@@ -17,14 +17,14 @@
   "note": "No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.",
   "matplotlib": "3.10.9",
   "presentation": {
-    "renderer_sha256": "7bf2bdc753479d61a190546f541d0fbf43566b0a7b60c2d71fd0f0372c2318eb",
-    "css_sha256": "b3e5d3088a99b8359dfc5807eaeb297ec02f7161f18a4f4204c19ba9f85d6cd2",
+    "renderer_sha256": "8ea892515cf36317c250b1a15b6396d7c6961b0fa5094706a4ad841d7c1a3ba0",
+    "css_sha256": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
     "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
     "tests": 10,
     "files_sha256": {
-      "index.html": "7cec64217696827a6d3f750d29e1d04452ab3992e559baa44d85189c11a40aca",
-      "review.css": "b3e5d3088a99b8359dfc5807eaeb297ec02f7161f18a4f4204c19ba9f85d6cd2",
-      "review.js": "ebcf9b833bf7706694c1fd9f31528ba819191f743b2330bac8c88d5fa6716f66",
+      "index.html": "634bbbf4adea62e81af55697d1a373db8cbd7acd6ed8e80e7ef0145040b9de46",
+      "review.css": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
+      "review.js": "7c1ecf7f25491572022008b6c4c8a6c2bb475210428d3571b554f578e8328ac1",
       "presentation.json": "1ad8cf4d52d56e9688b9b8f40e86ae5f79d8bd894ddccfb0d6d465b70bf6b7af"
     }
   }
