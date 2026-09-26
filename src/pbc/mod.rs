@@ -192,6 +192,15 @@ impl std::error::Error for PbcError {
     }
 }
 
+/// Result of [`PbcCircuit::max_axis_weights`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct MaxAxisWeights {
+    /// Over non-Clifford rotations and measurements.
+    pub non_clifford: usize,
+    /// Over Clifford rotations.
+    pub clifford: usize,
+}
+
 /// An owned PBC program. Handles are scoped to this circuit. Read-only slices
 /// expose the IR; checked methods maintain operand and outcome validity.
 ///
@@ -427,6 +436,27 @@ impl PbcCircuit {
             Ok(())
         })?;
         Ok(weights)
+    }
+
+    /// The largest axis weights: of non-Clifford rotations and measurements,
+    /// and of Clifford rotations (angles that are multiples of pi/4), 0 when
+    /// there are none. Materializes the axes within `max_work`, as
+    /// [`rotation_weights`](Self::rotation_weights) does.
+    pub fn max_axis_weights(&self, max_work: usize) -> Result<MaxAxisWeights, PbcError> {
+        let mut max = MaxAxisWeights::default();
+        self.visit_axes(max_work, |op, _, factors| {
+            let slot = match op {
+                PbcOp::Rotate { angle, .. } | PbcOp::ConditionalRotate { angle, .. }
+                    if angle.eighths() % 2 == 0 =>
+                {
+                    &mut max.clifford
+                }
+                _ => &mut max.non_clifford,
+            };
+            *slot = (*slot).max(factors.len());
+            Ok(())
+        })?;
+        Ok(max)
     }
 
     /// Visit the stored images C†XqC, then C†ZqC, in canonical order.

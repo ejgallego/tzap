@@ -1,7 +1,9 @@
-//! Machine-checked proof of `docs/pbc-weight-example.md`: every program in
-//! that walkthrough is compared, with the exact-arithmetic oracle in
-//! `crate::semantics`, against the input circuit's unitary (up to global
-//! phase), and every quoted output, T count, and weight is pinned.
+//! Machine-checked walkthrough of one example: tzap -O1 then conversion and
+//! conversion then the pass reach the same T count with different Pauli
+//! weight. Every intermediate program, including each step of moving the
+//! merged S into the frame, is compared with the exact-arithmetic oracle in
+//! `crate::semantics` against the input circuit's unitary (up to global
+//! phase), and every output, T count, and weight is pinned.
 
 use super::*;
 use crate::optimize::{Level, Options};
@@ -54,7 +56,7 @@ fn weight(c: &PbcCircuit) -> usize {
 
 #[test]
 fn step_1_conversion_is_exact() {
-    let pbc = to_pbc(&input()).unwrap();
+    let pbc = to_pbc(&input(), None).unwrap();
     assert_equivalent(&input(), &pbc);
     assert_eq!(
         pbc.to_text().unwrap(),
@@ -90,7 +92,7 @@ fn pipeline_a_tzap_o1_then_conversion_is_exact() {
             .equivalent_up_to_global_phase(&circuit_unitary(&input(), limits).unwrap())
     );
     // ...and so does converting its output.
-    let pbc = to_pbc(&optimized).unwrap();
+    let pbc = to_pbc(&optimized, None).unwrap();
     assert_equivalent(&input(), &pbc);
     assert_eq!(
         pbc.to_text().unwrap(),
@@ -102,7 +104,7 @@ fn pipeline_a_tzap_o1_then_conversion_is_exact() {
 
 #[test]
 fn pipeline_b_conversion_then_the_pass_is_exact() {
-    let mut pbc = to_pbc(&input()).unwrap();
+    let mut pbc = to_pbc(&input(), None).unwrap();
     let stats = pbc.optimize_rotations(OptimizeOptions::default()).unwrap();
     assert_equivalent(&input(), &pbc);
     assert_eq!(

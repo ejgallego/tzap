@@ -19,7 +19,7 @@ fn check(c: &PbcCircuit, expected: Vec<Gate>) {
     let circuit = gates(c.num_qubits(), expected);
     test_support::assert_equivalent(&circuit, c);
     // Every hand-written pair also exercises the automatic converter.
-    let converted = crate::pbc::to_pbc(&circuit).unwrap();
+    let converted = crate::pbc::to_pbc(&circuit, None).unwrap();
     test_support::assert_equivalent(&circuit, &converted);
     assert!(eval(c).equivalent_up_to_global_phase(&eval(&converted)));
 }

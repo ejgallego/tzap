@@ -297,7 +297,7 @@ fn ascii_cx_with_t_on_each_wire_aligns_all_connectors() {
             Gate::t(1),
         ],
     };
-    let drawing = to_pbc(&input).unwrap().to_ascii().unwrap();
+    let drawing = to_pbc(&input, None).unwrap().to_ascii().unwrap();
     let rows: Vec<_> = drawing.lines().collect();
     let joint_axis = rows[1].rfind('Z').unwrap();
     let frame_x = rows[1].find('X').unwrap();

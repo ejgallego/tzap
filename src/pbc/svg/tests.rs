@@ -18,7 +18,7 @@ fn draws_boxes_letters_tabs_and_frame() {
             Gate::measure { qubit: 2, cbit: 0 },
         ],
     };
-    let pbc = to_pbc(&circuit).unwrap();
+    let pbc = to_pbc(&circuit, None).unwrap();
     let svg = pbc.to_svg().unwrap();
     assert!(svg.starts_with("<svg") && svg.trim_end().ends_with("</svg>"));
     // Wire labels are 1-indexed kets.

@@ -2,8 +2,7 @@
 //! Clifford rotations into the output frame, and generalized
 //! multiproduct-commutation (MCR) group swaps.
 //!
-//! See `docs/pbc-phase-folding.tex` for the design and `docs/pbc-optimize.md`
-//! for how this implementation differs and what it achieves. Every axis
+//! Every axis
 //! (rotations, measurements, conditional rotations, and the output frame's
 //! images) is packed once into canonical bit planes and interned. Then rounds
 //! of two steps run until a round removes no T:
@@ -64,7 +63,10 @@ pub struct OptimizeOptions {
     /// Also report the T depth before and after (costs one layering pass
     /// each).
     pub measure_depth: bool,
-    /// Bound on packed axis storage, in u64 words.
+    /// Bound on packed storage, in u64 words: the interned axes, plus the
+    /// values live while packing. (The Clifford carried to the frame, 3n
+    /// images, is not counted.) Exceeding it fails with `ExpansionLimit` and
+    /// leaves the circuit unchanged; it is checked before each allocation.
     pub max_packed_words: usize,
 }
 
@@ -117,18 +119,26 @@ pub struct OptimizeStats {
     pub t_depth_before: usize,
     pub t_depth_after: usize,
     /// Total Pauli weight of the rotation axes: the number of non-identity
-    /// single-qubit factors, summed over all rotations.
+    /// single-qubit factors, summed over all rotations, conditional or not
+    /// (as in `PbcCircuit::rotation_weights`). Before counts every input
+    /// rotation, including zero-angle ones the pass removes.
     pub weight_before: usize,
     pub weight_after: usize,
 }
 
 /// An operation during optimization: a rotation, or a barrier (measurement
 /// or conditional rotation, by index into the original operations) with its
-/// current axis, which evaluates to `sign * W`.
+/// current axis, which evaluates to `sign * W`. `rotation` marks a
+/// conditional rotation, which still counts toward rotation weight.
 #[derive(Clone, Copy, Debug)]
 enum Item {
     Rot(Rot),
-    Barrier { op: usize, axis: u32, sign: i8 },
+    Barrier {
+        op: usize,
+        axis: u32,
+        sign: i8,
+        rotation: bool,
+    },
 }
 
 impl PbcCircuit {
@@ -188,7 +198,18 @@ impl PbcCircuit {
                         })
                     })
                 }
-                _ => Some(Item::Barrier { op, axis, sign }),
+                PbcOp::ConditionalRotate { .. } => Some(Item::Barrier {
+                    op,
+                    axis,
+                    sign,
+                    rotation: true,
+                }),
+                PbcOp::Measure { .. } => Some(Item::Barrier {
+                    op,
+                    axis,
+                    sign,
+                    rotation: false,
+                }),
             })
             .collect();
         let mut frame: Vec<(u32, i8)> = records[self.operations.len()..].to_vec();
@@ -205,9 +226,15 @@ impl PbcCircuit {
         if options.measure_depth {
             optimizer.stats.t_depth_before = optimizer.t_depth(&items);
         }
-        // Counted over the original rotations, including any the packing
-        // step dropped (identity axes weigh nothing anyway).
-        optimizer.stats.weight_before = optimizer.weight(&items);
+        // Every input rotation, conditional or not, including zero-angle ones
+        // that were not turned into items.
+        optimizer.stats.weight_before = self
+            .operations
+            .iter()
+            .zip(&records)
+            .filter(|(op, _)| !matches!(op, PbcOp::Measure { .. }))
+            .map(|(_, &(axis, _))| optimizer.axes.weight(axis))
+            .sum();
         let mut frame_changed = false;
         if options.strategy == Strategy::Litinski {
             frame_changed = optimizer.litinski(&mut items, &mut frame)?;
@@ -269,7 +296,7 @@ impl PbcCircuit {
                     axis: PauliAxis(handle(&mut self.arena, rot.axis)),
                     angle: PauliAngle::new(i64::from(rot.k)),
                 },
-                Item::Barrier { op, axis, sign } => {
+                Item::Barrier { op, axis, sign, .. } => {
                     let h = handle(&mut self.arena, axis);
                     match self.operations[op] {
                         PbcOp::Measure {
@@ -408,15 +435,16 @@ impl Optimizer<'_> {
         let to_frame = self.options.clifford_to_frame;
         let mut f = Clifford::identity(if to_frame { num_qubits } else { 0 }, l, Axes::signature);
         let mut word = vec![0u64; 2 * l];
-        // F† (sign W) F as (id, sign).
+        // F† (sign W) F as (id, sign). New axes count against the budget; on
+        // failure the pass stops and the circuit is left unchanged.
         let mut conjugate = |axes: &mut Axes, f: &mut Clifford, id: u32, sign: i8| {
             if !to_frame || f.fixes(axes.get(id)) {
-                return (id, sign);
+                return Ok((id, sign));
             }
             let phase = f.conjugate(axes.get(id), &mut word);
             debug_assert!(phase.is_multiple_of(2), "conjugation preserves Hermiticity");
-            let new = axes.intern(&word, None);
-            (new, if phase == 0 { sign } else { -sign })
+            let new = axes.intern(&word, None, 0)?;
+            Ok::<_, PbcError>((new, if phase == 0 { sign } else { -sign }))
         };
         let (mut merges, mut absorbed) = (0, 0);
         let mut out: Vec<Item> = Vec::with_capacity(items.len());
@@ -431,7 +459,7 @@ impl Optimizer<'_> {
         for &item in items.iter() {
             match item {
                 Item::Rot(rot) => {
-                    let (mut axis, mut sign) = conjugate(&mut self.axes, &mut f, rot.axis, 1);
+                    let (mut axis, mut sign) = conjugate(&mut self.axes, &mut f, rot.axis, 1)?;
                     self.last.resize(self.axes.len(), NONE);
                     // A pending Clifford that anticommutes with this rotation
                     // cannot stay in front of it: move it into F first.
@@ -440,7 +468,7 @@ impl Optimizer<'_> {
                         let n = self.absorb_pending(&mut out, &mut pending, &mut f, blocking);
                         if n > 0 {
                             absorbed += n;
-                            (axis, sign) = conjugate(&mut self.axes, &mut f, rot.axis, 1);
+                            (axis, sign) = conjugate(&mut self.axes, &mut f, rot.axis, 1)?;
                             self.last.resize(self.axes.len(), NONE);
                         }
                     }
@@ -490,11 +518,21 @@ impl Optimizer<'_> {
                     }
                     out.push(Item::Rot(rot));
                 }
-                Item::Barrier { op, axis, sign } => {
+                Item::Barrier {
+                    op,
+                    axis,
+                    sign,
+                    rotation,
+                } => {
                     absorbed += self.absorb_pending(&mut out, &mut pending, &mut f, None);
-                    let (axis, sign) = conjugate(&mut self.axes, &mut f, axis, sign);
+                    let (axis, sign) = conjugate(&mut self.axes, &mut f, axis, sign)?;
                     self.end_segment(&out[segment_start..]);
-                    out.push(Item::Barrier { op, axis, sign });
+                    out.push(Item::Barrier {
+                        op,
+                        axis,
+                        sign,
+                        rotation,
+                    });
                     segment_start = out.len();
                 }
             }
@@ -503,11 +541,8 @@ impl Optimizer<'_> {
         self.end_segment(&out[segment_start..]);
         if absorbed > 0 {
             for image in frame.iter_mut() {
-                *image = conjugate(&mut self.axes, &mut f, image.0, image.1);
+                *image = conjugate(&mut self.axes, &mut f, image.0, image.1)?;
             }
-        }
-        if self.axes.words_len() > self.options.max_packed_words {
-            return Err(PbcError::ExpansionLimit);
         }
         out.retain(|item| !matches!(item, Item::Rot(r) if r.k == 0));
         *items = out;
@@ -554,12 +589,17 @@ impl Optimizer<'_> {
         absorbed
     }
 
-    /// Total Pauli weight of the rotations' axes.
+    /// Total Pauli weight of the rotations' axes, conditional or not.
     fn weight(&self, items: &[Item]) -> usize {
         items
             .iter()
-            .map(|item| match item {
+            .map(|item| match *item {
                 Item::Rot(rot) => self.axes.weight(rot.axis),
+                Item::Barrier {
+                    axis,
+                    rotation: true,
+                    ..
+                } => self.axes.weight(axis),
                 Item::Barrier { .. } => 0,
             })
             .sum()

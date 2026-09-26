@@ -112,7 +112,7 @@ CCX, CCZ, CZ, and Rz stay native by default. To decompose them, use:
 
 **PBC output**
 
-See the [PBC exchange format](docs/pbc.md) for syntax and measurement examples.
+See the [PBC format](docs/pbc.md) for the syntax and examples.
 
 ```bash
 tzap input.qasm --to-pbc -o output.pbc
@@ -146,10 +146,12 @@ identity rows are implicit. This frame preserves quantum outputs.
 `-o -` writes PBC to stdout. JSON metrics describe the optimized gate circuit
 before conversion.
 Add `--pbc-opt` to merge commuting same-axis rotations and apply MCR group
-swaps after conversion, lowering the PBC T count; see
-[PBC rotation optimization](docs/pbc-optimize.md) for results.
+swaps after conversion, lowering the PBC T count.
+`--pbc-max-weight N` bounds the weight of every π/8 rotation and measurement,
+emitting Cliffords as π/4 rotations where the frame would widen an axis (see
+[docs/pbc.md](docs/pbc.md#weight-bound)).
 `--visualize-pbc circuit.svg` draws the PBC circuit as an SVG in the style of
-Litinski's "A Game of Surface Codes" (see [docs/pbc.md](docs/pbc.md#drawing-a-pbc-circuit)).
+Litinski's "A Game of Surface Codes" (see [docs/pbc.md](docs/pbc.md#visualizer)).
 Export materializes Pauli strings with a default budget of 16 million sparse-work units;
 unlike compressed conversion, expanded output is not guaranteed linear in size.
 

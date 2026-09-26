@@ -179,7 +179,7 @@ fn measurements_are_barriers_and_channels_are_preserved() {
             Gate::t(0),
         ],
     };
-    let mut c = to_pbc(&input).unwrap();
+    let mut c = to_pbc(&input, None).unwrap();
     let limits = ChannelLimits::default();
     let before = pbc_channel(&c, &[false], limits).unwrap();
     let stats = c.optimize_rotations(OptimizeOptions::default()).unwrap();
@@ -288,7 +288,7 @@ fn seeded_fuzz_on_converted_circuits() {
             });
         }
         for strategy in [Strategy::Merge, Strategy::Litinski] {
-            let mut c = to_pbc(&input).unwrap();
+            let mut c = to_pbc(&input, None).unwrap();
             let options = OptimizeOptions {
                 strategy,
                 measure_depth: true,
@@ -514,4 +514,64 @@ fn lazy_cliffords_merge_before_reaching_the_frame() {
         op,
         PbcOp::Rotate { angle, .. } if angle.eighths() == 3
     )));
+}
+
+/// A budget that packing fits but frame moves do not: S about X0 goes into
+/// the frame, which conjugates the four later rotations into four new axes
+/// (Y0, Y0Z1, Y0Z2, Y0Z1Z2), more than packing's transient storage frees.
+/// The pass must fail within the budget and leave the circuit unchanged, up
+/// to the smallest budget that fits.
+#[test]
+fn frame_moves_respect_the_storage_budget() {
+    let layers = [("XII", 2), ("ZII", 1), ("ZZI", 1), ("ZIZ", 1), ("ZZZ", 1)];
+    let packs = |limit| {
+        let c = rotations(3, &layers);
+        let mut roots: Vec<_> = c.operations().iter().map(|op| op.axis().as_ref()).collect();
+        for q in 0..3 {
+            roots.extend([c.output_frame().x(q), c.output_frame().z(q)]);
+        }
+        words::pack(&c.arena, 3, &roots, limit).is_ok()
+    };
+    let optimizes = |limit| {
+        let mut c = rotations(3, &layers);
+        let before = c.to_text().unwrap();
+        let options = OptimizeOptions {
+            max_packed_words: limit,
+            ..OptimizeOptions::default()
+        };
+        match c.optimize_rotations(options) {
+            Ok(_) => true,
+            Err(e) => {
+                assert_eq!(e, PbcError::ExpansionLimit);
+                assert_eq!(c.to_text().unwrap(), before, "unchanged on failure");
+                false
+            }
+        }
+    };
+    let pack_limit = (0..400).find(|&l| packs(l)).unwrap();
+    let optimize_limit = (0..400).find(|&l| optimizes(l)).unwrap();
+    assert!(
+        optimize_limit > pack_limit,
+        "the frame moves need more than packing ({pack_limit} vs {optimize_limit})"
+    );
+    // Monotone: every budget from the threshold on succeeds.
+    assert!((optimize_limit..optimize_limit + 8).all(optimizes));
+}
+
+/// Weight counts every rotation, like `rotation_weights`: zero-angle ones
+/// (before only; the pass removes them) and conditional ones (both).
+#[test]
+fn weight_counts_zero_angle_and_conditional_rotations() {
+    let mut c = rotations(2, &[("XZ", 0), ("ZI", 1)]);
+    let z1 = c.z(1).unwrap();
+    let m = c.measure(z1, None).unwrap();
+    let x0 = c.x(0).unwrap();
+    c.conditional_rotate(x0, PauliAngle::new(1), m).unwrap();
+    let before: usize = c.rotation_weights(1000).unwrap().iter().sum();
+    let stats = c.optimize_rotations(OptimizeOptions::default()).unwrap();
+    // X0Z1 (2, zero angle) + Z0 (1) + conditional X0 (1).
+    assert_eq!((before, stats.weight_before), (4, 4));
+    let after: usize = c.rotation_weights(1000).unwrap().iter().sum();
+    // The zero-angle rotation is gone; the conditional one still counts.
+    assert_eq!((after, stats.weight_after), (2, 2));
 }

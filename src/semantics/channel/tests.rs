@@ -52,7 +52,7 @@ fn pbc(c: &PbcCircuit, initial: &[bool]) -> Channel {
 }
 fn check(c: &Circuit, initial: &[bool]) -> Channel {
     let expected = gate_channel(c, initial);
-    let converted = to_pbc(c).unwrap();
+    let converted = to_pbc(c, None).unwrap();
     let actual = pbc(&converted, initial);
     assert_eq!(
         expected.compare(&actual),
@@ -361,7 +361,7 @@ fn phase_before_z_measurement_is_unobservable() {
 #[test]
 fn reject_bad_initial_stores_operands_and_resource_limits() {
     let input = circuit(1, 1, vec![measure(0, 0)]);
-    let converted = to_pbc(&input).unwrap();
+    let converted = to_pbc(&input, None).unwrap();
     let limits = ChannelLimits::default();
     assert_eq!(
         circuit_channel(&input, &[], limits),
@@ -439,7 +439,7 @@ fn reject_bad_initial_stores_operands_and_resource_limits() {
         Err(Error::LimitExceeded)
     );
     assert_eq!(
-        pbc_channel(&to_pbc(&too_many).unwrap(), &[false], limits),
+        pbc_channel(&to_pbc(&too_many, None).unwrap(), &[false], limits),
         Err(Error::LimitExceeded)
     );
 }
@@ -467,7 +467,7 @@ fn resets_and_post_measurement_gates_are_rejected() {
         let c = circuit(1, 1, vec![measure(0, 0), gate]);
         assert_eq!(
             circuit_channel(&c, &[false], limits).unwrap(),
-            pbc(&to_pbc(&c).unwrap(), &[false])
+            pbc(&to_pbc(&c, None).unwrap(), &[false])
         );
     }
     let mut c = PbcCircuit::new(1, 0);
@@ -489,7 +489,7 @@ fn resets_and_post_measurement_gates_are_rejected() {
 #[test]
 fn partial_measurement_frame_preserves_unmeasured_qubits() {
     let input = circuit(2, 1, vec![Gate::h(1), measure(0, 0)]);
-    let converted = to_pbc(&input).unwrap();
+    let converted = to_pbc(&input, None).unwrap();
     assert!(converted.frame_matches_gates(&[Gate::h(1)]));
     let expected = check(&input, &[false]);
     let mut wrong = PbcCircuit::new(2, 1);
@@ -523,7 +523,7 @@ fn full_bell_readout_absorbs_cliffords_into_joint_measurement_axes() {
 #[test]
 fn partial_bell_readout_needs_entangling_frame_even_if_measured_wire_is_discarded() {
     let input = circuit(2, 1, vec![Gate::h(0), cx(0, 1), measure(1, 0)]);
-    let converted = to_pbc(&input).unwrap();
+    let converted = to_pbc(&input, None).unwrap();
     assert!(converted.frame_matches_gates(&[Gate::h(0), cx(0, 1)]));
     let expected = check(&input, &[false]);
     let mut wrong = PbcCircuit::new(2, 1);

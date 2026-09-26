@@ -101,7 +101,7 @@ fn main() {
             .filter(|g| matches!(g, Gate::t(_) | Gate::tdg(_)))
             .count();
         let start = Instant::now();
-        let mut pbc = match to_pbc(&circuit) {
+        let mut pbc = match to_pbc(&circuit, None) {
             Ok(pbc) => pbc,
             Err(e) => {
                 eprintln!("skip (convert: {e}): {}", file.display());

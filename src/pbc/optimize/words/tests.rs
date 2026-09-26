@@ -131,3 +131,46 @@ fn packing_respects_the_storage_budget() {
         Some(PbcError::ExpansionLimit)
     );
 }
+
+/// The table refuses a new entry that would exceed its limit, counting the
+/// caller's reserved words, and never refuses an existing one.
+#[test]
+fn interning_never_exceeds_the_limit() {
+    let word = |x: u64, z: u64| [x, z];
+    let mut axes = Axes::new(1, 4);
+    let a = axes.intern(&word(1, 0), None, 0).unwrap();
+    axes.intern(&word(0, 1), None, 0).unwrap();
+    assert_eq!(axes.words_len(), 4);
+    assert_eq!(
+        axes.intern(&word(1, 1), None, 0),
+        Err(PbcError::ExpansionLimit)
+    );
+    assert_eq!(
+        axes.intern(&word(1, 0), None, 0),
+        Ok(a),
+        "existing entries are free"
+    );
+    assert_eq!(axes.words_len(), 4);
+    let mut fresh = Axes::new(1, 4);
+    assert_eq!(
+        fresh.intern(&word(1, 0), None, 3),
+        Err(PbcError::ExpansionLimit),
+        "2 words plus 3 reserved exceed 4"
+    );
+}
+
+/// The auditor's case: packing one one-qubit axis needs its live value (2
+/// words) and the interned axis (2 words), so a budget of 3 must fail rather
+/// than end at 4.
+#[test]
+fn packing_counts_live_values_and_the_new_axis() {
+    let mut c = PbcCircuit::new(1, 0);
+    let z = c.z(0).unwrap();
+    c.rotate(z, PauliAngle::new(1)).unwrap();
+    assert_eq!(
+        pack(&c.arena, 1, &[z.as_ref()], 3).err(),
+        Some(PbcError::ExpansionLimit)
+    );
+    let (axes, _) = pack(&c.arena, 1, &[z.as_ref()], 4).unwrap();
+    assert!(axes.words_len() <= 4);
+}

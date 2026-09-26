@@ -64,14 +64,17 @@ pub(super) struct Axes {
     /// ids with the same hash, so collisions are resolved by exact comparison.
     index: FxHashMap<u64, u32>,
     chain: Vec<u32>,
+    /// Bound on `words` plus any storage the caller reserves, in u64 words.
+    limit: usize,
 }
 
 const NONE: u32 = u32::MAX;
 
 impl Axes {
-    fn new(l: usize) -> Self {
+    fn new(l: usize, limit: usize) -> Self {
         Self {
             l,
+            limit,
             words: Vec::new(),
             handles: Vec::new(),
             supports: Vec::new(),
@@ -90,6 +93,7 @@ impl Axes {
     }
 
     /// Packed storage in use, in u64 words.
+    #[cfg(test)]
     pub fn words_len(&self) -> usize {
         self.words.len()
     }
@@ -132,21 +136,39 @@ impl Axes {
         signature
     }
 
-    pub fn intern(&mut self, words: &[u64], handle: Option<PauliRef>) -> u32 {
+    /// The id of `words`, interning it if new. A new entry is refused if the
+    /// table plus `reserved` words (other storage the caller counts against
+    /// the same budget) would exceed the limit, so the limit is never
+    /// exceeded; an existing entry costs nothing.
+    pub fn intern(
+        &mut self,
+        words: &[u64],
+        handle: Option<PauliRef>,
+        reserved: usize,
+    ) -> Result<u32, PbcError> {
         let hash = hash_words(words);
         let mut id = self.index.get(&hash).copied().unwrap_or(NONE);
         while id != NONE {
             if self.get(id) == words {
-                return id;
+                return Ok(id);
             }
             id = self.chain[id as usize];
+        }
+        let after = self
+            .words
+            .len()
+            .checked_add(words.len())
+            .and_then(|w| w.checked_add(reserved))
+            .ok_or(PbcError::ExpansionLimit)?;
+        if after > self.limit {
+            return Err(PbcError::ExpansionLimit);
         }
         let id = self.handles.len() as u32;
         self.words.extend_from_slice(words);
         self.handles.push(handle);
         self.supports.push(Self::signature(words, self.l));
         self.chain.push(self.index.insert(hash, id).unwrap_or(NONE));
-        id
+        Ok(id)
     }
 }
 
@@ -180,7 +202,7 @@ pub(super) fn pack(
 ) -> Result<(Axes, Vec<(u32, i8)>), PbcError> {
     let l = num_qubits.div_ceil(64).max(1);
     let stride = 2 * l;
-    let mut axes = Axes::new(l);
+    let mut axes = Axes::new(l, max_words);
     let mut records = vec![(0, 1); root_refs.len()];
 
     // Roots sorted by node, so each is packed as soon as its node is evaluated.
@@ -302,8 +324,12 @@ pub(super) fn pack(
                 2 => (-1, reference.scaled(super::super::Phase::MinusOne)),
                 _ => return Err(PbcError::NonHermitianAxis),
             };
-            check(live, &axes)?;
-            let id = axes.intern(&slots[s * stride..(s + 1) * stride], Some(handle));
+            // The live values count against the budget alongside the axes.
+            let id = axes.intern(
+                &slots[s * stride..(s + 1) * stride],
+                Some(handle),
+                live * stride,
+            )?;
             records[root] = (id, sign);
             uses[node] -= 1;
             if uses[node] == 0 {

@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         target: 1,
     });
     input.apply(Gate::t(1));
-    let output = to_pbc(&input)?;
+    let output = to_pbc(&input, None)?;
     print!("{}", output.to_ascii()?);
     Ok(())
 }

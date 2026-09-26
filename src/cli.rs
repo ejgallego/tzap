@@ -83,6 +83,8 @@ pub(crate) struct Run {
     pub(crate) pbc_opt: bool,
     /// Write an SVG drawing of the PBC circuit here (`--visualize-pbc`).
     pub(crate) visualize_pbc: Option<String>,
+    /// Bound on PBC rotation and measurement weight (`--pbc-max-weight`).
+    pub(crate) pbc_max_weight: Option<std::num::NonZeroUsize>,
     /// `--parallel`/`--no-parallel` as asked for, or `None` to decide from
     /// the circuit's size (see [`Run::resolve_parallel`]). Distinct from
     /// `options.parallel`, which is the answer rather than the request.
@@ -200,6 +202,7 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
     let mut to_pbc = false;
     let mut pbc_opt = false;
     let mut visualize_pbc: Option<String> = None;
+    let mut pbc_max_weight: Option<std::num::NonZeroUsize> = None;
     let mut decompose_rz = false;
     let mut decompose_cz = false;
     let mut decompose_ccx = false;
@@ -307,6 +310,13 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
                 visualize_pbc = Some(args.get(i).cloned().unwrap_or_else(|| {
                     arg_error("--visualize-pbc requires an output SVG file path")
                 }));
+            }
+            "--pbc-max-weight" => {
+                i += 1;
+                pbc_max_weight =
+                    Some(args.get(i).and_then(|s| s.parse().ok()).unwrap_or_else(|| {
+                        arg_error("--pbc-max-weight requires an integer of at least 1")
+                    }));
             }
             "-o" => {
                 i += 1;
@@ -433,6 +443,11 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
     if pbc_opt && !to_pbc && visualize_pbc.is_none() {
         arg_error("--pbc-opt optimizes PBC output — combine it with --to-pbc or --visualize-pbc");
     }
+    if pbc_max_weight.is_some() && !to_pbc && visualize_pbc.is_none() {
+        arg_error(
+            "--pbc-max-weight bounds PBC output — combine it with --to-pbc or --visualize-pbc",
+        );
+    }
     // Two writers, one stream: whichever won, the other's output would be
     // interleaved into it and neither would parse. Better to say so than to
     // emit a QASM file with a JSON object spliced through it.
@@ -450,6 +465,7 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
             to_pbc,
             pbc_opt,
             visualize_pbc,
+            pbc_max_weight,
             parallel,
             // An absent `-O` flag means O3 too; the distinction only ever
             // mattered for the validation above, which has already run.
@@ -525,6 +541,12 @@ fn print_help(ui: &Ui) {
     out.push_str(&format!(
         "    {bold}--pbc-opt{reset}        With --to-pbc: merge and MCR-swap PBC rotations to lower T count\n"
     ));
+    out.push_str(&format!(
+        "    {bold}--pbc-max-weight{reset} <N>  Bound weight of PBC T rotations and measurements (N >= 1);\n"
+    ));
+    out.push_str(
+        "                     Cliffords that would widen them are emitted as pi/4 rotations (weight <= 2).\n",
+    );
     out.push_str(&format!(
         "    {bold}--visualize-pbc{reset} <file.svg>  Draw the PBC circuit as SVG (Litinski-style)\n"
     ));

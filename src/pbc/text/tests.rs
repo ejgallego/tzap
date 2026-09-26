@@ -148,7 +148,7 @@ fn exported_programs_match_exact_unitaries_for_every_clifford_pair() {
                 num_cbits: 0,
                 gates: vec![a.clone(), Gate::t(0), b, Gate::tdg(1)],
             };
-            let text = to_pbc(&input).unwrap().to_text().unwrap();
+            let text = to_pbc(&input, None).unwrap().to_text().unwrap();
             assert_equivalent(&input, &read_text(&text));
         }
     }
@@ -169,7 +169,7 @@ fn exported_programs_preserve_exact_partial_readout_channels() {
                     Gate::measure { qubit: q, cbit: 1 },
                 ],
             };
-            let text = to_pbc(&input).unwrap().to_text().unwrap();
+            let text = to_pbc(&input, None).unwrap().to_text().unwrap();
             let actual = read_text(&text);
             assert_eq!(actual.output_frame().len(), 2);
             let initial = [true, false];
@@ -183,7 +183,7 @@ fn exported_programs_preserve_exact_partial_readout_channels() {
 
 fn assert_full_export(input: &Circuit, initial: &[bool]) {
     use crate::semantics::channel::{ChannelLimits, circuit_channel, pbc_channel};
-    let text = to_pbc(input).unwrap().to_text().unwrap();
+    let text = to_pbc(input, None).unwrap().to_text().unwrap();
     let exported = read_text(&text);
     let limits = ChannelLimits::default();
     let expected = circuit_channel(input, initial, limits).unwrap();
@@ -361,7 +361,7 @@ fn full_readout_keeps_output_frame_and_quantum_outputs() {
         num_cbits: 1,
         gates: vec![Gate::h(0), Gate::measure { qubit: 0, cbit: 0 }],
     };
-    let p = to_pbc(&c).unwrap();
+    let p = to_pbc(&c, None).unwrap();
     assert_eq!(
         p.to_text().unwrap(),
         "qubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n"
@@ -395,7 +395,7 @@ fn all_clifford_gates_export_as_frame_and_empty_program() {
         ],
     };
     assert_eq!(
-        to_pbc(&c).unwrap().to_text().unwrap(),
+        to_pbc(&c, None).unwrap().to_text().unwrap(),
         "qubits 2\nregisters 0\nf X0 -1 Y0 Z1\nf X1 -1 Z0 X1\nf Z0 -1 X0 Z1\nf Z1 -1 Z1\n"
     );
 }
@@ -590,7 +590,7 @@ fn mid_circuit_examples_export_exactly() {
             num_cbits: 2,
             gates,
         };
-        assert_eq!(to_pbc(&input).unwrap().to_text().unwrap(), expected);
+        assert_eq!(to_pbc(&input, None).unwrap().to_text().unwrap(), expected);
         for initial in [[false, false], [true, false], [false, true], [true, true]] {
             assert_full_export(&input, &initial);
         }

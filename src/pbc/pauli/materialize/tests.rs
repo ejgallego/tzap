@@ -105,7 +105,7 @@ fn late_sparse_leaf_export_is_independent_of_arena_prefix_and_width() {
             num_cbits: 0,
             gates: vec![Gate::t((n - 1) as u32)],
         };
-        let pbc = to_pbc(&circuit).unwrap();
+        let pbc = to_pbc(&circuit, None).unwrap();
         let root = pbc.operations()[0].axis().as_ref();
         let stats = pbc
             .arena
@@ -258,7 +258,7 @@ fn benchmark_sparse_materialization() {
             num_cbits: 0,
             gates: vec![Gate::t((n - 1) as u32)],
         };
-        let pbc = to_pbc(&input).unwrap();
+        let pbc = to_pbc(&input, None).unwrap();
         let export = median(
             || {
                 std::hint::black_box(pbc.to_text().unwrap());
@@ -289,7 +289,7 @@ fn benchmark_sparse_materialization() {
             num_cbits: 0,
             gates,
         };
-        let converted = to_pbc(&input).unwrap();
+        let converted = to_pbc(&input, None).unwrap();
         let bytes = converted.to_text().unwrap().len();
         let roots: Vec<_> = converted
             .operations()
@@ -308,7 +308,7 @@ fn benchmark_sparse_materialization() {
         );
         let end_to_end = median(
             || {
-                std::hint::black_box(to_pbc(&input).unwrap().to_text().unwrap());
+                std::hint::black_box(to_pbc(&input, None).unwrap().to_text().unwrap());
             },
             5,
         );

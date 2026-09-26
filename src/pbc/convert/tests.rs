@@ -4,6 +4,7 @@ use crate::pbc::{ExpandedPauli, Pauli, Phase};
 use crate::semantics::test_support::assert_equivalent;
 
 mod fuzz;
+mod max_weight;
 
 #[test]
 fn litinski_four_wire_rotation_commutation_example() {
@@ -100,7 +101,7 @@ fn litinski_four_wire_rotation_commutation_example() {
     for q in 0..4 {
         measured.gates.push(Gate::measure { qubit: q, cbit: q });
     }
-    let output = to_pbc(&measured).unwrap();
+    let output = to_pbc(&measured, None).unwrap();
     assert_eq!(output.operations().len(), 8);
     assert!(output.frame_matches_gates(&skeleton));
     // Check terminal measurement signs and retained quantum outputs via exact
@@ -110,7 +111,7 @@ fn litinski_four_wire_rotation_commutation_example() {
         let mut partial = input(4, measured.gates[..measured.gates.len() - 4].to_vec());
         partial.num_cbits = 1;
         partial.gates.push(Gate::measure { qubit: q, cbit: 0 });
-        let actual = to_pbc(&partial).unwrap();
+        let actual = to_pbc(&partial, None).unwrap();
         let limits = ChannelLimits::default();
         let expected = circuit_channel(&partial, &[false], limits).unwrap();
         let actual = pbc_channel(&actual, &[false], limits).unwrap();
@@ -127,7 +128,7 @@ fn input(n: usize, gates: Vec<Gate>) -> Circuit {
 }
 
 fn check(input: &Circuit) -> PbcCircuit {
-    let output = to_pbc(input).unwrap();
+    let output = to_pbc(input, None).unwrap();
     assert_equivalent(input, &output);
     assert_linear_size(input, &output);
     output
@@ -147,7 +148,7 @@ fn empty_circuits_and_typed_pass() {
         assert_eq!(output.pauli_nodes().len(), 1 + 2 * n);
         assert!(output.operations().is_empty());
         assert!(output.frame_matches_gates(&[]));
-        let pass: &dyn Pass<Result<PbcCircuit, PbcError>> = &ToPbc;
+        let pass: &dyn Pass<Result<PbcCircuit, PbcError>> = &ToPbc::default();
         assert_eq!(pass.name(), "ToPbc");
         assert_equivalent(&c, &pass.run(&c).unwrap());
     }
@@ -284,7 +285,7 @@ fn native_lowering_agrees_with_existing_gate_decomposition() {
     let native = check(&c);
     let decomposed = DecomposeToffoli.run(&c);
     assert_equivalent(&decomposed, &native);
-    assert_equivalent(&c, &to_pbc(&decomposed).unwrap());
+    assert_equivalent(&c, &to_pbc(&decomposed, None).unwrap());
 }
 
 #[test]
@@ -374,9 +375,9 @@ fn repeated_conversion_is_deterministic_and_preserves_input_metadata() {
     // Classical register size is metadata, not an allocation in the converter.
     c.num_cbits = usize::MAX;
     let before = c.clone();
-    let a = ToPbc.run(&c).unwrap();
-    ToPbc.run(&input(3, vec![Gate::h(2)])).unwrap();
-    let b = ToPbc.run(&c).unwrap();
+    let a = ToPbc::default().run(&c).unwrap();
+    ToPbc::default().run(&input(3, vec![Gate::h(2)])).unwrap();
+    let b = ToPbc::default().run(&c).unwrap();
     assert_eq!(a.to_ascii().unwrap(), b.to_ascii().unwrap());
     assert_eq!(a.num_cbits(), usize::MAX);
     assert_eq!(c.gates, before.gates);
@@ -439,7 +440,7 @@ fn terminal_measurements_preserve_frame_and_immutable_outcomes() {
             Gate::measure { qubit: 1, cbit: 0 },
         ],
     };
-    let output = to_pbc(&c).unwrap();
+    let output = to_pbc(&c, None).unwrap();
     assert_eq!(output.measurement_count(), 2);
     assert_eq!(output.operations().len(), 2);
     assert!(output.frame_matches_gates(&c.gates[..2]));
@@ -468,7 +469,7 @@ fn terminal_measurements_preserve_frame_and_immutable_outcomes() {
 fn reject_resets_and_any_gate_after_measurement() {
     let mut c = input(1, vec![Gate::h(0), Gate::reset(0)]);
     assert_eq!(
-        to_pbc(&c).unwrap_err(),
+        to_pbc(&c, None).unwrap_err(),
         PbcError::InvalidInput {
             index: 1,
             cause: Box::new(PbcError::UnsupportedGate(GateKind::Reset))
@@ -481,7 +482,7 @@ fn reject_resets_and_any_gate_after_measurement() {
     ] {
         c.gates = gates;
         assert_eq!(
-            to_pbc(&c).unwrap_err(),
+            to_pbc(&c, None).unwrap_err(),
             PbcError::InvalidInput {
                 index: c.gates.len() - 1,
                 cause: Box::new(PbcError::UnsupportedGate(GateKind::Reset)),
@@ -541,7 +542,7 @@ fn mid_circuit_measurements_match_exact_channels() {
                     Gate::h(1),
                 ]);
                 c.gates.push(Gate::measure { qubit: 1, cbit: 1 });
-                let output = to_pbc(&c).unwrap();
+                let output = to_pbc(&c, None).unwrap();
                 assert_eq!(output.measurement_count(), 2);
                 assert_linear_size(&c, &output);
                 for initial in [[false, true], [true, false]] {
@@ -597,7 +598,7 @@ fn invalid_inputs_report_instruction_index() {
     ];
     for (gate, cause) in cases {
         assert_eq!(
-            to_pbc(&input(2, vec![Gate::h(0), gate])).unwrap_err(),
+            to_pbc(&input(2, vec![Gate::h(0), gate]), None).unwrap_err(),
             PbcError::InvalidInput {
                 index: 1,
                 cause: Box::new(cause)
@@ -605,7 +606,7 @@ fn invalid_inputs_report_instruction_index() {
         );
     }
     assert_eq!(
-        to_pbc(&input(usize::MAX, vec![])).unwrap_err(),
+        to_pbc(&input(usize::MAX, vec![]), None).unwrap_err(),
         PbcError::TooManyQubits
     );
 }
@@ -623,7 +624,7 @@ fn growing_parity_uses_linear_nodes_not_quadratic_strings() {
                 Gate::t(0),
             ]);
         }
-        let output = to_pbc(&c).unwrap();
+        let output = to_pbc(&c, None).unwrap();
         assert_eq!(output.pauli_nodes().len(), 1 + 2 * n + 2 * (n - 1));
         assert_eq!(output.operations().len(), n - 1);
         assert_eq!(output.output_frame().len(), n);
@@ -654,7 +655,7 @@ fn long_native_stream_has_fixed_cost_per_gate() {
             10_000
         ],
     );
-    let output = to_pbc(&c).unwrap();
+    let output = to_pbc(&c, None).unwrap();
     assert_eq!(output.pauli_nodes().len(), 7 + 4 * c.gates.len());
     assert_eq!(output.operations().len(), 7 * c.gates.len());
     assert!(output.frame_matches_gates(&[]));
@@ -664,7 +665,7 @@ fn long_native_stream_has_fixed_cost_per_gate() {
 #[test]
 fn errors_display_their_instruction_and_expose_their_cause() {
     use std::error::Error;
-    let err = to_pbc(&input(1, vec![Gate::h(0), Gate::rz(0.5, 0)])).unwrap_err();
+    let err = to_pbc(&input(1, vec![Gate::h(0), Gate::rz(0.5, 0)]), None).unwrap_err();
     assert_eq!(
         err.to_string(),
         "input gate 1: unsupported PBC input gate: Rz"

@@ -40,7 +40,7 @@ fn random_gate(kind: GateKind, n: usize, rng: &mut StdRng) -> Gate {
 /// A random unitary circuit and its RNG, for callers that extend it. Width and
 /// optional-native subset are encoded in the seed so replay only needs one
 /// value. Every permitted gate kind is forced into the input.
-fn random_circuit(seed: u64) -> (Circuit, StdRng) {
+pub(super) fn random_circuit(seed: u64) -> (Circuit, StdRng) {
     let n = (seed % 4 + 1) as usize;
     let native_mask = (seed >> 2) & 7;
     let mut palette = vec![
@@ -119,7 +119,7 @@ fn fuzz_to_pbc() {
 
 /// `PBC_FUZZ_CASES` (decimal) and `PBC_FUZZ_SEED` (decimal or 0x-hex), with
 /// the given defaults.
-fn fuzz_range(default_count: u64, default_seed: u64) -> (u64, u64) {
+pub(super) fn fuzz_range(default_count: u64, default_seed: u64) -> (u64, u64) {
     let count = std::env::var("PBC_FUZZ_CASES")
         .map(|s| s.parse().expect("decimal case count"))
         .unwrap_or(default_count);
@@ -137,7 +137,7 @@ fn fuzz_range(default_count: u64, default_seed: u64) -> (u64, u64) {
 /// overwritten registers; the last register is never written, so its initial
 /// value must survive. Four-qubit circuits get one measurement, keeping exact
 /// Choi blocks within the oracle's limits.
-fn random_measured_circuit(seed: u64) -> (Circuit, Vec<bool>) {
+pub(super) fn random_measured_circuit(seed: u64) -> (Circuit, Vec<bool>) {
     let (mut c, mut rng) = random_circuit(seed);
     let n = c.num_qubits;
     c.num_cbits = n + 1;
@@ -167,7 +167,7 @@ fn mid_circuit_case(seed: u64, levels: &[crate::optimize::Level]) {
          fuzz_mid_circuit_measurements -- --ignored --nocapture\n{c}"
     );
     let expected = circuit_channel(&c, &initial, limits).unwrap();
-    let converted = to_pbc(&c).unwrap_or_else(|e| panic!("conversion failed: {e}, {replay}"));
+    let converted = to_pbc(&c, None).unwrap_or_else(|e| panic!("conversion failed: {e}, {replay}"));
     assert_linear_size(&c, &converted);
     let actual = pbc_channel(&converted, &initial, limits).unwrap();
     assert_eq!(
@@ -177,7 +177,7 @@ fn mid_circuit_case(seed: u64, levels: &[crate::optimize::Level]) {
     );
     // The rotation optimizer must preserve the channel too, treating
     // measurements as barriers.
-    let mut optimized = to_pbc(&c).unwrap();
+    let mut optimized = to_pbc(&c, None).unwrap();
     let stats = optimized
         .optimize_rotations(crate::pbc::OptimizeOptions::default())
         .unwrap();
@@ -196,7 +196,7 @@ fn mid_circuit_case(seed: u64, levels: &[crate::optimize::Level]) {
                 ..Options::default()
             };
             let (optimized, _) = optimize(&c, &options).unwrap();
-            let actual = pbc_channel(&to_pbc(&optimized).unwrap(), &initial, limits).unwrap();
+            let actual = pbc_channel(&to_pbc(&optimized, None).unwrap(), &initial, limits).unwrap();
             assert_eq!(
                 expected.compare(&actual),
                 Ok(()),
@@ -231,8 +231,8 @@ fn fuzz_mid_circuit_measurements() {
     eprintln!("PBC mid-circuit fuzz: {count} cases passed, starting seed {seed:#x}");
 }
 
-/// O3 is sound as seen through PBC: `to_pbc(C)` (no optimization) and
-/// `to_pbc(O3(C))` are the same operation. Unitary circuits are compared as
+/// O3 is sound as seen through PBC: `to_pbc(C, None)` (no optimization) and
+/// `to_pbc(O3(C), None)` are the same operation. Unitary circuits are compared as
 /// exact unitaries up to global phase; circuits with measurements (half the
 /// cases, including mid-circuit ones) as exact quantum-classical channels for
 /// every initial classical store. O3 runs sequentially and in parallel.
@@ -253,7 +253,7 @@ fn o3_case(seed: u64) -> (bool, bool) {
          Replay: PBC_FUZZ_SEED={seed} PBC_FUZZ_CASES=1 cargo test --release \
          fuzz_o3_matches_unoptimized_pbc -- --ignored --nocapture\n{circuit}"
     );
-    let plain = to_pbc(&circuit).unwrap();
+    let plain = to_pbc(&circuit, None).unwrap();
     // The initial store only affects bits the circuit never writes: check
     // all zeros and one random store. The reference is computed once.
     let stores = [vec![false; circuit.num_cbits], random_store];
@@ -279,7 +279,7 @@ fn o3_case(seed: u64) -> (bool, bool) {
         if checked.contains(&optimized.gates) {
             continue;
         }
-        let converted = to_pbc(&optimized).unwrap();
+        let converted = to_pbc(&optimized, None).unwrap();
         if let Some(reference) = &reference_unitary {
             let actual = pbc_unitary(&converted, Limits::default()).unwrap();
             assert!(
@@ -342,8 +342,8 @@ fn o3_comparison_detects_a_wrong_rewrite() {
             .rposition(|g| matches!(g, Gate::t(_)))
             .expect("every palette includes T");
         wrong.gates.remove(t);
-        let a = pbc_unitary(&to_pbc(&circuit).unwrap(), Limits::default()).unwrap();
-        let b = pbc_unitary(&to_pbc(&wrong).unwrap(), Limits::default()).unwrap();
+        let a = pbc_unitary(&to_pbc(&circuit, None).unwrap(), Limits::default()).unwrap();
+        let b = pbc_unitary(&to_pbc(&wrong, None).unwrap(), Limits::default()).unwrap();
         assert!(!a.equivalent_up_to_global_phase(&b), "seed {seed:#x}");
     }
 }

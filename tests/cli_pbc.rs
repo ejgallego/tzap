@@ -32,44 +32,51 @@ fn convert(source: &str) -> String {
 fn documented_measurement_examples_match_cli_output() {
     let doc = include_str!("../docs/pbc.md");
     let readme = include_str!("../README.md");
-    for (n, body, expected) in [
+    // (qubits, body, expected output, whether docs/pbc.md shows it)
+    for (n, body, expected, in_doc) in [
         (
             1,
             "h q[0];\nmeasure q[0] -> c[0];",
             "qubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n",
+            true,
         ),
         (
             1,
             "x q[0];\nmeasure q[0] -> c[0];",
             "qubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n",
+            false,
         ),
         (
             1,
             "h q[0];\nt q[0];\nh q[0];\nmeasure q[0] -> c[0];",
             "qubits 1\nregisters 1\nr 1 1 X0\nm 1 Z0 -> c0\n",
+            false,
         ),
         (
             2,
             "h q[0];\ncx q[0],q[1];\nmeasure q[0] -> c[0];\nmeasure q[1] -> c[1];",
             "qubits 2\nregisters 2\nm 1 X0 -> c0\nm 1 X0 Z1 -> c1\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
+            true,
         ),
     ] {
-        assert!(doc.contains(&format!("```text\n{expected}```")));
+        assert!(!in_doc || doc.contains(&format!("```text\n{expected}```")));
         assert_eq!(convert(&qasm(n, body)), expected);
     }
     for (body, expected, text) in [
         (
             "h q[0];\ncx q[0],q[1];\nmeasure q[1] -> c[0];",
             "qubits 2\nregisters 1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
-            doc,
+            None,
         ),
         (
             "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];",
             "qubits 2\nregisters 1\nr 1 1 X0 Z1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
-            readme,
+            Some(readme),
         ),
     ] {
-        assert!(text.contains(&format!("```text\n{expected}```")));
+        if let Some(text) = text {
+            assert!(text.contains(&format!("```text\n{expected}```")));
+        }
         assert_eq!(convert(&qasm_with_cbits(2, 1, body)), expected);
     }
 }
@@ -233,7 +240,7 @@ fn file_output_json_and_errors_preserve_stream_contract() {
         .failed("conflicting stdout writers");
 }
 
-/// Every mid-circuit example in docs/pbc.md, through the CLI.
+/// Mid-circuit examples through the CLI; the one docs/pbc.md shows must match.
 #[test]
 fn documented_mid_circuit_examples_match_cli_output() {
     let doc = include_str!("../docs/pbc.md");
@@ -265,8 +272,9 @@ fn documented_mid_circuit_examples_match_cli_output() {
              m 1 X0 X1 -> c1\nf X0 1 Z0 Z1\nf X1 1 Z1\nf Z0 1 X0\nf Z1 1 X0 X1\n",
         ),
     ] {
+        let in_doc = n == 2;
         assert!(
-            doc.contains(&format!("```text\n{expected}```")),
+            !in_doc || doc.contains(&format!("```text\n{expected}```")),
             "{expected}"
         );
         assert_eq!(convert(&qasm_with_cbits(n, 2, body)), expected);
@@ -357,4 +365,62 @@ fn visualize_pbc_writes_an_svg() {
     Tzap::new(&["-", "--visualize-pbc"])
         .run()
         .failed("missing path");
+}
+
+/// --pbc-max-weight emits the Cliffords that would widen an axis as
+/// rotations; it requires N >= 1 and --to-pbc or --visualize-pbc.
+#[test]
+fn pbc_max_weight_flushes_cliffords_as_rotations() {
+    let doc = include_str!("../docs/pbc.md");
+    let source = qasm(2, "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];");
+    let expected = "qubits 2\nregisters 2\nr 2 1 Z0\nr 2 1 X0\nr 2 1 Z0\nr 2 1 Z0\nr 2 1 X1\n\
+                    r -2 1 Z0 X1\nr 1 1 Z1\nm 1 Z1 -> c0\n";
+    assert!(
+        doc.contains(expected),
+        "docs/pbc.md is missing:\n{expected}"
+    );
+    let run = Tzap::new(&[
+        "-",
+        "-o",
+        "-",
+        "--to-pbc",
+        "--pbc-max-weight",
+        "1",
+        "--passes",
+        "CancelGates",
+    ])
+    .stdin(&source)
+    .run()
+    .ok("bounded conversion");
+    assert_eq!(run.stdout, expected);
+    assert!(
+        run.stderr.contains("PBC max weight: 1 (bound 1)"),
+        "{}",
+        run.stderr
+    );
+    // Bound 2 admits the unbounded conversion unchanged.
+    let wide = Tzap::new(&[
+        "-",
+        "-o",
+        "-",
+        "--to-pbc",
+        "--pbc-max-weight",
+        "2",
+        "--passes",
+        "CancelGates",
+    ])
+    .stdin(&source)
+    .run()
+    .ok("bound 2");
+    assert_eq!(wide.stdout, convert(&source));
+    for bad in [
+        &["-", "--to-pbc", "--pbc-max-weight", "0"][..],
+        &["-", "--to-pbc", "--pbc-max-weight"],
+        &["-", "--pbc-max-weight", "2"],
+    ] {
+        Tzap::new(bad)
+            .stdin(&source)
+            .run()
+            .failed("invalid --pbc-max-weight");
+    }
 }

@@ -263,7 +263,7 @@ fn prepare_output(ui: &Ui, run: &Run, circuit: &Circuit) -> Option<String> {
     // Conversion is terminal: optimization and requested decompositions have
     // already finished. Validate even when no output destination was requested.
     if run.to_pbc || run.visualize_pbc.is_some() {
-        let mut pbc = tzap::pbc::to_pbc(circuit).unwrap_or_else(|e| {
+        let mut pbc = tzap::pbc::to_pbc(circuit, run.pbc_max_weight).unwrap_or_else(|e| {
             let hint = if circuit.gates.iter().any(|g| matches!(g, Gate::rz(..))) {
                 " Rz gates require --decompose-rz (or DecomposeRz in --passes)."
             } else {
@@ -274,7 +274,13 @@ fn prepare_output(ui: &Ui, run: &Run, circuit: &Circuit) -> Option<String> {
         ui.info("  Converting to PBC (retaining quantum and classical outputs)");
         if run.pbc_opt {
             let start = Instant::now();
-            match pbc.optimize_rotations(tzap::pbc::OptimizeOptions::default()) {
+            // Moving Cliffords into the frame is the only step that widens
+            // axes; merges and swaps keep every axis, so a bound still holds.
+            let options = tzap::pbc::OptimizeOptions {
+                clifford_to_frame: run.pbc_max_weight.is_none(),
+                ..Default::default()
+            };
+            match pbc.optimize_rotations(options) {
                 Ok(stats) => ui.info(&format!(
                     "  PBC rotation optimization: T {} → {} ({} merges, {} MCR swaps, \
                      {} Cliffords to frame, {:.3}s)",
@@ -290,6 +296,17 @@ fn prepare_output(ui: &Ui, run: &Run, circuit: &Circuit) -> Option<String> {
             }
         } else {
             ui.info(&format!("  PBC T count: {}", pbc.t_count()));
+        }
+        if let Some(bound) = run.pbc_max_weight {
+            match pbc.max_axis_weights(usize::MAX) {
+                Ok(max) => ui.info(&format!(
+                    "  PBC max weight: {} (bound {bound}), Clifford rotations {}; {} operations",
+                    max.non_clifford,
+                    max.clifford,
+                    pbc.operations().len()
+                )),
+                Err(e) => ui.info(&format!("  PBC max weight unavailable: {e}")),
+            }
         }
         if let Some(path) = &run.visualize_pbc {
             let options = tzap::pbc::SvgOptions::default();
