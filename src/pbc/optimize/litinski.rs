@@ -10,19 +10,23 @@ impl Optimizer<'_> {
     /// of layer i + 1 into layer i if it commutes with all of layer i, until
     /// nothing moves. Equal rotations that meet in a layer combine; a combined
     /// Clifford is commuted to the end (into the frame), which changes later
-    /// axes, so layering restarts until no more rotations combine. Returns
-    /// whether the frame changed.
+    /// axes, so layering restarts until no more rotations combine, for at
+    /// most `rounds` passes. With `clifford_to_frame` off, combined Cliffords
+    /// stay in place as rotations instead. Returns whether the frame changed.
     pub(super) fn litinski(
         &mut self,
         items: &mut Vec<Item>,
         frame: &mut [(u32, i8)],
     ) -> Result<bool, PbcError> {
-        // Combined Cliffords always go to the end, as in the paper.
-        self.options.clifford_to_frame = true;
+        // Combined Cliffords go to the end, as in the paper, unless
+        // `clifford_to_frame` is off (then these streams change nothing).
         let mut frame_changed = false;
+        if self.options.rounds == 0 {
+            return Ok(false);
+        }
         // Initial Cliffords, if any, go to the end first.
         frame_changed |= self.stream(items, frame, false)? > 0;
-        loop {
+        for _ in 0..self.options.rounds {
             let mut combined = 0;
             let mut output = Vec::with_capacity(items.len());
             let mut segment = Vec::new();
@@ -107,47 +111,57 @@ impl Optimizer<'_> {
             .all(|r| r.support & rot.support == 0 || !self.axes.anticommute(r.axis, rot.axis))
     }
 
-    /// T depth: odd-angle rotations placed as early as possible into layers
-    /// of mutually commuting rotations (one past the latest layer holding an
-    /// anticommuting rotation), summed over segments. Even-angle rotations
-    /// are Clifford and ignored.
+    /// T depth: the most odd-angle rotations along any chain of rotations
+    /// that must stay in order (each anticommuting with the next), summed
+    /// over segments. Clifford rotations add no depth themselves but stay in
+    /// the chain: one between two T rotations it anticommutes with keeps
+    /// them apart, since commuting it past either changes that axis. Each
+    /// rotation's level is the largest `level + [is T]` among the earlier
+    /// rotations it anticommutes with; the depth is the largest T level + 1.
     pub(super) fn t_depth(&self, items: &[Item]) -> usize {
         let mut total = 0;
-        // Per layer: its rotations and the union of their signatures.
-        let mut layers: Vec<(u64, Vec<Rot>)> = Vec::new();
-        // Per signature bit: the highest layer touching it, plus one.
+        // Bucket v holds the rotations with `level + [is T]` = v, and the
+        // union of their signatures.
+        let mut buckets: Vec<(u64, Vec<Rot>)> = Vec::new();
+        // Per signature bit: the highest bucket touching it, plus one.
         let mut top = [0usize; 64];
+        let mut depth = 0;
         for item in items {
             match *item {
-                Item::Rot(rot) if rot.k % 2 != 0 => {
-                    // No layer above the highest one sharing a bit can hold
-                    // an anticommuting rotation.
+                Item::Rot(rot) => {
+                    // Buckets above the highest one sharing a bit hold no
+                    // anticommuting rotation; search down from there.
                     let bound = bits(rot.support).map(|b| top[b]).max().unwrap_or(0);
-                    let mut place = 0;
+                    let mut level = 0;
                     for index in (0..bound).rev() {
-                        let (signature, layer) = &layers[index];
-                        if signature & rot.support != 0 && !self.commutes_with_all(layer, rot) {
-                            place = index + 1;
+                        let (signature, bucket) = &buckets[index];
+                        if signature & rot.support != 0 && !self.commutes_with_all(bucket, rot) {
+                            level = index;
                             break;
                         }
                     }
-                    if place == layers.len() {
-                        layers.push((0, Vec::new()));
+                    let is_t = rot.k % 2 != 0;
+                    let value = level + usize::from(is_t);
+                    if is_t {
+                        depth = depth.max(value);
                     }
-                    layers[place].0 |= rot.support;
-                    layers[place].1.push(rot);
+                    if buckets.len() <= value {
+                        buckets.resize_with(value + 1, || (0, Vec::new()));
+                    }
+                    buckets[value].0 |= rot.support;
+                    buckets[value].1.push(rot);
                     for b in bits(rot.support) {
-                        top[b] = top[b].max(place + 1);
+                        top[b] = top[b].max(value + 1);
                     }
                 }
-                Item::Rot(_) => {}
                 Item::Barrier { .. } => {
-                    total += layers.len();
-                    layers.clear();
+                    total += depth;
+                    depth = 0;
+                    buckets.clear();
                     top = [0; 64];
                 }
             }
         }
-        total + layers.len()
+        total + depth
     }
 }

@@ -683,3 +683,61 @@ fn json_reports_the_pbc() {
     let qasm_only = json(&[]);
     assert!(qasm_only.contains("\"pbc\": null"), "{qasm_only}");
 }
+
+/// The report's counts and weights agree however they are obtained: from
+/// the optimizer, from the exported text, or by materializing for a drawing.
+#[test]
+fn report_weights_agree_across_sources() {
+    let source = qasm(
+        3,
+        "h q[0];\ncx q[0],q[1];\nt q[1];\ncx q[1],q[2];\nt q[2];\nh q[2];\nt q[2];\n\
+         measure q[2] -> c[0];\nt q[0];",
+    );
+    let converted = |stderr: &str| -> String {
+        let start = stderr.find("Converted to PBC").expect(stderr);
+        let block = &stderr[start..];
+        let end = block.find("\n  ").unwrap_or(block.len());
+        // Drop the timing on the heading line.
+        block[..end].split_once('\n').unwrap().1.to_string()
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let svg = dir.path().join("c.svg");
+    let run = |args: &[&str]| {
+        let mut all = vec!["-"];
+        all.extend_from_slice(args);
+        Tzap::new(&all).stdin(&source).run().ok("report").stderr
+    };
+    let optimizer = converted(&run(&["--to-pbc"]));
+    let text = converted(&run(&["--to-pbc", "--pbc-no-opt"]));
+    let drawing = converted(&run(&[
+        "--visualize-pbc",
+        svg.to_str().unwrap(),
+        "--pbc-no-opt",
+        "--passes",
+        "CancelGates",
+    ]));
+    assert_eq!(optimizer, text);
+    assert_eq!(text, drawing);
+    assert!(text.contains("measurement weight min/median/max"), "{text}");
+}
+
+/// --pbc-expansion-budget bounds writing, and needs PBC output.
+#[test]
+fn expansion_budget_flag() {
+    let source = qasm(2, "t q[0];\nh q[0];\nt q[0];\ncx q[0],q[1];\nt q[1];");
+    let over = Tzap::new(&["-", "--to-pbc", "-o", "-", "--pbc-expansion-budget", "1"])
+        .stdin(&source)
+        .run()
+        .failed("tiny budget");
+    assert!(
+        over.stderr.contains("raise it with --pbc-expansion-budget"),
+        "{}",
+        over.stderr
+    );
+    for bad in [
+        &["-", "--pbc-expansion-budget", "5"][..],
+        &["-", "--to-pbc", "--pbc-expansion-budget", "lots"],
+    ] {
+        Tzap::new(bad).stdin(&source).run().failed("bad flag use");
+    }
+}

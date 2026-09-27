@@ -14,6 +14,11 @@ use crate::ui::{Ui, Verbosity};
 /// in the middle of a pipeline.
 pub(crate) const STREAM_PATH: &str = "-";
 
+/// Default `--pbc-expansion-budget`: sparse work for expanding PBC axes into
+/// explicit Pauli strings, a guard against runaway memory (roughly 8 bytes a
+/// unit at worst). The largest benchmark, gf2^256_mult, needs about 10M.
+pub(crate) const DEFAULT_PBC_EXPANSION_BUDGET: usize = 256_000_000;
+
 /// Passes that run on the PBC circuit, after the gate passes: `(name,
 /// description)`. `ToPbc` converts; `PbcOpt` then optimizes the rotations.
 pub(crate) const PBC_PASSES: [(&str, &str); 2] = [
@@ -138,6 +143,9 @@ pub(crate) struct Run {
     pub(crate) pbc_passes: Vec<&'static str>,
     /// Write an SVG drawing of the PBC circuit here (`--visualize-pbc`).
     pub(crate) visualize_pbc: Option<String>,
+    /// Sparse-expansion work allowed for writing, drawing, or measuring PBC
+    /// axes (`--pbc-expansion-budget`).
+    pub(crate) pbc_expansion_budget: usize,
     /// Bound on PBC rotation and measurement weight (`--pbc-max-weight`).
     pub(crate) pbc_max_weight: Option<std::num::NonZeroUsize>,
     /// `--parallel`/`--no-parallel` as asked for, or `None` to decide from
@@ -215,8 +223,11 @@ fn parse_string_arg(args: &[String], i: usize, flag_name: &str, what: &str) -> S
 
 /// Every long flag that takes a separate value, and so may also be written
 /// `--flag=value` (see [`split_flag_values`]).
-const VALUE_FLAGS: [&str; 7] = [
+const VALUE_FLAGS: [&str; 10] = [
     "--epsilon",
+    "--pbc-expansion-budget",
+    "--pbc-max-weight",
+    "--visualize-pbc",
     "--passes",
     "--cache-dir",
     "--superopt-qubits",
@@ -257,6 +268,7 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
     let mut to_pbc = false;
     let mut pbc_no_opt = false;
     let mut visualize_pbc: Option<String> = None;
+    let mut pbc_expansion_budget: Option<usize> = None;
     let mut pbc_max_weight: Option<std::num::NonZeroUsize> = None;
     let mut decompose_rz = false;
     let mut decompose_cz = false;
@@ -368,6 +380,15 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
                 i += 1;
                 visualize_pbc = Some(args.get(i).cloned().unwrap_or_else(|| {
                     arg_error("--visualize-pbc requires an output SVG file path")
+                }));
+            }
+            "--pbc-expansion-budget" => {
+                i += 1;
+                let value = args.get(i).map_or("", |s| s.as_str());
+                pbc_expansion_budget = Some(value.parse().unwrap_or_else(|_| {
+                    arg_error(format!(
+                        "--pbc-expansion-budget requires a number of work units, got '{value}'"
+                    ))
                 }));
             }
             "--pbc-max-weight" => {
@@ -542,6 +563,12 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
         (decompose_ccx, decompose_cz, decompose_rz) = (false, false, false);
     }
     to_pbc |= pbc_passes.0;
+    if pbc_expansion_budget.is_some() && !to_pbc && visualize_pbc.is_none() {
+        arg_error(
+            "--pbc-expansion-budget applies to PBC output — combine it with --to-pbc or \
+             --visualize-pbc",
+        );
+    }
     if pbc_max_weight.is_some() && !to_pbc && visualize_pbc.is_none() {
         arg_error(
             "--pbc-max-weight bounds PBC output — combine it with --to-pbc or --visualize-pbc",
@@ -585,6 +612,7 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
                 .filter_map(|(listed, name)| listed.then_some(name))
                 .collect(),
             visualize_pbc,
+            pbc_expansion_budget: pbc_expansion_budget.unwrap_or(DEFAULT_PBC_EXPANSION_BUDGET),
             pbc_max_weight,
             parallel,
             // An absent `-O` flag means O3 too; the distinction only ever
@@ -732,6 +760,12 @@ fn print_help(ui: &Ui) {
     out.push_str("                     and π/2 rotations of weight <= 2\n");
     out.push_str(&format!("    {bold}--visualize-pbc{reset} <file.svg>\n"));
     out.push_str("                     Draw the PBC circuit as SVG, in Litinski's style\n");
+    out.push_str(&format!("    {bold}--pbc-expansion-budget{reset} <N>\n"));
+    out.push_str("                     Work allowed for expanding Pauli axes when writing,\n");
+    out.push_str(&format!(
+        "                     drawing, or measuring PBC (default {})\n",
+        crate::progress::fmt_num(DEFAULT_PBC_EXPANSION_BUDGET)
+    ));
     out.push('\n');
     out.push_str(&format!("  {heading}PASSES{reset} (names for --passes)\n"));
     for (name, _pass, desc) in PassName::ALL {

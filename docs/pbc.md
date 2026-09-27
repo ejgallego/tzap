@@ -10,7 +10,8 @@ tzap input.qasm --to-pbc -o output.pbc
 `--to-pbc` turns gate-level optimization off, since PBC has its own: after any
 requested decompositions, the circuit is converted, and then the rotation
 optimizer lowers the T count by merging same-axis rotations, moving each
-rotation past the rotations it commutes with to reach its partner. `--pbc-no-opt` skips the rotation optimizer.
+rotation past the rotations it commutes with to reach its partner.
+`--pbc-no-opt` skips the rotation optimizer.
 To run gate-level optimization first, pass `-O1`–`-O3`, `-Osuper`, or
 `--passes`, where conversion is the pass `ToPbc`, listed after the gate passes,
 optionally followed by the rotation optimizer `PbcOpt`:
@@ -19,12 +20,48 @@ optionally followed by the rotation optimizer `PbcOpt`:
 tzap input.qasm --passes CancelGates,ToPbc,PbcOpt -o output.pbc
 ```
 
-tzap reports the number of π/8 rotations and, if any, of Clifford rotations
-and measurements, with the minimum, median, and maximum weight of each.
+The input must have no resets; for Rz gates, also pass `--decompose-rz`.
+Measurements may appear anywhere, including mid-circuit. tzap checks these
+right after parsing, naming the offending gate, before any other work.
 
-The input
-must have no resets; for Rz gates, also pass `--decompose-rz`. Measurements may
-appear anywhere, including mid-circuit.
+## Report
+
+On stderr, tzap reports the PBC before and after the rotation optimizer: the
+number of π/8 rotations and, when there are any, of Clifford rotations (left in
+the circuit by a weight bound) and measurements, with the minimum, median, and
+maximum weight of each kind. For `benchmarks/feynman/barenco_tof_3.qasm`:
+
+```text
+  Converted to PBC in 0.000s
+	├─ 28 π/8 rotations
+	└─ π/8 weight min/median/max: 1/2/3
+  Optimized PBC in 0.000s
+	├─ 28 → 16 π/8 rotations (↓42.9%)
+	└─ π/8 weight min/median/max: 1/2/3
+```
+
+For an even count, the median is the mean of the two middle weights, so it can
+end in `.5`. With `-O1`–`-O3` or `--passes`, a gate-level summary comes first;
+without them, the parsed circuit's gate metrics are listed under `Parsed`.
+
+With `--json`, the report's `metrics` describe the gate circuit before
+conversion, and the `pbc` key describes the PBC (`null` when there is none):
+
+- `max_weight`: the `--pbc-max-weight` bound, or `null`.
+- `converted`: the circuit as converted, and `optimization.output`: after the
+  rotation optimizer (`optimization` is `null` with `--pbc-no-opt`). Each has
+  `pi8_rotations`, `clifford_rotations`, and `measurements` counts, and under
+  `weight` a `{min, median, max}` for each kind (`null` for none).
+- `optimization.merges`, `mcr_swaps`, `cliffords_to_frame`: the optimizer's
+  work; `convert_seconds` and `optimization.seconds`: timings.
+
+`options.level` is `null` when no preset level ran (`--to-pbc` alone, or
+`--passes`), and `output.gate_set` is `null` for PBC output.
+
+Writing, drawing, and measuring PBC expand the shared Pauli axes into explicit
+strings. That work is bounded by `--pbc-expansion-budget` (256 million units by
+default; the largest benchmark, `gf2^256_mult`, needs about 10 million).
+Exceeding it is an error that names the flag.
 
 ## Syntax
 
@@ -169,7 +206,8 @@ Codes". Each operation is one box spanning its qubits, with a Pauli letter on
 every wire it covers (𝟙 inside the span where it acts trivially). A tab shows
 the angle, with a white "−" strip when the axis is negative. π/8 rotations
 are green, π/4 orange, π/2 grey, and measurements blue. Operations are drawn
-as early as their commutation allows, as in the paper's figures.
+as early as their commutation allows, as in the paper's figures. Every
+operation is drawn, however large the circuit.
 
 For example, this circuit (from Fig. 4 of the paper):
 

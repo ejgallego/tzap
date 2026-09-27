@@ -183,23 +183,11 @@ pub(crate) struct RunInfo<'a> {
     pub(crate) pbc: Option<&'a PbcReport>,
 }
 
-/// Minimum, median, and maximum of a set of axis weights.
-#[derive(Clone, Copy)]
-pub(crate) struct WeightStats {
-    pub(crate) min: usize,
-    pub(crate) median: f64,
-    pub(crate) max: usize,
-}
-
-/// Operation counts of a PBC circuit, with axis weight statistics (`None`
-/// for an empty kind, or when weights exceeded the materialization budget).
+/// Operation counts of a PBC circuit with their axis weights; `weighed` is
+/// false when the weights exceeded the materialization budget.
 pub(crate) struct PbcCounts {
-    pub(crate) pi8_rotations: usize,
-    pub(crate) clifford_rotations: usize,
-    pub(crate) measurements: usize,
-    pub(crate) pi8_weight: Option<WeightStats>,
-    pub(crate) clifford_weight: Option<WeightStats>,
-    pub(crate) measurement_weight: Option<WeightStats>,
+    pub(crate) axes: tzap::pbc::AxisWeights,
+    pub(crate) weighed: bool,
 }
 
 /// The rotation optimizer's work.
@@ -219,27 +207,30 @@ pub(crate) struct PbcReport {
     pub(crate) optimization: Option<PbcOptimization>,
 }
 
-fn weight_value(stats: Option<WeightStats>) -> Value {
-    Value::some(stats, |w| {
-        Value::Object(vec![
-            ("min", Value::Int(w.min)),
-            ("median", Value::Float(w.median)),
-            ("max", Value::Int(w.max)),
-        ])
-    })
+/// `{min, median, max}`, or `null` for no operations or unknown weights.
+fn weight_value(w: tzap::pbc::WeightSummary, weighed: bool) -> Value {
+    if w.count == 0 || !weighed {
+        return Value::Null;
+    }
+    Value::Object(vec![
+        ("min", Value::Int(w.min)),
+        ("median", Value::Float(w.median())),
+        ("max", Value::Int(w.max)),
+    ])
 }
 
 fn pbc_counts_value(c: &PbcCounts) -> Value {
+    let a = &c.axes;
     Value::Object(vec![
-        ("pi8_rotations", Value::Int(c.pi8_rotations)),
-        ("clifford_rotations", Value::Int(c.clifford_rotations)),
-        ("measurements", Value::Int(c.measurements)),
+        ("pi8_rotations", Value::Int(a.pi8.count)),
+        ("clifford_rotations", Value::Int(a.clifford.count)),
+        ("measurements", Value::Int(a.measurements.count)),
         (
             "weight",
             Value::Object(vec![
-                ("pi8_rotations", weight_value(c.pi8_weight)),
-                ("clifford_rotations", weight_value(c.clifford_weight)),
-                ("measurements", weight_value(c.measurement_weight)),
+                ("pi8_rotations", weight_value(a.pi8, c.weighed)),
+                ("clifford_rotations", weight_value(a.clifford, c.weighed)),
+                ("measurements", weight_value(a.measurements, c.weighed)),
             ]),
         ),
     ])
@@ -298,10 +289,11 @@ fn options_value(options: &Options, run: &RunInfo<'_>) -> Value {
     };
     let (qubits, window_gates, murm_entries) = options.superopt.resolved(options.level);
     Value::Object(vec![
-        // `null` when gate-level optimization was off (`--to-pbc` alone).
+        // `null` when no preset level ran: gate-level optimization was off
+        // (`--to-pbc` alone), or `--passes` replaced the preset pipeline.
         (
             "level",
-            if run.gate_opts_off {
+            if run.gate_opts_off || options.passes.is_some() {
                 Value::Null
             } else {
                 Value::str(level)

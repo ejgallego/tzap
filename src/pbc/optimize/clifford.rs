@@ -2,17 +2,25 @@
 //! images of every qubit's X, Y, and Z, for moving Clifford rotations into
 //! the output frame.
 
-use super::words::{anticommutes, product};
+use super::super::PbcError;
+use super::words::{Axes, anticommutes, product};
 
-/// The Clifford F, as `F† P_q F` for P in X, Y, Z and every qubit q: packed
-/// canonical words with phase exponents (`i^p W`). Starts as the identity.
+/// The Clifford F, as `F† P_q F` for P in X, Y, Z: packed canonical words
+/// with phase exponents (`i^p W`). Starts as the identity, and stores images
+/// only for the qubits it has touched, each in a slot allocated on first
+/// touch and counted against the axes' storage limit.
 pub(super) struct Clifford {
     l: usize,
-    /// Image of X_q at index 3q, Y_q at 3q + 1, Z_q at 3q + 2; `2 l` words each.
+    /// Slot of each qubit's images, or `NONE` while they are the identity's.
+    slots: Vec<u32>,
+    /// The qubit of each slot.
+    qubits: Vec<u32>,
+    /// Images of slot s: X at index 3s, Y at 3s + 1, Z at 3s + 2; `2 l`
+    /// words each.
     images: Vec<u64>,
     phases: Vec<u8>,
-    /// Support signature of each X and Z image (as in `Axes::support`), to
-    /// skip images that cannot anticommute with an absorbed axis.
+    /// Support signature of each image (as in `Axes::support`), to skip
+    /// images that cannot anticommute with an absorbed axis.
     supports: Vec<u64>,
     /// Qubits whose images may differ from the identity's.
     touched: Vec<u64>,
@@ -21,47 +29,78 @@ pub(super) struct Clifford {
 }
 
 const LETTERS: usize = 3;
+const NONE: u32 = u32::MAX;
 
 impl Clifford {
     pub fn identity(num_qubits: usize, l: usize, signature: fn(&[u64], usize) -> u64) -> Self {
-        let stride = 2 * l;
-        let mut images = vec![0u64; LETTERS * num_qubits * stride];
-        let mut supports = vec![0u64; LETTERS * num_qubits];
-        for q in 0..num_qubits {
-            let (word, bit) = (q / 64, 1u64 << (q % 64));
-            for (letter, (x, z)) in [(true, false), (true, true), (false, true)]
-                .into_iter()
-                .enumerate()
-            {
-                let start = (LETTERS * q + letter) * stride;
-                if x {
-                    images[start + word] = bit;
-                }
-                if z {
-                    images[start + l + word] = bit;
-                }
-                supports[LETTERS * q + letter] = signature(&images[start..start + stride], l);
-            }
-        }
         Self {
             l,
-            images,
-            phases: vec![0; LETTERS * num_qubits],
-            supports,
+            slots: vec![NONE; num_qubits],
+            qubits: Vec::new(),
+            images: Vec::new(),
+            phases: Vec::new(),
+            supports: Vec::new(),
             touched: vec![0; l],
             signature,
-            scratch: vec![0; stride],
+            scratch: vec![0; 2 * l],
         }
+    }
+
+    /// Storage counted against the axes' limit, in u64 words.
+    pub fn words(&self) -> usize {
+        self.images.len()
+    }
+
+    /// Give qubit q a slot holding its identity images.
+    fn touch(&mut self, q: usize, axes: &Axes) -> Result<(), PbcError> {
+        if self.slots[q] != NONE {
+            return Ok(());
+        }
+        let (l, stride) = (self.l, 2 * self.l);
+        axes.reserve(LETTERS * stride)?;
+        self.slots[q] = self.qubits.len() as u32;
+        self.qubits.push(q as u32);
+        let (word, bit) = (q / 64, 1u64 << (q % 64));
+        for (x, z) in [(true, false), (true, true), (false, true)] {
+            let start = self.images.len();
+            self.images.resize(start + stride, 0);
+            if x {
+                self.images[start + word] = bit;
+            }
+            if z {
+                self.images[start + l + word] = bit;
+            }
+            self.supports
+                .push((self.signature)(&self.images[start..start + stride], l));
+            self.phases.push(0);
+        }
+        Ok(())
     }
 
     /// Compose a Pauli rotation `exp(-i k pi/8 B)`, k in {2, -2, 4}, executed
     /// before F: `F <- F R`. Each image I becomes `R† I R`, which for an image
     /// anticommuting with B is `i B I` (k = 2), `-i B I` (k = -2), or `-I`
     /// (k = 4); commuting images are unchanged. Y images follow the same rule,
-    /// since conjugation is linear.
-    pub fn absorb(&mut self, b: &[u64], b_support: u64, k: i8) {
+    /// since conjugation is linear. Untouched qubits outside B's support keep
+    /// identity images, which commute with B; those in it get a slot first,
+    /// which fails if the storage limit would be exceeded.
+    pub fn absorb(
+        &mut self,
+        b: &[u64],
+        b_support: u64,
+        k: i8,
+        axes: &Axes,
+    ) -> Result<(), PbcError> {
         debug_assert!(matches!(k, 2 | -2 | 4));
         let (l, stride) = (self.l, 2 * self.l);
+        for j in 0..l {
+            let mut acted = b[j] | b[l + j];
+            while acted != 0 {
+                let q = 64 * j + acted.trailing_zeros() as usize;
+                acted &= acted - 1;
+                self.touch(q, axes)?;
+            }
+        }
         for index in 0..self.phases.len() {
             if self.supports[index] & b_support == 0 {
                 continue;
@@ -80,9 +119,10 @@ impl Clifford {
                 image.copy_from_slice(&self.scratch);
                 self.supports[index] = (self.signature)(image, l);
             }
-            let q = index / LETTERS;
+            let q = self.qubits[index / LETTERS] as usize;
             self.touched[q / 64] |= 1 << (q % 64);
         }
+        Ok(())
     }
 
     /// Whether `F† W F = W` is certain because W acts on no touched qubit.
@@ -113,7 +153,7 @@ impl Clifford {
                     (1, 1) => 1,
                     _ => 2,
                 };
-                let index = LETTERS * (64 * j + bit) + letter;
+                let index = LETTERS * self.slots[64 * j + bit] as usize + letter;
                 let image = &self.images[index * stride..(index + 1) * stride];
                 let e = product(out, image, &mut self.scratch, l);
                 out.copy_from_slice(&self.scratch);

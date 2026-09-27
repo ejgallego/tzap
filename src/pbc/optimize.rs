@@ -31,7 +31,9 @@ mod litinski;
 mod words;
 
 use super::pauli::{PauliArena, PauliNode, PauliRef};
-use super::{Pauli, PauliAngle, PauliAxis, PbcCircuit, PbcError, PbcOp, Phase};
+use super::{
+    AxisKind, AxisWeights, Pauli, PauliAngle, PauliAxis, PbcCircuit, PbcError, PbcOp, Phase,
+};
 use clifford::Clifford;
 use words::{Axes, Rot, anticommutes, normalize, pack, product};
 
@@ -47,11 +49,13 @@ pub struct OptimizeOptions {
     /// Per run triple, how many shorter group variants to try besides the
     /// full runs: suffixes of A and prefixes of C.
     pub candidates: usize,
-    /// Maximum rounds of streaming merge and MCR swaps; also bounds the
-    /// merge sweeps of `Strategy::Litinski`.
+    /// Maximum rounds of streaming merge and MCR swaps, or of
+    /// `Strategy::Litinski`'s layer-and-combine passes. 0 leaves the
+    /// rotations as they are.
     pub rounds: usize,
     /// Move Clifford (even-angle) rotations into the output frame, which can
-    /// unblock further merges.
+    /// unblock further merges. Off, Clifford rotations stay in place and no
+    /// axis changes (as under a weight bound), for either strategy.
     pub clifford_to_frame: bool,
     /// Accept a certified MCR swap whenever it lets rotations merge, even if
     /// the T count does not drop immediately; otherwise only when it does.
@@ -65,10 +69,11 @@ pub struct OptimizeOptions {
     /// Also report the T depth before and after (costs one layering pass
     /// each).
     pub measure_depth: bool,
-    /// Bound on packed storage, in u64 words: the interned axes, plus the
-    /// values live while packing. (The Clifford carried to the frame, 3n
-    /// images, is not counted.) Exceeding it fails with `ExpansionLimit` and
-    /// leaves the circuit unchanged; it is checked before each allocation.
+    /// Bound on packed storage, in u64 words: the interned axes, the values
+    /// live while packing, and the Clifford carried to the frame (three
+    /// images per qubit it has touched). Exceeding it fails with
+    /// `ExpansionLimit` and leaves the circuit unchanged; it is checked before
+    /// each allocation.
     pub max_packed_words: usize,
 }
 
@@ -126,6 +131,10 @@ pub struct OptimizeStats {
     /// rotation, including zero-angle ones the pass removes.
     pub weight_before: usize,
     pub weight_after: usize,
+    /// Operation counts and axis weights by kind, before and after, as
+    /// [`PbcCircuit::axis_weight_summary`] would report them.
+    pub axes_before: AxisWeights,
+    pub axes_after: AxisWeights,
 }
 
 /// An operation during optimization: a rotation, or a barrier (measurement
@@ -237,6 +246,14 @@ impl PbcCircuit {
             .filter(|(op, _)| !matches!(op, PbcOp::Measure { .. }))
             .map(|(_, &(axis, _))| optimizer.axes.weight(axis))
             .sum();
+        optimizer.stats.axes_before = AxisWeights::of(
+            self.operations
+                .iter()
+                .zip(&records)
+                .filter_map(|(op, &(axis, _))| {
+                    Some((AxisKind::of(op)?, optimizer.axes.weight(axis)))
+                }),
+        );
         let mut frame_changed = false;
         if options.strategy == Strategy::Litinski {
             frame_changed = optimizer.litinski(&mut items, &mut frame)?;
@@ -247,7 +264,7 @@ impl PbcCircuit {
         // those into the frame too.
         let mut t = usize::MAX;
         let rounds = if options.strategy == Strategy::Merge {
-            options.rounds.max(1)
+            options.rounds
         } else {
             0
         };
@@ -261,6 +278,7 @@ impl PbcCircuit {
             t = now;
         }
         if options.strategy == Strategy::Merge
+            && rounds > 0
             && options.clifford_to_frame
             && items
                 .iter()
@@ -272,6 +290,22 @@ impl PbcCircuit {
             optimizer.stats.t_depth_after = optimizer.t_depth(&items);
         }
         optimizer.stats.weight_after = optimizer.weight(&items);
+        optimizer.stats.axes_after = AxisWeights::of(items.iter().filter_map(|item| match *item {
+            Item::Rot(rot) => {
+                let kind = if rot.k % 2 == 0 {
+                    AxisKind::Clifford
+                } else {
+                    AxisKind::Pi8
+                };
+                Some((kind, optimizer.axes.weight(rot.axis)))
+            }
+            // Barriers keep their operation (and angle), so classify it; a
+            // zero-angle conditional rotation has no kind.
+            Item::Barrier { op, axis, .. } => Some((
+                AxisKind::of(&self.operations[op])?,
+                optimizer.axes.weight(axis),
+            )),
+        }));
 
         // Install: build handles for synthesized axes, sharing leaves.
         let mut axes = optimizer.axes;
@@ -467,7 +501,7 @@ impl Optimizer<'_> {
                     // cannot stay in front of it: move it into F first.
                     if to_frame && !pending.is_empty() {
                         let blocking = Some((axis, self.axes.support(axis)));
-                        let n = self.absorb_pending(&mut out, &mut pending, &mut f, blocking);
+                        let n = self.absorb_pending(&mut out, &mut pending, &mut f, blocking)?;
                         if n > 0 {
                             absorbed += n;
                             (axis, sign) = conjugate(&mut self.axes, &mut f, rot.axis, 1)?;
@@ -476,7 +510,7 @@ impl Optimizer<'_> {
                     }
                     let k = normalize(i32::from(sign) * i32::from(rot.k));
                     if to_frame && !lazy && k % 2 == 0 {
-                        f.absorb(self.axes.get(axis), self.axes.support(axis), k);
+                        f.absorb(self.axes.get(axis), self.axes.support(axis), k, &self.axes)?;
                         absorbed += 1;
                         continue;
                     }
@@ -500,7 +534,7 @@ impl Optimizer<'_> {
                             if lazy {
                                 pending.push(j);
                             } else {
-                                f.absorb(self.axes.get(axis), rot.support, target.k);
+                                f.absorb(self.axes.get(axis), rot.support, target.k, &self.axes)?;
                                 absorbed += 1;
                                 target.k = 0;
                             }
@@ -526,7 +560,7 @@ impl Optimizer<'_> {
                     sign,
                     rotation,
                 } => {
-                    absorbed += self.absorb_pending(&mut out, &mut pending, &mut f, None);
+                    absorbed += self.absorb_pending(&mut out, &mut pending, &mut f, None)?;
                     let (axis, sign) = conjugate(&mut self.axes, &mut f, axis, sign)?;
                     self.end_segment(&out[segment_start..]);
                     out.push(Item::Barrier {
@@ -539,7 +573,7 @@ impl Optimizer<'_> {
                 }
             }
         }
-        absorbed += self.absorb_pending(&mut out, &mut pending, &mut f, None);
+        absorbed += self.absorb_pending(&mut out, &mut pending, &mut f, None)?;
         self.end_segment(&out[segment_start..]);
         if absorbed > 0 {
             for image in frame.iter_mut() {
@@ -550,6 +584,9 @@ impl Optimizer<'_> {
         *items = out;
         self.stats.merges += merges;
         self.stats.cliffords_to_frame += absorbed;
+        // F is dropped here. (On an early error the whole pass fails, so its
+        // storage need not be returned.)
+        self.axes.release(f.words());
         Ok(absorbed)
     }
 
@@ -564,7 +601,7 @@ impl Optimizer<'_> {
         pending: &mut Vec<u32>,
         f: &mut Clifford,
         blocking: Option<(u32, u64)>,
-    ) -> usize {
+    ) -> Result<usize, PbcError> {
         let mut absorbed = 0;
         let mut keep = 0;
         for i in 0..pending.len() {
@@ -582,13 +619,13 @@ impl Optimizer<'_> {
                 keep += 1;
                 continue;
             }
-            f.absorb(self.axes.get(r.axis), r.support, r.k);
+            f.absorb(self.axes.get(r.axis), r.support, r.k, &self.axes)?;
             self.last[r.axis as usize] = NONE;
             r.k = 0;
             absorbed += 1;
         }
         pending.truncate(keep);
-        absorbed
+        Ok(absorbed)
     }
 
     /// Total Pauli weight of the rotations' axes, conditional or not.

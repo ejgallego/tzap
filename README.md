@@ -156,8 +156,9 @@ emitting Cliffords as π/4 rotations where the frame would widen an axis (see
 [docs/pbc.md](docs/pbc.md#weight-bound)).
 `--visualize-pbc circuit.svg` draws the PBC circuit as an SVG in the style of
 Litinski's "A Game of Surface Codes" (see [docs/pbc.md](docs/pbc.md#visualizer)).
-Export materializes Pauli strings with a default budget of 16 million sparse-work units;
-unlike compressed conversion, expanded output is not guaranteed linear in size.
+Export expands the Pauli strings within a budget of 256 million sparse-work
+units by default (`--pbc-expansion-budget`); unlike the compressed conversion,
+expanded output is not guaranteed linear in size.
 
 ## Circuit support
 

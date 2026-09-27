@@ -66,12 +66,16 @@ pub(super) struct Axes {
     chain: Vec<u32>,
     /// Bound on `words` plus any storage the caller reserves, in u64 words.
     limit: usize,
+    /// Other storage held against the same limit (the Clifford carried to
+    /// the frame), through [`Axes::reserve`]; a `Cell` so it can be reserved
+    /// while axes are borrowed.
+    external: std::cell::Cell<usize>,
 }
 
 const NONE: u32 = u32::MAX;
 
 impl Axes {
-    fn new(l: usize, limit: usize) -> Self {
+    pub(super) fn new(l: usize, limit: usize) -> Self {
         Self {
             l,
             limit,
@@ -80,7 +84,29 @@ impl Axes {
             supports: Vec::new(),
             index: FxHashMap::default(),
             chain: Vec::new(),
+            external: std::cell::Cell::new(0),
         }
+    }
+
+    /// Count `words` of other storage against the limit, or fail if that
+    /// would exceed it.
+    pub fn reserve(&self, words: usize) -> Result<(), PbcError> {
+        let after = self
+            .words
+            .len()
+            .checked_add(self.external.get())
+            .and_then(|w| w.checked_add(words))
+            .ok_or(PbcError::ExpansionLimit)?;
+        if after > self.limit {
+            return Err(PbcError::ExpansionLimit);
+        }
+        self.external.set(self.external.get() + words);
+        Ok(())
+    }
+
+    /// Return storage counted by [`Axes::reserve`].
+    pub fn release(&self, words: usize) {
+        self.external.set(self.external.get() - words);
     }
 
     pub fn len(&self) -> usize {
@@ -159,6 +185,7 @@ impl Axes {
             .len()
             .checked_add(words.len())
             .and_then(|w| w.checked_add(reserved))
+            .and_then(|w| w.checked_add(self.external.get()))
             .ok_or(PbcError::ExpansionLimit)?;
         if after > self.limit {
             return Err(PbcError::ExpansionLimit);

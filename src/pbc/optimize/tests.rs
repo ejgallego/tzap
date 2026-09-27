@@ -462,8 +462,18 @@ fn t_depth_is_as_soon_as_possible_layering() {
     assert_eq!(depth(2, &[("ZI", 1), ("IZ", 1)]).0, 1);
     assert_eq!(depth(1, &[("Z", 1), ("X", 1)]).0, 2);
     assert_eq!(depth(2, &[("ZI", 1), ("XI", 1), ("IZ", 1)]).0, 2);
-    assert_eq!(depth(2, &[("ZI", 1), ("XI", 2), ("ZI", -3)]).0, 1);
     assert_eq!(depth(1, &[("Z", 1), ("X", 1), ("Y", 1)]).0, 3);
+    // A Clifford anticommuting with two T rotations keeps them apart:
+    // commuting X(S) past the second Z(T) turns it into Y, which
+    // anticommutes with the first.
+    assert_eq!(depth(2, &[("ZI", 1), ("XI", 2), ("ZI", -3)]).0, 2);
+    // Cliffords add no depth of their own, and one that commutes with both
+    // (or acts elsewhere) changes nothing.
+    assert_eq!(depth(1, &[("X", 2), ("Z", 1)]).0, 1);
+    assert_eq!(depth(2, &[("ZI", 1), ("IX", 2), ("ZI", 1)]).0, 1);
+    assert_eq!(depth(2, &[("ZI", 1), ("ZZ", 2), ("ZI", 1)]).0, 1);
+    // The chain runs through Cliffords: Z(T), X(S), Y(S), X(T).
+    assert_eq!(depth(1, &[("Z", 1), ("X", 2), ("Y", 2), ("X", 1)]).0, 2);
 }
 
 /// Litinski's layering combines equal rotations that share a layer into a
@@ -579,4 +589,131 @@ fn weight_counts_zero_angle_and_conditional_rotations() {
     let after: usize = c.rotation_weights(1000).unwrap().iter().sum();
     // The zero-angle rotation is gone; the conditional one still counts.
     assert_eq!((after, stats.weight_after), (2, 2));
+}
+
+/// The optimizer's per-kind weight summaries agree with materializing the
+/// circuit before and after, with Clifford rotations (from a weight bound),
+/// measurements, and every strategy and frame setting.
+#[test]
+fn axis_weight_summaries_match_materialization() {
+    let (mut cliffords, mut measurements) = (0, 0);
+    for case in 0..48u64 {
+        let mut rng = StdRng::seed_from_u64(0x4157_0000 + case);
+        let n = 2 + (case % 3) as usize;
+        let mut input = Circuit {
+            num_qubits: n,
+            num_cbits: n,
+            gates: vec![],
+        };
+        for _ in 0..rng.gen_range(6..=30) {
+            let q = rng.gen_range(0..n as u32);
+            let r = (q + 1) % n as u32;
+            input.gates.push(match rng.gen_range(0..8) {
+                0 => Gate::h(q),
+                1 => Gate::s(q),
+                2 | 3 => Gate::t(q),
+                4 => Gate::tdg(q),
+                5 => Gate::measure { qubit: q, cbit: q },
+                _ => Gate::cnot {
+                    control: q,
+                    target: r,
+                },
+            });
+        }
+        let bound = std::num::NonZeroUsize::new((case % 3) as usize);
+        for (strategy, clifford_to_frame) in [
+            (Strategy::Merge, true),
+            (Strategy::Merge, false),
+            (Strategy::Litinski, true),
+        ] {
+            let mut c = to_pbc(&input, bound).unwrap();
+            let before = c.axis_weight_summary(usize::MAX).unwrap();
+            let stats = c
+                .optimize_rotations(OptimizeOptions {
+                    strategy,
+                    clifford_to_frame,
+                    ..OptimizeOptions::default()
+                })
+                .unwrap();
+            let after = c.axis_weight_summary(usize::MAX).unwrap();
+            assert_eq!(stats.axes_before, before, "case {case}\n{input}");
+            assert_eq!(stats.axes_after, after, "case {case}\n{input}");
+            assert_eq!(stats.axes_after.pi8.count, stats.t_after);
+            cliffords += after.clifford.count;
+            measurements += after.measurements.count;
+        }
+    }
+    assert!(cliffords > 0 && measurements > 0);
+}
+
+/// The Clifford carried to the frame stores images only for the qubits it
+/// touches, and that storage counts against the budget.
+#[test]
+fn clifford_storage_counts_only_touched_qubits() {
+    let n: usize = 1000;
+    let l = n.div_ceil(64);
+    let slot = 3 * 2 * l;
+    let z = |qubits: &[usize]| {
+        let mut w = vec![0u64; 2 * l];
+        for &q in qubits {
+            w[l + q / 64] |= 1 << (q % 64);
+        }
+        w
+    };
+    let (z0, z01) = (z(&[0]), z(&[0, 1]));
+    let unbounded = words::Axes::new(l, usize::MAX);
+    let mut f = clifford::Clifford::identity(n, l, words::Axes::signature);
+    assert_eq!(f.words(), 0, "an identity Clifford stores nothing");
+    f.absorb(&z0, words::Axes::signature(&z0, l), 2, &unbounded)
+        .unwrap();
+    assert_eq!(f.words(), slot);
+    // Room for exactly one qubit's images: a second qubit is refused.
+    let tight = words::Axes::new(l, slot);
+    let mut g = clifford::Clifford::identity(n, l, words::Axes::signature);
+    g.absorb(&z0, words::Axes::signature(&z0, l), 2, &tight)
+        .unwrap();
+    assert_eq!(
+        g.absorb(&z01, words::Axes::signature(&z01, l), 2, &tight),
+        Err(PbcError::ExpansionLimit)
+    );
+}
+
+/// `rounds: 0` leaves the rotations alone, for both strategies.
+#[test]
+fn zero_rounds_change_nothing() {
+    let layers = [("ZI", 1), ("XI", 2), ("ZI", 1), ("IZ", 1), ("IZ", 1)];
+    for strategy in [Strategy::Merge, Strategy::Litinski] {
+        let mut c = rotations(2, &layers);
+        let before = c.to_text().unwrap();
+        let stats = c
+            .optimize_rotations(OptimizeOptions {
+                rounds: 0,
+                strategy,
+                ..OptimizeOptions::default()
+            })
+            .unwrap();
+        assert_eq!(c.to_text().unwrap(), before, "{strategy:?}");
+        assert_eq!((stats.merges, stats.cliffords_to_frame), (0, 0));
+    }
+}
+
+/// Litinski honors `clifford_to_frame: false`: combined Cliffords stay as
+/// rotations, the frame is untouched, and the unitary is preserved.
+#[test]
+fn litinski_can_keep_cliffords_in_place() {
+    let layers = [("XI", 2), ("ZI", 1), ("ZI", 1), ("ZZ", 1)];
+    let mut c = rotations(2, &layers);
+    let stats = optimize(
+        &mut c,
+        OptimizeOptions {
+            strategy: Strategy::Litinski,
+            clifford_to_frame: false,
+            ..OptimizeOptions::default()
+        },
+    );
+    assert_eq!(stats.cliffords_to_frame, 0);
+    assert!(c.frame_matches_gates(&[]), "frame untouched");
+    // The two Z0 T rotations combined into an S that stayed in the circuit.
+    assert_eq!(stats.axes_after.clifford.count, 2);
+    assert_eq!(stats.t_after, 1);
 }

@@ -108,7 +108,16 @@ fn assert_schema(report: &Json, context: &str) {
         ],
         "{context}: unexpected options shape"
     );
-    options.get("level").as_str();
+    // A preset level, or null when --passes (or --to-pbc alone) replaced it.
+    let level = options.get("level");
+    assert_eq!(
+        level.is_null(),
+        !options.get("passes").is_null(),
+        "{context}: level {level:?}"
+    );
+    if !level.is_null() {
+        level.as_str();
+    }
     options.get("fixpoint").as_bool();
     options.get("decompose_rz").as_bool();
     options.get("decompose_cz").as_bool();
@@ -482,7 +491,8 @@ fn the_options_echo_what_the_run_actually_used() {
     let run = tzap(&["--json", "-q", TEST_QASM, "--passes", "CancelGates"])
         .ok("production default options");
     let default = Json::parse(&run.stdout);
-    assert_eq!(default.at("options/level").as_str(), "O3");
+    // --passes replaces the preset levels; SuperOpt's bounds are O3's.
+    assert!(default.at("options/level").is_null());
     assert_eq!(default.at("options/superopt/qubits").as_usize(), 3);
     assert_eq!(default.at("options/superopt/window_gates").as_usize(), 25);
     assert_eq!(
@@ -528,7 +538,8 @@ fn the_pass_pipeline_round_trips_through_the_report() {
         report.at("options/passes").strings(),
         vec!["CancelGates", "PhaseFoldRand", "CancelGates"]
     );
-    assert_eq!(report.at("options/level").as_str(), "O3");
+    // The pipeline replaces the preset levels, so none is reported.
+    assert!(report.at("options/level").is_null());
 
     // Feeding the reported names back in is accepted.
     let names = report.at("options/passes").strings().join(",");

@@ -192,6 +192,88 @@ impl std::error::Error for PbcError {
     }
 }
 
+/// The kinds of operation [`AxisWeights`] summarizes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AxisKind {
+    /// A rotation by an odd multiple of pi/8 (T-type), conditional or not.
+    Pi8,
+    /// A rotation by a nonzero multiple of pi/4 (Clifford), conditional or not.
+    Clifford,
+    Measurement,
+}
+
+impl AxisKind {
+    /// The kind of `op`, or `None` for a zero-angle (identity) rotation.
+    pub fn of(op: &PbcOp) -> Option<Self> {
+        match op {
+            PbcOp::Measure { .. } => Some(Self::Measurement),
+            PbcOp::Rotate { angle, .. } | PbcOp::ConditionalRotate { angle, .. } => {
+                match angle.eighths() {
+                    0 => None,
+                    k if k % 2 == 1 => Some(Self::Pi8),
+                    _ => Some(Self::Clifford),
+                }
+            }
+        }
+    }
+}
+
+/// How many operations of one kind there are, and the minimum, median, and
+/// maximum of their axis weights (all zero when there are none).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct WeightSummary {
+    pub count: usize,
+    pub min: usize,
+    /// The two middle weights in sorted order: equal for an odd count; the
+    /// median is their mean.
+    pub middle: (usize, usize),
+    pub max: usize,
+}
+
+impl WeightSummary {
+    pub fn of(weights: &mut [usize]) -> Self {
+        weights.sort_unstable();
+        let n = weights.len();
+        if n == 0 {
+            return Self::default();
+        }
+        Self {
+            count: n,
+            min: weights[0],
+            middle: (weights[(n - 1) / 2], weights[n / 2]),
+            max: weights[n - 1],
+        }
+    }
+
+    pub fn median(&self) -> f64 {
+        (self.middle.0 + self.middle.1) as f64 / 2.0
+    }
+}
+
+/// Weight summaries by kind of operation; see [`AxisKind`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AxisWeights {
+    pub pi8: WeightSummary,
+    pub clifford: WeightSummary,
+    pub measurements: WeightSummary,
+}
+
+impl AxisWeights {
+    /// Summarize `(kind, weight)` pairs.
+    pub fn of(weights: impl IntoIterator<Item = (AxisKind, usize)>) -> Self {
+        let mut by_kind: [Vec<usize>; 3] = Default::default();
+        for (kind, weight) in weights {
+            by_kind[kind as usize].push(weight);
+        }
+        let [mut pi8, mut clifford, mut measurements] = by_kind;
+        Self {
+            pi8: WeightSummary::of(&mut pi8),
+            clifford: WeightSummary::of(&mut clifford),
+            measurements: WeightSummary::of(&mut measurements),
+        }
+    }
+}
+
 /// Result of [`PbcCircuit::max_axis_weights`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct MaxAxisWeights {
@@ -447,6 +529,19 @@ impl PbcCircuit {
             Ok(())
         })?;
         Ok(weights)
+    }
+
+    /// [`AxisWeights`] of the operations, materializing the axes within
+    /// `max_work`. [`PbcCircuit::optimize_rotations`] reports the same before
+    /// and after without materializing.
+    pub fn axis_weight_summary(&self, max_work: usize) -> Result<AxisWeights, PbcError> {
+        let weights = self.axis_weights(max_work)?;
+        Ok(AxisWeights::of(
+            self.operations
+                .iter()
+                .zip(weights)
+                .filter_map(|(op, w)| Some((AxisKind::of(op)?, w))),
+        ))
     }
 
     /// The largest axis weights: of non-Clifford rotations and measurements,

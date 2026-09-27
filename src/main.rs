@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 
 use tzap::circuit::{Circuit, Gate, GateSet};
 use tzap::optimize::{Metrics, Observer, Report, StageKind, optimize_with};
+use tzap::pbc::{AxisKind, AxisWeights};
 #[cfg(test)]
 use tzap::super_opt::BASE_GATE_SET;
 
@@ -281,58 +282,72 @@ fn count(n: usize, noun: &str) -> String {
     }
 }
 
-/// A PBC circuit's operations by kind, with their axis weights: pi/8
-/// (T-type) rotations, Clifford (pi/4, pi/2) rotations left in the circuit
-/// rather than the frame, and measurements. Identity rotations are skipped.
+/// Operation counts and axis weights of a PBC circuit, and whether the
+/// weights are known (they are all zero when materializing exceeded its
+/// budget).
+#[derive(Clone, Copy)]
 struct PbcStats {
-    t: Vec<usize>,
-    clifford: Vec<usize>,
-    measure: Vec<usize>,
-    /// Whether the weights are known; they are all zero when they could not
-    /// be materialized within the budget.
+    axes: AxisWeights,
     weighed: bool,
 }
 
 impl PbcStats {
-    fn of(pbc: &tzap::pbc::PbcCircuit) -> Self {
-        use tzap::pbc::PbcOp;
-        let (weights, weighed) = match pbc.axis_weights(PBC_WEIGHT_BUDGET) {
-            Ok(weights) => (weights, true),
-            Err(_) => (vec![0; pbc.operations().len()], false),
-        };
-        let mut stats = Self {
-            t: Vec::new(),
-            clifford: Vec::new(),
-            measure: Vec::new(),
-            weighed,
-        };
-        for (op, weight) in pbc.operations().iter().zip(weights) {
-            match op {
-                PbcOp::Measure { .. } => stats.measure.push(weight),
-                PbcOp::Rotate { angle, .. } | PbcOp::ConditionalRotate { angle, .. } => {
-                    match angle.eighths() {
-                        0 => {} // identity; the optimizer removes these
-                        k if k % 2 == 1 => stats.t.push(weight),
-                        _ => stats.clifford.push(weight),
-                    }
+    /// By materializing the axes; counts only when that exceeds its budget.
+    fn materialize(pbc: &tzap::pbc::PbcCircuit, budget: usize) -> Self {
+        match pbc.axis_weight_summary(budget) {
+            Ok(axes) => Self {
+                axes,
+                weighed: true,
+            },
+            Err(_) => Self {
+                axes: AxisWeights::of(
+                    pbc.operations()
+                        .iter()
+                        .filter_map(|op| Some((AxisKind::of(op)?, 0))),
+                ),
+                weighed: false,
+            },
+        }
+    }
+
+    /// From exported PBC text, which lists every axis already expanded:
+    /// each `r` or `m` line's weight is its number of factors.
+    fn from_text(text: &str) -> Self {
+        let axes = AxisWeights::of(text.lines().filter_map(|line| {
+            let mut fields = line.split_whitespace();
+            match fields.next()? {
+                "r" => {
+                    let k: i64 = fields.next()?.parse().ok()?;
+                    let kind = match k.rem_euclid(8) {
+                        0 => return None,
+                        k if k % 2 == 1 => AxisKind::Pi8,
+                        _ => AxisKind::Clifford,
+                    };
+                    Some((kind, fields.skip(1).count()))
                 }
+                "m" => Some((
+                    AxisKind::Measurement,
+                    fields.skip(1).take_while(|f| *f != "->").count(),
+                )),
+                _ => None,
             }
+        }));
+        Self {
+            axes,
+            weighed: true,
         }
-        for weights in [&mut stats.t, &mut stats.clifford, &mut stats.measure] {
-            weights.sort_unstable();
-        }
-        stats
     }
 
     /// `N π/8 rotations · N Clifford rotations · N measurements`, omitting
     /// empty Clifford and measurement counts.
     fn counts(&self) -> String {
-        let mut parts = vec![count(self.t.len(), "π/8 rotation")];
-        if !self.clifford.is_empty() {
-            parts.push(count(self.clifford.len(), "Clifford rotation"));
+        let a = &self.axes;
+        let mut parts = vec![count(a.pi8.count, "π/8 rotation")];
+        if a.clifford.count > 0 {
+            parts.push(count(a.clifford.count, "Clifford rotation"));
         }
-        if !self.measure.is_empty() {
-            parts.push(count(self.measure.len(), "measurement"));
+        if a.measurements.count > 0 {
+            parts.push(count(a.measurements.count, "measurement"));
         }
         parts.join(" · ")
     }
@@ -340,49 +355,34 @@ impl PbcStats {
     /// One `π/8 weight min/median/max: 1/2/3` line per non-empty kind; none
     /// when weights are unknown.
     fn weights(&self, measurements: bool) -> Vec<String> {
-        let mut kinds = vec![("π/8", &self.t), ("Clifford", &self.clifford)];
-        if measurements {
-            kinds.push(("measurement", &self.measure));
+        if !self.weighed {
+            return Vec::new();
         }
-        let parts: Vec<String> = kinds
+        let a = &self.axes;
+        let mut kinds = vec![("π/8", a.pi8), ("Clifford", a.clifford)];
+        if measurements {
+            kinds.push(("measurement", a.measurements));
+        }
+        kinds
             .into_iter()
-            .filter_map(|(label, weights)| {
-                let w = weight_stats(weights)?;
-                Some(format!(
+            .filter(|(_, w)| w.count > 0)
+            .map(|(label, w)| {
+                format!(
                     "{label} weight min/median/max: {}/{}/{}",
                     w.min,
-                    fmt_median(w.median),
+                    fmt_median(w.median()),
                     w.max
-                ))
+                )
             })
-            .collect();
-        if self.weighed { parts } else { Vec::new() }
+            .collect()
     }
 
     fn json(&self) -> json::PbcCounts {
-        let stats = |weights: &[usize]| weight_stats(weights).filter(|_| self.weighed);
         json::PbcCounts {
-            pi8_rotations: self.t.len(),
-            clifford_rotations: self.clifford.len(),
-            measurements: self.measure.len(),
-            pi8_weight: stats(&self.t),
-            clifford_weight: stats(&self.clifford),
-            measurement_weight: stats(&self.measure),
+            axes: self.axes,
+            weighed: self.weighed,
         }
     }
-}
-
-/// Sparse-materialization budget for reporting weights, as for export.
-const PBC_WEIGHT_BUDGET: usize = 16_000_000;
-
-/// Statistics of sorted weights, or `None` for none.
-fn weight_stats(sorted: &[usize]) -> Option<json::WeightStats> {
-    let n = sorted.len();
-    (n > 0).then(|| json::WeightStats {
-        min: sorted[0],
-        median: (sorted[(n - 1) / 2] + sorted[n / 2]) as f64 / 2.0,
-        max: sorted[n - 1],
-    })
 }
 
 /// A median, which is a whole number or halfway between two.
@@ -459,15 +459,10 @@ fn prepare_output(ui: &Ui, run: &Run, circuit: &Circuit) -> Prepared {
     let mut pbc = tzap::pbc::to_pbc(circuit, run.pbc_max_weight)
         .unwrap_or_else(|e| ui.abort(&format!("Error converting to PBC: {e}")));
     let convert_seconds = convert_start.elapsed().as_secs_f64();
-    let before = PbcStats::of(&pbc);
-    let mut lines = vec![before.counts()];
-    lines.extend(before.weights(true));
-    tree(
-        ui,
-        &format!("Converted to PBC in {convert_seconds:.3}s"),
-        &lines,
-    );
-    let mut optimization = None;
+    // The optimizer reports weights before and after from its own packed
+    // axes; otherwise they come from the exported text. Only a drawing
+    // without either materializes the axes just for this report.
+    let mut optimized = None;
     if run.pbc_opt {
         let start = Instant::now();
         // Moving Cliffords into the frame is the only step that widens
@@ -477,87 +472,106 @@ fn prepare_output(ui: &Ui, run: &Run, circuit: &Circuit) -> Prepared {
             ..Default::default()
         };
         match pbc.optimize_rotations(options) {
-            Ok(stats) => {
-                let seconds = start.elapsed().as_secs_f64();
-                let after = PbcStats::of(&pbc);
-                let t = (before.t.len(), after.t.len());
-                let clifford = (before.clifford.len(), after.clifford.len());
-                if t.0 == t.1 && clifford.0 == clifford.1 {
-                    tree(
-                        ui,
-                        &format!("Optimized PBC in {seconds:.3}s"),
-                        &["no reduction".to_string()],
-                    );
-                } else {
-                    // `a → b N π/8 rotations (↓x%)`, like the Converted line.
-                    let change = |(before, after): (usize, usize), noun: &str| {
-                        let reduction = if before > 0 {
-                            (before as f64 - after as f64) / before as f64 * 100.0
-                        } else {
-                            0.0
-                        };
-                        let noun = if after == 1 {
-                            noun.to_string()
-                        } else {
-                            format!("{noun}s")
-                        };
-                        format!(
-                            "{} → {} {noun} (↓{reduction:.1}%)",
-                            fmt_num(before),
-                            fmt_num(after)
-                        )
-                    };
-                    let mut lines = vec![change(t, "π/8 rotation")];
-                    if clifford != (0, 0) {
-                        lines.push(change(clifford, "Clifford rotation"));
-                    }
-                    lines.extend(after.weights(false));
-                    tree(ui, &format!("Optimized PBC in {seconds:.3}s"), &lines);
-                }
-                optimization = Some(json::PbcOptimization {
-                    output: after.json(),
-                    merges: stats.merges,
-                    mcr_swaps: stats.swaps,
-                    cliffords_to_frame: stats.cliffords_to_frame,
-                    seconds,
-                });
-            }
+            Ok(stats) => optimized = Some((stats, start.elapsed().as_secs_f64())),
             // The pass leaves the circuit unchanged on failure.
             Err(e) => ui.note(&format!("  PBC optimization skipped: {e}")),
         }
     }
+    let output = if run.to_pbc {
+        Some(
+            pbc.to_text_with(tzap::pbc::TextOptions {
+                max_expansion_cells: run.pbc_expansion_budget,
+            })
+            .unwrap_or_else(|e| {
+                ui.abort(&format!(
+                    "Error exporting PBC: {e} ({} work units; raise it with \
+                     --pbc-expansion-budget)",
+                    fmt_num(run.pbc_expansion_budget)
+                ))
+            }),
+        )
+    } else {
+        run.output_path.as_ref().map(|_| circuit.to_qasm())
+    };
+    let stats = |axes| PbcStats {
+        axes,
+        weighed: true,
+    };
+    let before = match (&optimized, &output) {
+        (Some((s, _)), _) => stats(s.axes_before),
+        (None, Some(text)) if run.to_pbc => PbcStats::from_text(text),
+        _ => PbcStats::materialize(&pbc, run.pbc_expansion_budget),
+    };
+    let mut lines = vec![before.counts()];
+    lines.extend(before.weights(true));
+    tree(
+        ui,
+        &format!("Converted to PBC in {convert_seconds:.3}s"),
+        &lines,
+    );
+    let optimization = optimized.map(|(s, seconds)| {
+        let after = stats(s.axes_after);
+        let (b, a) = (&before.axes, &after.axes);
+        let t = (b.pi8.count, a.pi8.count);
+        let clifford = (b.clifford.count, a.clifford.count);
+        if t.0 == t.1 && clifford.0 == clifford.1 {
+            tree(
+                ui,
+                &format!("Optimized PBC in {seconds:.3}s"),
+                &["no reduction".to_string()],
+            );
+        } else {
+            // `a → b N π/8 rotations (↓x%)`.
+            let change = |(before, after): (usize, usize), noun: &str| {
+                let reduction = if before > 0 {
+                    (before as f64 - after as f64) / before as f64 * 100.0
+                } else {
+                    0.0
+                };
+                let noun = if after == 1 {
+                    noun.to_string()
+                } else {
+                    format!("{noun}s")
+                };
+                format!(
+                    "{} → {} {noun} (↓{reduction:.1}%)",
+                    fmt_num(before),
+                    fmt_num(after)
+                )
+            };
+            let mut lines = vec![change(t, "π/8 rotation")];
+            if clifford != (0, 0) {
+                lines.push(change(clifford, "Clifford rotation"));
+            }
+            lines.extend(after.weights(false));
+            tree(ui, &format!("Optimized PBC in {seconds:.3}s"), &lines);
+        }
+        json::PbcOptimization {
+            output: after.json(),
+            merges: s.merges,
+            mcr_swaps: s.swaps,
+            cliffords_to_frame: s.cliffords_to_frame,
+            seconds,
+        }
+    });
     let drawing = run.visualize_pbc.as_ref().map(|path| {
-        let options = tzap::pbc::SvgOptions::default();
+        let options = tzap::pbc::SvgOptions {
+            // Every operation, however large the circuit.
+            max_operations: usize::MAX,
+            max_expansion_cells: run.pbc_expansion_budget,
+            ..Default::default()
+        };
         let svg = pbc
             .to_svg_with(options)
             .unwrap_or_else(|e| ui.abort(&format!("Error drawing PBC: {e}")));
         (path.clone(), svg)
     });
-    let output = if run.to_pbc {
-        Some(
-            pbc.to_text()
-                .unwrap_or_else(|e| ui.abort(&format!("Error exporting PBC: {e}"))),
-        )
-    } else {
-        run.output_path.as_ref().map(|_| circuit.to_qasm())
-    };
     let report = json::PbcReport {
         max_weight: run.pbc_max_weight.map(|w| w.get()),
         converted: before.json(),
         convert_seconds,
         optimization,
     };
-    if let Some((_, _)) = &drawing {
-        let total = pbc.operations().len();
-        let shown = total.min(tzap::pbc::SvgOptions::default().max_operations);
-        if shown < total {
-            ui.note(&format!(
-                "  The drawing shows the first {} of {}",
-                fmt_num(shown),
-                count(total, "operation")
-            ));
-        }
-    }
     Prepared {
         output,
         drawing,
