@@ -44,20 +44,6 @@ For an even count, the median is the mean of the two middle weights, so it can
 end in `.5`. With `-O1`–`-O3` or `--passes`, a gate-level summary comes first;
 without them, the parsed circuit's gate metrics are listed under `Parsed`.
 
-With `--json`, the report's `metrics` describe the gate circuit before
-conversion, and the `pbc` key describes the PBC (`null` when there is none):
-
-- `max_weight`: the `--pbc-max-weight` bound, or `null`.
-- `converted`: the circuit as converted, and `optimization.output`: after the
-  rotation optimizer (`optimization` is `null` with `--pbc-no-opt`). Each has
-  `pi8_rotations`, `clifford_rotations`, and `measurements` counts, and under
-  `weight` a `{min, median, max}` for each kind (`null` for none).
-- `optimization.merges`, `mcr_swaps`, `cliffords_to_frame`: the optimizer's
-  work; `convert_seconds` and `optimization.seconds`: timings.
-
-`options.level` is `null` when no preset level ran (`--to-pbc` alone, or
-`--passes`), and `output.gate_set` is `null` for PBC output.
-
 Writing, drawing, and measuring PBC expand the shared Pauli axes into explicit
 strings. That work is bounded by `--pbc-expansion-budget` (256 million units by
 default; the largest benchmark, `gf2^256_mult`, needs about 10 million).
