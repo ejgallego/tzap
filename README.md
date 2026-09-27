@@ -71,7 +71,7 @@ For example, using a benchmark in this repo:
 
 ```console
 $ tzap benchmarks/feynman/hwb12.qasm -o optimized.qasm
-⚡️ tzap v0.6.1
+⚡️ tzap v0.7.0
   Parsed benchmarks/feynman/hwb12.qasm (5.5 MB) in 0.079s
 	├─ 20 qubits · 514,412 gates
 	└─ Circuit gates: {h, x, t, tdg, cx}
