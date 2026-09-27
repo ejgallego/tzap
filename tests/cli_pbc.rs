@@ -10,6 +10,10 @@ fn qasm_with_cbits(n: usize, cbits: usize, body: &str) -> String {
     format!("OPENQASM 2.0;\ninclude \"qelib1.inc\";\nqreg q[{n}];\ncreg c[{cbits}];\n{body}\n")
 }
 
+fn pbc_guide() -> String {
+    include_str!("../docs/pbc.md").replace("\r\n", "\n")
+}
+
 /// Convert without optimization beyond gate cancellation, so outputs are the
 /// direct transformation the docs describe.
 fn convert(source: &str) -> String {
@@ -31,7 +35,7 @@ fn convert(source: &str) -> String {
 
 #[test]
 fn documented_measurement_examples_match_cli_output() {
-    let doc = include_str!("../docs/pbc.md");
+    let doc = pbc_guide();
     // (qubits, body, expected output, whether docs/pbc.md shows it)
     for (n, body, expected, in_doc) in [
         (
@@ -261,7 +265,7 @@ fn file_output_json_and_errors_preserve_stream_contract() {
 /// Mid-circuit examples through the CLI; the one docs/pbc.md shows must match.
 #[test]
 fn documented_mid_circuit_examples_match_cli_output() {
-    let doc = include_str!("../docs/pbc.md");
+    let doc = pbc_guide();
     for (n, body, expected) in [
         (
             1,
@@ -363,6 +367,16 @@ fn to_pbc_optimizes_rotations_unless_pbc_no_opt() {
         .failed("--pbc-no-opt without --to-pbc");
 }
 
+#[test]
+fn invalid_pbc_option_with_long_stdin_reports_the_option_error() {
+    let source = qasm(1, &"t q[0];\n".repeat(100_000));
+    let run = Tzap::new(&["-", "--pbc-no-opt"])
+        .stdin(&source)
+        .run()
+        .failed("--pbc-no-opt without --to-pbc");
+    assert!(run.stderr.contains("--pbc-no-opt"), "{}", run.stderr);
+}
+
 /// --to-pbc alone turns gate-level optimization off and says so; -O* or
 /// --passes turn it back on. Requested decompositions still run.
 #[test]
@@ -440,7 +454,7 @@ fn visualize_pbc_writes_an_svg() {
 /// rotations; it requires N >= 1 and --to-pbc or --visualize-pbc.
 #[test]
 fn pbc_max_weight_flushes_cliffords_as_rotations() {
-    let doc = include_str!("../docs/pbc.md");
+    let doc = pbc_guide();
     let source = qasm(2, "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];");
     let expected = "pbc 0.1\nqubits 2\nregisters 2\nr 2 1 Z0\nr 2 1 X0\nr 4 1 Z0\nr 2 1 X1\n\
                     r -2 1 Z0 X1\nr 1 1 Z1\nm 1 Z1 -> c0\n";
