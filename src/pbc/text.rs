@@ -44,7 +44,10 @@ impl PbcCircuit {
         if let Some(index) = self.operations.iter().position(|op| !exportable(op)) {
             return Err(PbcError::UnsupportedTextOperation { index });
         }
-        let mut text = format!("qubits {}\nregisters {}\n", self.num_qubits, self.num_cbits);
+        let mut text = format!(
+            "pbc 1\nqubits {}\nregisters {}\n",
+            self.num_qubits, self.num_cbits
+        );
         let used = self.visit_axes(options.max_expansion_cells, |op, phase, factors| {
             let sign = match phase {
                 Phase::One => "1",

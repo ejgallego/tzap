@@ -5,6 +5,7 @@ use crate::pbc::{Pauli, PauliAngle, to_pbc};
 /// Test-only reader, independent of the original circuit and converter.
 fn read_text(text: &str) -> PbcCircuit {
     let mut lines = text.lines();
+    assert_eq!(lines.next(), Some("pbc 1"));
     let n = lines
         .next()
         .unwrap()
@@ -266,13 +267,13 @@ fn classical_projection_distinguishes_readout_axes_but_discards_output_frame() {
     let limits = ChannelLimits::default();
     let expected = circuit_channel(&input, &[false], limits).unwrap();
     let correct = pbc_channel(
-        &read_text("qubits 1\nregisters 1\nm 1 X0 -> c0\n"),
+        &read_text("pbc 1\nqubits 1\nregisters 1\nm 1 X0 -> c0\n"),
         &[false],
         limits,
     )
     .unwrap();
     let wrong = pbc_channel(
-        &read_text("qubits 1\nregisters 1\nm 1 Z0 -> c0\n"),
+        &read_text("pbc 1\nqubits 1\nregisters 1\nm 1 Z0 -> c0\n"),
         &[false],
         limits,
     )
@@ -320,7 +321,7 @@ fn sparse_factors_signed_angles_and_overwritten_registers() {
     p.measure(z.negated(), Some(2)).unwrap();
     assert_eq!(
         p.to_text().unwrap(),
-        "qubits 12\nregisters 3\nr -1 -1 X0 Z11\nr 2 1 Y2\nm 1 X0 Z11 -> c2\nm -1 Z11 -> c2\n"
+        "pbc 1\nqubits 12\nregisters 3\nr -1 -1 X0 Z11\nr 2 1 Y2\nm 1 X0 Z11 -> c2\nm -1 Z11 -> c2\n"
     );
 }
 
@@ -337,7 +338,7 @@ fn shared_products_preserve_y_and_signs() {
     p.measure(minus_identity, Some(0)).unwrap();
     assert_eq!(
         p.to_text().unwrap(),
-        "qubits 1\nregisters 1\nr 1 1 Y0\nm -1 -> c0\n"
+        "pbc 1\nqubits 1\nregisters 1\nr 1 1 Y0\nm -1 -> c0\n"
     );
 }
 
@@ -350,7 +351,7 @@ fn angles_are_integer_multiples_modulo_global_phase() {
     }
     assert_eq!(
         p.to_text().unwrap(),
-        "qubits 1\nregisters 0\nr 0 1 Z0\nr 1 1 Z0\nr 2 1 Z0\nr 3 1 Z0\nr 4 1 Z0\nr -3 1 Z0\nr -2 1 Z0\nr -1 1 Z0\n"
+        "pbc 1\nqubits 1\nregisters 0\nr 0 1 Z0\nr 1 1 Z0\nr 2 1 Z0\nr 3 1 Z0\nr 4 1 Z0\nr -3 1 Z0\nr -2 1 Z0\nr -1 1 Z0\n"
     );
 }
 
@@ -364,7 +365,7 @@ fn full_readout_keeps_output_frame_and_quantum_outputs() {
     let p = to_pbc(&c, None).unwrap();
     assert_eq!(
         p.to_text().unwrap(),
-        "qubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n"
+        "pbc 1\nqubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n"
     );
     assert!(p.frame_matches_gates(&[Gate::h(0)]));
 }
@@ -373,7 +374,7 @@ fn full_readout_keeps_output_frame_and_quantum_outputs() {
 fn all_clifford_gates_export_as_frame_and_empty_program() {
     assert_eq!(
         PbcCircuit::new(0, 2).to_text().unwrap(),
-        "qubits 0\nregisters 2\n"
+        "pbc 1\nqubits 0\nregisters 2\n"
     );
     let c = Circuit {
         num_qubits: 2,
@@ -396,7 +397,7 @@ fn all_clifford_gates_export_as_frame_and_empty_program() {
     };
     assert_eq!(
         to_pbc(&c, None).unwrap().to_text().unwrap(),
-        "qubits 2\nregisters 0\nf X0 -1 Y0 Z1\nf X1 -1 Z0 X1\nf Z0 -1 X0 Z1\nf Z1 -1 Z1\n"
+        "pbc 1\nqubits 2\nregisters 0\nf X0 -1 Y0 Z1\nf X1 -1 Z0 X1\nf Z0 -1 X0 Z1\nf Z1 -1 Z1\n"
     );
 }
 
@@ -429,7 +430,7 @@ fn unsupported_operations_and_expansion_limit_fail_without_truncation() {
     late_rotation.rotate(z, PauliAngle::new(1)).unwrap();
     assert_eq!(
         late_rotation.to_text().unwrap(),
-        "qubits 1\nregisters 1\nm 1 Z0 -> c0\nr 1 1 Z0\n"
+        "pbc 1\nqubits 1\nregisters 1\nm 1 Z0 -> c0\nr 1 1 Z0\n"
     );
 }
 
@@ -448,7 +449,7 @@ fn text_budget_covers_operations_and_output_frame_together() {
         p.to_text_with(TextOptions {
             max_expansion_cells: 9,
         }),
-        Ok("qubits 1\nregisters 0\nr 1 1 Z0\n".into())
+        Ok("pbc 1\nqubits 1\nregisters 0\nr 1 1 Z0\n".into())
     );
 }
 
@@ -533,7 +534,7 @@ fn mid_circuit_examples_export_exactly() {
                 Gate::t(0),
                 m(0, 1),
             ],
-            "qubits 1\nregisters 2\nr 1 1 X0\nm 1 X0 -> c0\nr 1 1 Z0\nm 1 Z0 -> c1\n",
+            "pbc 1\nqubits 1\nregisters 2\nr 1 1 X0\nm 1 X0 -> c0\nr 1 1 Z0\nm 1 Z0 -> c1\n",
         ),
         (
             2,
@@ -545,7 +546,7 @@ fn mid_circuit_examples_export_exactly() {
                 Gate::h(1),
                 m(1, 1),
             ],
-            "qubits 2\nregisters 2\nm 1 X0 -> c0\nr 1 1 X0 Z1\nm 1 X1 -> c1\n\
+            "pbc 1\nqubits 2\nregisters 2\nm 1 X0 -> c0\nr 1 1 X0 Z1\nm 1 X1 -> c1\n\
              f X0 1 Z0 X1\nf X1 1 X0 Z1\nf Z0 1 X0\nf Z1 1 X1\n",
         ),
         (
@@ -561,7 +562,7 @@ fn mid_circuit_examples_export_exactly() {
                 Gate::t(1),
                 m(0, 1),
             ],
-            "qubits 3\nregisters 2\nr 1 1 X0\nm 1 X0 Z1 Z2 -> c0\nr 1 1 Z0 X2\nr 1 1 Z1\n\
+            "pbc 1\nqubits 3\nregisters 2\nr 1 1 X0\nm 1 X0 Z1 Z2 -> c0\nr 1 1 Z0 X2\nr 1 1 Z1\n\
              m 1 Z0 X2 -> c1\nf X1 1 X1 X2\nf Z0 1 Z0 X2\nf Z2 1 X0 Z1 Z2\n",
         ),
         (
@@ -579,7 +580,7 @@ fn mid_circuit_examples_export_exactly() {
                 cx(0, 1),
                 m(1, 1),
             ],
-            "qubits 3\nregisters 2\nr 1 1 X0\nr 1 1 X1\nr 1 1 X2\nr -1 1 X0 X1\n\
+            "pbc 1\nqubits 3\nregisters 2\nr 1 1 X0\nr 1 1 X1\nr 1 1 X2\nr -1 1 X0 X1\n\
              r -1 1 X0 X2\nr -1 1 X1 X2\nr 1 1 X0 X1 X2\nm 1 Z2 -> c0\nr -1 1 X0\n\
              m 1 X0 X1 -> c1\nf X0 1 Z0 Z1\nf X1 1 Z1\nf Z0 1 X0\nf Z1 1 X0 X1\n",
         ),

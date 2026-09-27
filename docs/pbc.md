@@ -7,11 +7,18 @@ Pauli-product rotations and measurements, followed by a Clifford frame.
 tzap input.qasm --to-pbc -o output.pbc
 ```
 
+The first line of every output is `pbc 1`, the format version. A reader should
+reject an unknown version; a change to the file syntax or meaning will use a
+new version number.
+
 `--to-pbc` turns gate-level optimization off, since PBC has its own: after any
 requested decompositions, the circuit is converted, and then the rotation
 optimizer lowers the T count by merging same-axis rotations, moving each
 rotation past the rotations it commutes with to reach its partner.
-`--pbc-no-opt` skips the rotation optimizer.
+Use `--pbc-no-opt` to keep the converted rotations unchanged, or
+`--pbc-max-weight N` to limit the weight of π/8 rotations and measurements.
+The [weight bound](#weight-bound) section explains how Clifford gates are
+emitted when the bound would be exceeded.
 To run gate-level optimization first, pass `-O1`–`-O3`, `-Osuper`, or
 `--passes`, where conversion is the pass `ToPbc`, listed after the gate passes,
 optionally followed by the rotation optimizer `PbcOpt`:
@@ -51,10 +58,11 @@ Exceeding it is an error that names the flag.
 
 ## Syntax
 
-The first two lines declare the number of qubits and of classical registers,
-each of which holds one bit:
+The required version line comes first. The next two lines declare the number
+of qubits and of classical registers, each of which holds one bit:
 
 ```text
+pbc 1
 qubits 3
 registers 2
 ```
@@ -102,6 +110,7 @@ them after the measurements).
 Input: `H q0; measure q0 -> c0`.
 
 ```text
+pbc 1
 qubits 1
 registers 1
 m 1 X0 -> c0
@@ -116,6 +125,7 @@ H changes the measurement axis from Z to X; the frame represents that H.
 Input: `H q0; CX q0 -> q1; measure q0 -> c0; measure q1 -> c1`.
 
 ```text
+pbc 1
 qubits 2
 registers 2
 m 1 X0 -> c0
@@ -132,6 +142,7 @@ The second measurement is of the joint product `X0 Z1`.
 Input: `H q0; CX q0 -> q1; measure q0 -> c0; T q1; H q1; measure q1 -> c1`.
 
 ```text
+pbc 1
 qubits 2
 registers 2
 m 1 X0 -> c0
@@ -165,6 +176,7 @@ For the last example's first four gates (`H q0; CX q0 -> q1; T q1; measure q1
 -> c0`), bound 1 gives
 
 ```text
+pbc 1
 qubits 2
 registers 2
 r 2 1 Z0

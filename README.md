@@ -11,7 +11,7 @@
 [**Installation**](#installation) · [**Using tzap**](#running-tzap) &nbsp;**|**&nbsp;  [Qiskit integration](https://github.com/qqq-wisc/tzap/blob/main/docs/qiskit.md) · [PennyLane integration](https://github.com/qqq-wisc/tzap/blob/main/docs/pennylane.md)
 
 A super fast, Rust-based optimizer for large Clifford+T/Rz circuits, with
-conversion to optimized Pauli-based computation (PBC) circuits.
+optional conversion to optimized Pauli-based computation (PBC) circuits.
 - tzap is state-of-the-art in *speed*, *scalability*, and *gate-count reduction*.
 - tzap **minimizes T-count** with a new linear-time phase folding algorithm, based on [this paper](https://arxiv.org/abs/2605.13929).
 - tzap implements a new and fast **superoptimization** pass, based on [this paper](https://ia.cr/2026/2115).
