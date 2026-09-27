@@ -45,7 +45,7 @@ impl PbcCircuit {
             return Err(PbcError::UnsupportedTextOperation { index });
         }
         let mut text = format!(
-            "pbc 1\nqubits {}\nregisters {}\n",
+            "pbc 0.1\nqubits {}\nregisters {}\n",
             self.num_qubits, self.num_cbits
         );
         let used = self.visit_axes(options.max_expansion_cells, |op, phase, factors| {

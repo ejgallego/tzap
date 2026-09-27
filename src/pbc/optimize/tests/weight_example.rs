@@ -60,7 +60,7 @@ fn step_1_conversion_is_exact() {
     assert_equivalent(&input(), &pbc);
     assert_eq!(
         pbc.to_text().unwrap(),
-        "pbc 1\nqubits 2\nregisters 0\nr 1 1 Z0 Z1\nr 1 1 Z0 Z1\nr -1 1 Z0 Z1\nr 1 1 X0 Z1\n\
+        "pbc 0.1\nqubits 2\nregisters 0\nr 1 1 Z0 Z1\nr 1 1 Z0 Z1\nr -1 1 Z0 Z1\nr 1 1 X0 Z1\n\
          f X0 1 Z0\nf X1 1 Z0 X1\nf Z0 1 X0 Z1\n"
     );
     assert_eq!((pbc.t_count(), weight(&pbc)), (4, 8));
@@ -96,7 +96,7 @@ fn pipeline_a_tzap_o1_then_conversion_is_exact() {
     assert_equivalent(&input(), &pbc);
     assert_eq!(
         pbc.to_text().unwrap(),
-        "pbc 1\nqubits 2\nregisters 0\nr 1 1 Z0 Z1\nr 1 1 X0 Z1\n\
+        "pbc 0.1\nqubits 2\nregisters 0\nr 1 1 Z0 Z1\nr 1 1 X0 Z1\n\
          f X0 1 Z0\nf X1 1 Z0 X1\nf Z0 1 X0 Z1\n"
     );
     assert_eq!((pbc.t_count(), weight(&pbc)), (2, 4));
@@ -109,7 +109,7 @@ fn pipeline_b_conversion_then_the_pass_is_exact() {
     assert_equivalent(&input(), &pbc);
     assert_eq!(
         pbc.to_text().unwrap(),
-        "pbc 1\nqubits 2\nregisters 0\nr -1 1 Z0 Z1\nr -1 1 Y0\n\
+        "pbc 0.1\nqubits 2\nregisters 0\nr -1 1 Z0 Z1\nr -1 1 Y0\n\
          f X0 1 Z0\nf X1 -1 Y1\nf Z0 -1 Y0\n"
     );
     assert_eq!((pbc.t_count(), weight(&pbc)), (2, 3));
@@ -146,7 +146,7 @@ fn every_row_of_the_walk_table_is_exact() {
     assert_equivalent(&input(), &end);
     assert_eq!(
         end.to_text().unwrap(),
-        "pbc 1\nqubits 2\nregisters 0\nr -1 1 Z0 Z1\nr 1 -1 Y0\n\
+        "pbc 0.1\nqubits 2\nregisters 0\nr -1 1 Z0 Z1\nr 1 -1 Y0\n\
          f X0 1 Z0\nf X1 -1 Y1\nf Z0 -1 Y0\n"
     );
 }

@@ -117,7 +117,7 @@ fn late_sparse_leaf_export_is_independent_of_arena_prefix_and_width() {
         assert_eq!((stats.nodes, stats.work), (1, 3));
         assert_eq!(
             pbc.to_text().unwrap(),
-            format!("pbc 1\nqubits {n}\nregisters 0\nr 1 1 Z{}\n", n - 1)
+            format!("pbc 0.1\nqubits {n}\nregisters 0\nr 1 1 Z{}\n", n - 1)
         );
     }
 }

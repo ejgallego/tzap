@@ -37,25 +37,25 @@ fn documented_measurement_examples_match_cli_output() {
         (
             1,
             "h q[0];\nmeasure q[0] -> c[0];",
-            "pbc 1\nqubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n",
+            "pbc 0.1\nqubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n",
             true,
         ),
         (
             1,
             "x q[0];\nmeasure q[0] -> c[0];",
-            "pbc 1\nqubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n",
+            "pbc 0.1\nqubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n",
             false,
         ),
         (
             1,
             "h q[0];\nt q[0];\nh q[0];\nmeasure q[0] -> c[0];",
-            "pbc 1\nqubits 1\nregisters 1\nr 1 1 X0\nm 1 Z0 -> c0\n",
+            "pbc 0.1\nqubits 1\nregisters 1\nr 1 1 X0\nm 1 Z0 -> c0\n",
             false,
         ),
         (
             2,
             "h q[0];\ncx q[0],q[1];\nmeasure q[0] -> c[0];\nmeasure q[1] -> c[1];",
-            "pbc 1\nqubits 2\nregisters 2\nm 1 X0 -> c0\nm 1 X0 Z1 -> c1\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
+            "pbc 0.1\nqubits 2\nregisters 2\nm 1 X0 -> c0\nm 1 X0 Z1 -> c1\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
             true,
         ),
     ] {
@@ -65,11 +65,11 @@ fn documented_measurement_examples_match_cli_output() {
     for (body, expected) in [
         (
             "h q[0];\ncx q[0],q[1];\nmeasure q[1] -> c[0];",
-            "pbc 1\nqubits 2\nregisters 1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
+            "pbc 0.1\nqubits 2\nregisters 1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
         ),
         (
             "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];",
-            "pbc 1\nqubits 2\nregisters 1\nr 1 1 X0 Z1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
+            "pbc 0.1\nqubits 2\nregisters 1\nr 1 1 X0 Z1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
         ),
     ] {
         assert_eq!(convert(&qasm_with_cbits(2, 1, body)), expected);
@@ -84,7 +84,7 @@ fn multiple_registers_are_numbered_in_declaration_order() {
                   creg x[1];\ncreg y[2];\nh b[1];\nmeasure b[1] -> y[1];\nmeasure a[0] -> x[0];\n";
     assert_eq!(
         convert(source),
-        "pbc 1\nqubits 3\nregisters 3\nm 1 X2 -> c2\nm 1 Z0 -> c0\nf X2 1 Z2\nf Z2 1 X2\n"
+        "pbc 0.1\nqubits 3\nregisters 3\nm 1 X2 -> c2\nm 1 Z0 -> c0\nf X2 1 Z2\nf Z2 1 X2\n"
     );
 }
 
@@ -96,7 +96,7 @@ fn stdout_has_only_pbc_and_full_readout_retains_frame() {
         .ok("full readout");
     assert_eq!(
         run.stdout,
-        "pbc 1\nqubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n"
+        "pbc 0.1\nqubits 1\nregisters 1\nm 1 X0 -> c0\nf X0 1 Z0\nf Z0 1 X0\n"
     );
     assert!(
         run.stderr
@@ -152,7 +152,7 @@ fn conversion_runs_after_optimization_and_custom_decomposition() {
     .ok("final transformation");
     assert_eq!(
         run.stdout,
-        "pbc 1\nqubits 2\nregisters 2\nf X0 1 X0 Z1\nf X1 1 Z0 X1\n"
+        "pbc 0.1\nqubits 2\nregisters 2\nf X0 1 X0 Z1\nf X1 1 Z0 X1\n"
     );
 }
 
@@ -162,7 +162,7 @@ fn default_pipeline_decomposes_rz_before_conversion() {
         .stdin(&qasm(1, "h q[0];\nrz(pi/4) q[0];"))
         .run()
         .ok("Rz decomposition");
-    assert!(run.stdout.starts_with("pbc 1\nqubits 1\nregisters 1\n"));
+    assert!(run.stdout.starts_with("pbc 0.1\nqubits 1\nregisters 1\n"));
     assert!(run.stdout.contains("r "));
     assert!(!run.stdout.contains("rz"));
 }
@@ -236,7 +236,7 @@ fn file_output_json_and_errors_preserve_stream_contract() {
     assert!(run.stdout.trim_start().starts_with('{'));
     assert_eq!(
         std::fs::read_to_string(&path).unwrap(),
-        "pbc 1\nqubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n"
+        "pbc 0.1\nqubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n"
     );
     Tzap::new(&[
         "-",
@@ -251,7 +251,7 @@ fn file_output_json_and_errors_preserve_stream_contract() {
     .failed("no overwrite on conversion failure");
     assert_eq!(
         std::fs::read_to_string(&path).unwrap(),
-        "pbc 1\nqubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n"
+        "pbc 0.1\nqubits 1\nregisters 1\nm -1 Z0 -> c0\nf Z0 -1 Z0\n"
     );
     Tzap::new(&["-", "-o", "-", "--to-pbc", "--json"])
         .run()
@@ -266,26 +266,26 @@ fn documented_mid_circuit_examples_match_cli_output() {
         (
             1,
             "h q[0];\nt q[0];\nmeasure q[0] -> c[0];\nh q[0];\nt q[0];\nmeasure q[0] -> c[1];",
-            "pbc 1\nqubits 1\nregisters 2\nr 1 1 X0\nm 1 X0 -> c0\nr 1 1 Z0\nm 1 Z0 -> c1\n",
+            "pbc 0.1\nqubits 1\nregisters 2\nr 1 1 X0\nm 1 X0 -> c0\nr 1 1 Z0\nm 1 Z0 -> c1\n",
         ),
         (
             2,
             "h q[0];\ncx q[0],q[1];\nmeasure q[0] -> c[0];\nt q[1];\nh q[1];\nmeasure q[1] -> c[1];",
-            "pbc 1\nqubits 2\nregisters 2\nm 1 X0 -> c0\nr 1 1 X0 Z1\nm 1 X1 -> c1\n\
+            "pbc 0.1\nqubits 2\nregisters 2\nm 1 X0 -> c0\nr 1 1 X0 Z1\nm 1 X1 -> c1\n\
              f X0 1 Z0 X1\nf X1 1 X0 Z1\nf Z0 1 X0\nf Z1 1 X1\n",
         ),
         (
             3,
             "h q[0];\nt q[0];\ncx q[0],q[2];\ncx q[1],q[2];\nmeasure q[2] -> c[0];\n\
              h q[0];\nt q[0];\nt q[1];\nmeasure q[0] -> c[1];",
-            "pbc 1\nqubits 3\nregisters 2\nr 1 1 X0\nm 1 X0 Z1 Z2 -> c0\nr 1 1 Z0 X2\nr 1 1 Z1\n\
+            "pbc 0.1\nqubits 3\nregisters 2\nr 1 1 X0\nm 1 X0 Z1 Z2 -> c0\nr 1 1 Z0 X2\nr 1 1 Z1\n\
              m 1 Z0 X2 -> c1\nf X1 1 X1 X2\nf Z0 1 Z0 X2\nf Z2 1 X0 Z1 Z2\n",
         ),
         (
             3,
             "h q[0];\nh q[1];\nccx q[0],q[1],q[2];\nmeasure q[2] -> c[0];\ntdg q[0];\n\
              cx q[0],q[1];\nmeasure q[1] -> c[1];",
-            "pbc 1\nqubits 3\nregisters 2\nr 1 1 X0\nr 1 1 X1\nr 1 1 X2\nr -1 1 X0 X1\n\
+            "pbc 0.1\nqubits 3\nregisters 2\nr 1 1 X0\nr 1 1 X1\nr 1 1 X2\nr -1 1 X0 X1\n\
              r -1 1 X0 X2\nr -1 1 X1 X2\nr 1 1 X0 X1 X2\nm 1 Z2 -> c0\nr -1 1 X0\n\
              m 1 X0 X1 -> c1\nf X0 1 Z0 Z1\nf X1 1 Z1\nf Z0 1 X0\nf Z1 1 X0 X1\n",
         ),
@@ -404,7 +404,7 @@ fn to_pbc_turns_gate_optimization_off_unless_requested() {
         .stdin(&qasm(1, "h q[0];\nrz(pi/4) q[0];"))
         .run()
         .ok("Rz decomposition");
-    assert!(rz.stdout.starts_with("pbc 1\nqubits 1\nregisters 1\n"));
+    assert!(rz.stdout.starts_with("pbc 0.1\nqubits 1\nregisters 1\n"));
     assert!(rz.stdout.contains("r "), "{}", rz.stdout);
 }
 
@@ -442,7 +442,7 @@ fn visualize_pbc_writes_an_svg() {
 fn pbc_max_weight_flushes_cliffords_as_rotations() {
     let doc = include_str!("../docs/pbc.md");
     let source = qasm(2, "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];");
-    let expected = "pbc 1\nqubits 2\nregisters 2\nr 2 1 Z0\nr 2 1 X0\nr 4 1 Z0\nr 2 1 X1\n\
+    let expected = "pbc 0.1\nqubits 2\nregisters 2\nr 2 1 Z0\nr 2 1 X0\nr 4 1 Z0\nr 2 1 X1\n\
                     r -2 1 Z0 X1\nr 1 1 Z1\nm 1 Z1 -> c0\n";
     assert!(
         doc.contains(expected),
@@ -532,7 +532,7 @@ fn to_pbc_and_pbc_opt_are_passes() {
     let bare = run(&["--passes", "ToPbc"]);
     assert_eq!(
         bare.stdout,
-        "pbc 1\nqubits 2\nregisters 2\nr 1 1 Z0\nr 1 1 Z0\nf X0 1 X0 X1\nf Z1 1 Z0 Z1\n"
+        "pbc 0.1\nqubits 2\nregisters 2\nr 1 1 Z0\nr 1 1 Z0\nf X0 1 X0 X1\nf Z1 1 Z0 Z1\n"
     );
     let optimized = run(&["--passes", "ToPbc,PbcOpt"]);
     assert!(!optimized.stdout.contains("\nr "), "{}", optimized.stdout);
@@ -640,7 +640,7 @@ fn pbc_report_lines_match_the_run() {
     assert!(
         std::fs::read_to_string(&pbc)
             .unwrap()
-            .starts_with("pbc 1\nqubits 1\n")
+            .starts_with("pbc 0.1\nqubits 1\n")
     );
 }
 
