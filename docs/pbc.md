@@ -1,4 +1,4 @@
-# PBC format
+# tzap's PBC format
 
 tzap can export a circuit as a Pauli-based computation (PBC): a list of
 Pauli-product rotations and measurements, followed by a Clifford frame.
