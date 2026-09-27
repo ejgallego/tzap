@@ -64,8 +64,15 @@ fn arrow(reduction: f64) -> char {
     if reduction < 0.0 { '↑' } else { '↓' }
 }
 
+/// The reduction's magnitude to one decimal; `<0.1` rather than `0.0` for a
+/// real change too small to show, so a box never hides one.
 fn magnitude(reduction: f64) -> String {
-    format!("{:.1}", reduction.abs())
+    let magnitude = reduction.abs();
+    if magnitude > 0.0 && magnitude < 0.05 {
+        "<0.1".to_string()
+    } else {
+        format!("{magnitude:.1}")
+    }
 }
 
 fn format_result_trailing(
@@ -121,6 +128,25 @@ impl Ui {
         }
         metrics.push(("Depth", in_depth, out_depth, DEPTH_BAR_COLOR));
 
+        // Lead with the headline number, so the one figure most readers want is in
+        // the title rather than only in the Gates row. Spelled out in words rather
+        // than as the rows' ↓ arrow: "fewer"/"more" carries the direction, and a
+        // circuit can grow (`--decompose-rz` expanding rotations into Clifford+T).
+        let gates_reduction = pct(in_gates, out_gates);
+        let direction = if gates_reduction < 0.0 {
+            "more"
+        } else {
+            "fewer"
+        };
+        let title = format!(
+            "Final result · {}% {direction} gates · {secs:.3}s",
+            magnitude(gates_reduction)
+        );
+        self.print_reduction_box(&title, metrics);
+    }
+
+    /// A one-shot box of `(label, before, after, color)` rows.
+    fn print_reduction_box(&self, title: &str, metrics: Vec<(&str, usize, usize, &'static str)>) {
         // One shared width across every row (not just each row's own before/after
         // pair), so the "→" arrows line up regardless of how much smaller a
         // metric like Rz's counts are than Gates' or Depth's.
@@ -148,21 +174,7 @@ impl Ui {
             })
             .collect();
 
-        // Lead with the headline number, so the one figure most readers want is in
-        // the title rather than only in the Gates row. Spelled out in words rather
-        // than as the rows' ↓ arrow: "fewer"/"more" carries the direction, and a
-        // circuit can grow (`--decompose-rz` expanding rotations into Clifford+T).
-        let gates_reduction = pct(in_gates, out_gates);
-        let direction = if gates_reduction < 0.0 {
-            "more"
-        } else {
-            "fewer"
-        };
-        let title = format!(
-            "Final result · {}% {direction} gates · {secs:.3}s",
-            magnitude(gates_reduction)
-        );
-        for line in progress_box(&title, &rows) {
+        for line in progress_box(title, &rows) {
             self.info(&line);
         }
     }

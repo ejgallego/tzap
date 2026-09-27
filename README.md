@@ -10,7 +10,8 @@
 
 [**Installation**](#installation) · [**Using tzap**](#running-tzap) &nbsp;**|**&nbsp;  [Qiskit integration](https://github.com/qqq-wisc/tzap/blob/main/docs/qiskit.md) · [PennyLane integration](https://github.com/qqq-wisc/tzap/blob/main/docs/pennylane.md)
 
-A super fast, Rust-based optimizer for large Clifford+T/Rz circuits.
+A super fast, Rust-based optimizer for large Clifford+T/Rz circuits, with
+optional conversion to optimized Pauli-based computation (PBC) circuits.
 - tzap is state-of-the-art in *speed*, *scalability*, and *gate-count reduction*.
 - tzap **minimizes T-count** with a new linear-time phase folding algorithm, based on [this paper](https://arxiv.org/abs/2605.13929).
 - tzap implements a new and fast **superoptimization** pass, based on [this paper](https://ia.cr/2026/2115).
@@ -109,6 +110,17 @@ CCX, CCZ, CZ, and Rz stay native by default. To decompose them, use:
 - `--decompose-ccx` to decompose CCX and CCZ
 - `--decompose-cz` to decompose CZ into CX+H
 - `--decompose-rz` to decompose Rz via gridsynth
+
+**PBC circuits**
+
+Use `--to-pbc` to convert a circuit to PBC and optimize its Pauli rotations:
+
+```bash
+tzap input.qasm --to-pbc -o output.pbc
+```
+
+Use `--decompose-rz` when the input contains Rz gates; resets are unsupported.
+See the [PBC guide](docs/pbc.md) for the format, options, and examples.
 
 ## Circuit support
 

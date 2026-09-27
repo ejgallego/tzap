@@ -14,26 +14,77 @@ use crate::ui::{Ui, Verbosity};
 /// in the middle of a pipeline.
 pub(crate) const STREAM_PATH: &str = "-";
 
-fn parse_pass_list(list: &str) -> Vec<PassName> {
-    let parsed = list
+/// Default `--pbc-expansion-budget`: sparse work for expanding PBC axes into
+/// explicit Pauli strings, a guard against runaway memory (roughly 8 bytes a
+/// unit at worst). The largest benchmark, gf2^256_mult, needs about 10M.
+pub(crate) const DEFAULT_PBC_EXPANSION_BUDGET: usize = 256_000_000;
+
+/// Passes that run on the PBC circuit, after the gate passes: `(name,
+/// description)`. `ToPbc` converts; `PbcOpt` then optimizes the rotations.
+pub(crate) const PBC_PASSES: [(&str, &str); 2] = [
+    (
+        "ToPbc",
+        "Convert to PBC; outputs PBC (see --pbc-max-weight). Must follow the gate passes",
+    ),
+    (
+        "PbcOpt",
+        "Merge same-axis PBC rotations to lower the T count. Must follow ToPbc",
+    ),
+];
+
+fn is_pass_name(name: &str) -> bool {
+    PassName::parse(name).is_some() || PBC_PASSES.iter().any(|(n, _)| *n == name)
+}
+
+/// A parsed `--passes` list: gate passes, then optional PBC passes.
+struct PassList {
+    gates: Vec<PassName>,
+    to_pbc: bool,
+    pbc_opt: bool,
+}
+
+fn parse_pass_list(list: &str) -> PassList {
+    let mut parsed = PassList {
+        gates: Vec::new(),
+        to_pbc: false,
+        pbc_opt: false,
+    };
+    let names: Vec<&str> = list
         .split(',')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
-        .map(|name| {
-            PassName::parse(name).unwrap_or_else(|| {
-                arg_error(format!(
-                    "Unknown pass '{name}'. Available passes: {}",
-                    PassName::all_names()
-                ))
-            })
-        })
-        .collect::<Vec<_>>();
-
-    if parsed.is_empty() {
+        .collect();
+    if names.is_empty() {
         arg_error(
             "--passes requires at least one pass name \
              (e.g. --passes CancelGates,PhaseFoldRand)",
         );
+    }
+    for name in names {
+        match name {
+            "ToPbc" if parsed.to_pbc => arg_error("--passes lists ToPbc more than once"),
+            "ToPbc" => parsed.to_pbc = true,
+            "PbcOpt" if !parsed.to_pbc => {
+                arg_error("PbcOpt optimizes PBC — list it after ToPbc in --passes")
+            }
+            "PbcOpt" if parsed.pbc_opt => arg_error("--passes lists PbcOpt more than once"),
+            "PbcOpt" => parsed.pbc_opt = true,
+            _ => {
+                let pass = PassName::parse(name).unwrap_or_else(|| {
+                    arg_error(format!(
+                        "Unknown pass '{name}'. Available passes: {}, {}",
+                        PassName::all_names(),
+                        PBC_PASSES.map(|(n, _)| n).join(", ")
+                    ))
+                });
+                if parsed.to_pbc {
+                    arg_error(format!(
+                        "{name} is a gate pass and cannot run after ToPbc — list gate passes first"
+                    ));
+                }
+                parsed.gates.push(pass);
+            }
+        }
     }
     parsed
 }
@@ -43,14 +94,14 @@ fn looks_like_pass_list_fragment(token: &str) -> bool {
         .split(',')
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
-        .all(|name| PassName::parse(name).is_some())
+        .all(is_pass_name)
 }
 
 /// What this invocation is for. Optimizing a circuit is the whole point of
 /// tzap; the cache actions are maintenance on the artifact an `-Osuper` run
 /// leaves behind, and take no input circuit.
 pub(crate) enum Action {
-    Optimize(Run),
+    Optimize(Box<Run>),
     /// `--cache-info`: report where the on-disk MURMs live and
     /// what they cost.
     CacheInfo,
@@ -78,6 +129,25 @@ pub(crate) struct Run {
     /// Where to write the optimized circuit: a path, [`STREAM_PATH`] for
     /// stdout, or `None` to discard it.
     pub(crate) output_path: Option<String>,
+    pub(crate) to_pbc: bool,
+    /// Run the PBC rotation optimizer after conversion: on by default,
+    /// off with `--pbc-no-opt`; under `--passes … ToPbc`, only if `PbcOpt` is
+    /// listed.
+    pub(crate) pbc_opt: bool,
+    /// Gate-level optimization was turned off because `--to-pbc` was given
+    /// without `-O*` or `--passes`; only requested decompositions run.
+    pub(crate) gate_opts_off: bool,
+    /// Flags given that have no effect because gate-level optimization is off.
+    pub(crate) ignored: Vec<&'static str>,
+    /// The PBC passes listed in `--passes`, for the `--json` report.
+    pub(crate) pbc_passes: Vec<&'static str>,
+    /// Write an SVG drawing of the PBC circuit here (`--visualize-pbc`).
+    pub(crate) visualize_pbc: Option<String>,
+    /// Sparse-expansion work allowed for writing, drawing, or measuring PBC
+    /// axes (`--pbc-expansion-budget`).
+    pub(crate) pbc_expansion_budget: usize,
+    /// Bound on PBC rotation and measurement weight (`--pbc-max-weight`).
+    pub(crate) pbc_max_weight: Option<std::num::NonZeroUsize>,
     /// `--parallel`/`--no-parallel` as asked for, or `None` to decide from
     /// the circuit's size (see [`Run::resolve_parallel`]). Distinct from
     /// `options.parallel`, which is the answer rather than the request.
@@ -153,8 +223,11 @@ fn parse_string_arg(args: &[String], i: usize, flag_name: &str, what: &str) -> S
 
 /// Every long flag that takes a separate value, and so may also be written
 /// `--flag=value` (see [`split_flag_values`]).
-const VALUE_FLAGS: [&str; 7] = [
+const VALUE_FLAGS: [&str; 10] = [
     "--epsilon",
+    "--pbc-expansion-budget",
+    "--pbc-max-weight",
+    "--visualize-pbc",
     "--passes",
     "--cache-dir",
     "--superopt-qubits",
@@ -192,12 +265,19 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
     let args = split_flag_values(args);
     let mut input_path: Option<String> = None;
     let mut output_path: Option<String> = None;
+    let mut to_pbc = false;
+    let mut pbc_no_opt = false;
+    let mut visualize_pbc: Option<String> = None;
+    let mut pbc_expansion_budget: Option<usize> = None;
+    let mut pbc_max_weight: Option<std::num::NonZeroUsize> = None;
     let mut decompose_rz = false;
     let mut decompose_cz = false;
     let mut decompose_ccx = false;
     let mut rz_epsilon: f64 = DEFAULT_RZ_EPSILON;
     let mut parallel: Option<bool> = None;
     let mut passes: Option<Vec<PassName>> = None;
+    // (ToPbc, PbcOpt) listed in --passes.
+    let mut pbc_passes = (false, false);
     let mut fixpoint = false;
     let mut optimization_level = None;
     let mut superopt_qubits: Option<usize> = None;
@@ -220,6 +300,8 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
             "--help" | "-h" => help = true,
             "--version" | "-v" | "-V" => version = true,
             "--decompose-rz" => decompose_rz = true,
+            "--to-pbc" => to_pbc = true,
+            "--pbc-no-opt" => pbc_no_opt = true,
             "--decompose-cz" => decompose_cz = true,
             "--decompose-ccx" => decompose_ccx = true,
             "--superopt-gates" => {
@@ -260,7 +342,9 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
                     list.push_str(next);
                     i += 1;
                 }
-                passes = Some(parse_pass_list(&list));
+                let parsed = parse_pass_list(&list);
+                passes = Some(parsed.gates);
+                pbc_passes = (parsed.to_pbc, parsed.pbc_opt);
             }
             // Last spelling on the line wins, as for any --x/--no-x pair, so
             // a wrapper script's default can be overridden by appending to it.
@@ -291,6 +375,30 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
                     "-Osuper" => Level::Osuper,
                     _ => unreachable!(),
                 });
+            }
+            "--visualize-pbc" => {
+                i += 1;
+                visualize_pbc = Some(args.get(i).cloned().unwrap_or_else(|| {
+                    arg_error("--visualize-pbc requires an output SVG file path")
+                }));
+            }
+            "--pbc-expansion-budget" => {
+                i += 1;
+                let value = args.get(i).map_or("", |s| s.as_str());
+                pbc_expansion_budget = Some(value.parse().unwrap_or_else(|_| {
+                    arg_error(format!(
+                        "--pbc-expansion-budget requires a number of work units, got '{value}'"
+                    ))
+                }));
+            }
+            "--pbc-max-weight" => {
+                i += 1;
+                let value = args.get(i).map_or("", |s| s.as_str());
+                pbc_max_weight = Some(value.parse().unwrap_or_else(|_| {
+                    arg_error(format!(
+                        "--pbc-max-weight requires an integer of at least 1, got '{value}'"
+                    ))
+                }));
             }
             "-o" => {
                 i += 1;
@@ -414,20 +522,98 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
              — list the corresponding decomposition passes instead",
         );
     }
+    // --to-pbc is shorthand for ending the pipeline with ToPbc,PbcOpt (ToPbc
+    // alone with --pbc-no-opt); mixing the two spellings would make the order
+    // ambiguous.
+    if pbc_passes.0 && to_pbc {
+        arg_error("--passes already lists ToPbc — drop --to-pbc");
+    }
+    if pbc_passes.0 && pbc_no_opt {
+        arg_error(
+            "--pbc-no-opt does not apply to --passes — list PbcOpt after ToPbc to optimize, \
+             or leave it out",
+        );
+    }
+    if to_pbc && fixpoint && passes.is_none() {
+        arg_error(
+            "--fixpoint repeats gate-level passes, which --to-pbc turns off — use -O3 \
+             (a fixpoint) or --passes <list> --fixpoint",
+        );
+    }
+    if pbc_no_opt && !to_pbc && visualize_pbc.is_none() {
+        arg_error(
+            "--pbc-no-opt applies to PBC output — combine it with --to-pbc or --visualize-pbc",
+        );
+    }
+    let pbc_opt = if pbc_passes.0 {
+        pbc_passes.1
+    } else {
+        !pbc_no_opt
+    };
+    // Gate-level passes tend to widen PBC axes and cost time, and PBC has its
+    // own optimizer: --to-pbc alone runs only the requested decompositions.
+    let gate_opts_off = to_pbc && optimization_level.is_none() && passes.is_none() && !fixpoint;
+    if gate_opts_off {
+        let requested = [
+            (decompose_ccx, PassName::DecomposeToffoli),
+            (decompose_cz, PassName::DecomposeCz),
+            (decompose_rz, PassName::DecomposeRz),
+        ];
+        passes = Some(requested.iter().filter(|r| r.0).map(|r| r.1).collect());
+        (decompose_ccx, decompose_cz, decompose_rz) = (false, false, false);
+    }
+    to_pbc |= pbc_passes.0;
+    if pbc_expansion_budget.is_some() && !to_pbc && visualize_pbc.is_none() {
+        arg_error(
+            "--pbc-expansion-budget applies to PBC output — combine it with --to-pbc or \
+             --visualize-pbc",
+        );
+    }
+    if pbc_max_weight.is_some() && !to_pbc && visualize_pbc.is_none() {
+        arg_error(
+            "--pbc-max-weight bounds PBC output — combine it with --to-pbc or --visualize-pbc",
+        );
+    }
     // Two writers, one stream: whichever won, the other's output would be
     // interleaved into it and neither would parse. Better to say so than to
     // emit a QASM file with a JSON object spliced through it.
     if json && output_path.as_deref() == Some(STREAM_PATH) {
-        arg_error(
+        let file = if to_pbc { "out.pbc" } else { "out.qasm" };
+        arg_error(format!(
             "--json and `-o -` both write to stdout — write the circuit to a \
-             file (-o out.qasm) and keep --json on stdout, or drop --json",
-        );
+             file (-o {file}) and keep --json on stdout, or drop --json"
+        ));
+    }
+    // Flags that only configure gate-level optimization, which is off.
+    let mut ignored = Vec::new();
+    if gate_opts_off {
+        if parallel.is_some() {
+            ignored.push("--parallel/--no-parallel");
+        }
+        if superopt_qubits.is_some()
+            || superopt_window_gates.is_some()
+            || superopt_murm_entries.is_some()
+            || !matches!(superopt_gates, SuperOptGates::Auto)
+        {
+            ignored.push("--superopt-*");
+        }
     }
 
     Opts {
-        action: Action::Optimize(Run {
+        action: Action::Optimize(Box::new(Run {
             input_path,
             output_path,
+            to_pbc,
+            pbc_opt,
+            gate_opts_off,
+            ignored,
+            pbc_passes: [(pbc_passes.0, "ToPbc"), (pbc_passes.1, "PbcOpt")]
+                .into_iter()
+                .filter_map(|(listed, name)| listed.then_some(name))
+                .collect(),
+            visualize_pbc,
+            pbc_expansion_budget: pbc_expansion_budget.unwrap_or(DEFAULT_PBC_EXPANSION_BUDGET),
+            pbc_max_weight,
             parallel,
             // An absent `-O` flag means O3 too; the distinction only ever
             // mattered for the validation above, which has already run.
@@ -451,7 +637,7 @@ pub(crate) fn parse_args(args: &[String]) -> Opts {
                 },
                 superopt_gates,
             },
-        }),
+        })),
         ui,
         json,
     }
@@ -477,14 +663,14 @@ fn print_help(ui: &Ui) {
     ));
     out.push('\n');
     out.push_str(&format!("  {heading}USAGE{reset}\n"));
-    out.push_str("    tzap <input.qasm> [output.qasm] [options]\n");
+    out.push_str("    tzap <input.qasm> [output] [options]\n");
     out.push('\n');
     out.push_str(&format!("  {heading}ARGS{reset}\n"));
     out.push_str(&format!(
         "    {bold}<input.qasm>{reset}     Input OpenQASM 2.0 file, or - for stdin\n"
     ));
     out.push_str(&format!(
-        "    {bold}[output.qasm]{reset}    Output file, or - for stdout (no output if omitted)\n"
+        "    {bold}[output]{reset}         Output file, or - for stdout (no output if omitted)\n"
     ));
     out.push('\n');
     out.push_str(&format!("  {heading}OPTIONS{reset}\n"));
@@ -555,8 +741,37 @@ fn print_help(ui: &Ui) {
         "    {bold}-V, --version{reset}    Print the version\n"
     ));
     out.push('\n');
+    out.push_str(&format!("  {heading}PBC OUTPUT{reset}\n"));
+    out.push_str(&format!(
+        "    {bold}--to-pbc{reset}         Convert to Pauli-based computation (PBC), then optimize\n"
+    ));
+    out.push_str("                     its rotations; write it with -o <file.pbc> or -o -.\n");
+    out.push_str(
+        "                     Gate-level optimization is off unless -O1/-O2/-O3/-Osuper\n",
+    );
+    out.push_str("                     or --passes is given. Same as ending --passes with\n");
+    out.push_str("                     ToPbc,PbcOpt (ToPbc alone with --pbc-no-opt).\n");
+    out.push_str(&format!(
+        "    {bold}--pbc-no-opt{reset}     Skip the PBC rotation optimizer\n"
+    ));
+    out.push_str(&format!("    {bold}--pbc-max-weight{reset} <N>\n"));
+    out.push_str("                     Bound the weight of π/8 rotations and measurements\n");
+    out.push_str("                     (N >= 1); Cliffords that would widen them become π/4\n");
+    out.push_str("                     and π/2 rotations of weight <= 2\n");
+    out.push_str(&format!("    {bold}--visualize-pbc{reset} <file.svg>\n"));
+    out.push_str("                     Draw the PBC circuit as SVG, in Litinski's style\n");
+    out.push_str(&format!("    {bold}--pbc-expansion-budget{reset} <N>\n"));
+    out.push_str("                     Work allowed for expanding Pauli axes when writing,\n");
+    out.push_str(&format!(
+        "                     drawing, or measuring PBC (default {})\n",
+        crate::progress::fmt_num(DEFAULT_PBC_EXPANSION_BUDGET)
+    ));
+    out.push('\n');
     out.push_str(&format!("  {heading}PASSES{reset} (names for --passes)\n"));
     for (name, _pass, desc) in PassName::ALL {
+        out.push_str(&format!("    {bold}{name:<19}{reset}  {desc}\n"));
+    }
+    for (name, desc) in PBC_PASSES {
         out.push_str(&format!("    {bold}{name:<19}{reset}  {desc}\n"));
     }
     out.push('\n');

@@ -99,6 +99,13 @@ impl Ui {
         self.sgr("\x1b[0m")
     }
 
+    /// A tree connector (`├─`, or `└─` for the `last` line), in grey so the
+    /// figures after it stand out.
+    pub(crate) fn elbow(&self, last: bool) -> String {
+        let glyph = if last { "└─" } else { "├─" };
+        format!("{}{glyph}{}", self.sgr("\x1b[90m"), self.reset())
+    }
+
     pub(crate) fn out_reset(&self) -> &'static str {
         self.out_sgr("\x1b[0m")
     }
@@ -116,6 +123,12 @@ impl Ui {
         if !self.quiet() {
             eprintln!("{text}");
         }
+    }
+
+    /// Print a side note or warning — context rather than a result — in
+    /// grey. Suppressed by `--quiet`, like [`Ui::info`].
+    pub(crate) fn note(&self, text: &str) {
+        self.info(&format!("{}{text}{}", self.sgr("\x1b[90m"), self.reset()));
     }
 
     /// A blank separator line, at normal verbosity and above.

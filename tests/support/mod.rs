@@ -82,13 +82,21 @@ impl Tzap {
                     .stderr(Stdio::piped())
                     .spawn()
                     .expect("failed to spawn tzap");
-                child
+                let write = child
                     .stdin
-                    .as_mut()
+                    .take()
                     .expect("piped stdin")
-                    .write_all(input.as_bytes())
-                    .expect("failed to write tzap's stdin");
-                child.wait_with_output().expect("failed to run tzap")
+                    .write_all(input.as_bytes());
+                let output = child.wait_with_output().expect("failed to run tzap");
+                if let Err(error) = write {
+                    assert!(
+                        error.kind() == std::io::ErrorKind::BrokenPipe && !output.status.success(),
+                        "failed to write tzap's stdin: {error}; exit status: {:?}; stderr: {}",
+                        output.status.code(),
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+                output
             }
         };
         Run::from(output)

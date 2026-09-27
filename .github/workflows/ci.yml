@@ -35,7 +35,13 @@ jobs:
         with:
           enable-cache: true
       - run: cargo test
-      - run: cargo test --release -- --ignored
+      # Extended PBC fuzzers default to hundreds of cases for manual runs.
+      # Sample each width once in CI so the exact mid-circuit channel checks
+      # fit the job limit; regular tests cover larger seeded sets.
+      - name: Run release-only tests and PBC fuzz samples
+        env:
+          PBC_FUZZ_CASES: "4"
+        run: cargo test --release -- --ignored
 
   # The release wheel matrix covers Windows and macOS, but nothing else in CI
   # compiles there — so a Windows-only build break would first show up at tag
