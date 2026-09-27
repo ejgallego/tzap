@@ -10,7 +10,8 @@
 
 [**Installation**](#installation) · [**Using tzap**](#running-tzap) &nbsp;**|**&nbsp;  [Qiskit integration](https://github.com/qqq-wisc/tzap/blob/main/docs/qiskit.md) · [PennyLane integration](https://github.com/qqq-wisc/tzap/blob/main/docs/pennylane.md)
 
-A super fast, Rust-based optimizer for large Clifford+T/Rz circuits.
+A super fast, Rust-based optimizer for large Clifford+T/Rz circuits, with
+conversion to optimized Pauli-based computation (PBC) circuits.
 - tzap is state-of-the-art in *speed*, *scalability*, and *gate-count reduction*.
 - tzap **minimizes T-count** with a new linear-time phase folding algorithm, based on [this paper](https://arxiv.org/abs/2605.13929).
 - tzap implements a new and fast **superoptimization** pass, based on [this paper](https://ia.cr/2026/2115).
@@ -110,55 +111,16 @@ CCX, CCZ, CZ, and Rz stay native by default. To decompose them, use:
 - `--decompose-cz` to decompose CZ into CX+H
 - `--decompose-rz` to decompose Rz via gridsynth
 
-**PBC output**
+**PBC circuits**
 
-See the [PBC format](docs/pbc.md) for the syntax and examples.
+Use `--to-pbc` to convert a circuit to PBC and optimize its Pauli rotations:
 
 ```bash
 tzap input.qasm --to-pbc -o output.pbc
 ```
 
-`--to-pbc` turns gate-level optimization off (pass `-O1`–`-O3`, `-Osuper`, or
-`--passes` to keep it), converts after any requested decompositions, and then
-optimizes the PBC rotations: same-axis rotations merge after moving past the
-rotations they commute with, lowering the T count. `--pbc-no-opt` skips that optimizer. Inputs
-must have no resets; measurements may appear anywhere, including mid-circuit.
-Use `--decompose-rz` for Rz.
-Export preserves all quantum and classical outputs, including post-measurement
-states. The entire remaining Clifford action is retained as a Pauli-generator frame,
-whether none, some, or all qubits are measured. For example,
-`h q[0]; cx q[0],q[1]; t q[1]; measure q[1] -> c[0];` exports as:
-
-```text
-qubits 2
-registers 1
-r 1 1 X0 Z1
-m 1 X0 Z1 -> c0
-f X0 1 Z0 X1
-f Z0 1 X0
-f Z1 1 X0 Z1
-```
-
-`r <k> <sign> <factors>` rotates by `k*pi/8` using `exp(-i*k*pi/8*P)`.
-`m <sign> <factors> -> cN` measures the signed Pauli product (`r` and `m`
-lines interleave in execution order): +1 gives bit 0,
--1 gives bit 1. Signs are `1` or `-1`; omitted factors are identity (an empty
-list is the identity). Register writes may overwrite earlier values. Trailing
-`f` records encode `C†XqC` and `C†ZqC` for the output Clifford C; omitted
-identity rows are implicit. This frame preserves quantum outputs.
-`-o -` writes PBC to stdout. JSON `metrics` describe the gate circuit before
-conversion; the `pbc` key has the PBC's rotation and measurement counts, axis
-weights, and the optimizer's merges.
-Conversion and the PBC optimizer are also passes, `ToPbc` and `PbcOpt`, listed
-after the gate passes: `--passes CancelGates,ToPbc,PbcOpt`.
-`--pbc-max-weight N` bounds the weight of every π/8 rotation and measurement,
-emitting Cliffords as π/4 rotations where the frame would widen an axis (see
-[docs/pbc.md](docs/pbc.md#weight-bound)).
-`--visualize-pbc circuit.svg` draws the PBC circuit as an SVG in the style of
-Litinski's "A Game of Surface Codes" (see [docs/pbc.md](docs/pbc.md#visualizer)).
-Export expands the Pauli strings within a budget of 256 million sparse-work
-units by default (`--pbc-expansion-budget`); unlike the compressed conversion,
-expanded output is not guaranteed linear in size.
+Use `--decompose-rz` when the input contains Rz gates; resets are unsupported.
+See the [PBC guide](docs/pbc.md) for the format, options, and examples.
 
 ## Circuit support
 
