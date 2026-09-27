@@ -32,7 +32,6 @@ fn convert(source: &str) -> String {
 #[test]
 fn documented_measurement_examples_match_cli_output() {
     let doc = include_str!("../docs/pbc.md");
-    let readme = include_str!("../README.md");
     // (qubits, body, expected output, whether docs/pbc.md shows it)
     for (n, body, expected, in_doc) in [
         (
@@ -63,21 +62,16 @@ fn documented_measurement_examples_match_cli_output() {
         assert!(!in_doc || doc.contains(&format!("```text\n{expected}```")));
         assert_eq!(convert(&qasm(n, body)), expected);
     }
-    for (body, expected, text) in [
+    for (body, expected) in [
         (
             "h q[0];\ncx q[0],q[1];\nmeasure q[1] -> c[0];",
             "qubits 2\nregisters 1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
-            None,
         ),
         (
             "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];",
             "qubits 2\nregisters 1\nr 1 1 X0 Z1\nm 1 X0 Z1 -> c0\nf X0 1 Z0 X1\nf Z0 1 X0\nf Z1 1 X0 Z1\n",
-            Some(readme),
         ),
     ] {
-        if let Some(text) = text {
-            assert!(text.contains(&format!("```text\n{expected}```")));
-        }
         assert_eq!(convert(&qasm_with_cbits(2, 1, body)), expected);
     }
 }

@@ -5,8 +5,8 @@
 //! eigenvalue. All output qubits and final user classical bits are observable;
 //! internal outcome IDs are not. Hidden histories are summed incoherently into
 //! Choi blocks, never compared as individual Kraus operators or sampled.
-//! Measurements may appear anywhere in gate and PBC inputs. Resets and
-//! feed-forward are rejected.
+//! Measurements may appear anywhere in gate and PBC inputs. PBC conditional
+//! rotations read immutable measurement outcomes. Gate resets are rejected.
 
 use super::*;
 use std::collections::{BTreeMap, BTreeSet};
@@ -107,6 +107,7 @@ impl Channel {
 struct Branch {
     kraus: Matrix,
     classical: Vec<bool>,
+    outcomes: Vec<bool>,
 }
 
 struct Footprint {
@@ -182,6 +183,7 @@ fn initial_branch(dim: usize, classical: &[bool]) -> Vec<Branch> {
     vec![Branch {
         kraus: Matrix::identity(dim),
         classical: classical.to_vec(),
+        outcomes: Vec::new(),
     }]
 }
 
@@ -191,15 +193,24 @@ fn apply(branches: &mut [Branch], unitary: &Matrix) {
     }
 }
 
-fn split(branches: Vec<Branch>, operators: [Matrix; 2], target: Option<u32>) -> Vec<Branch> {
+fn split(
+    branches: Vec<Branch>,
+    operators: [Matrix; 2],
+    target: Option<u32>,
+    record_outcome: bool,
+) -> Vec<Branch> {
     let mut result = Vec::with_capacity(branches.len() * 2);
     for branch in branches {
         for (outcome, operator) in operators.iter().enumerate() {
             let mut next = Branch {
                 kraus: operator.mul(&branch.kraus),
                 classical: branch.classical.clone(),
+                outcomes: branch.outcomes.clone(),
             };
             let bit = outcome == 1;
+            if record_outcome {
+                next.outcomes.push(bit);
+            }
             if let Some(cbit) = target {
                 next.classical[cbit as usize] = bit;
             }
@@ -291,7 +302,7 @@ pub(crate) fn circuit_channel(
                     let bit = usize::from(col & mask != 0);
                     operators[bit].set(col, col, Scalar::integer(1));
                 }
-                branches = split(branches, operators, Some(cbit));
+                branches = split(branches, operators, Some(cbit), false);
             }
             _ => apply(
                 &mut branches,
@@ -316,11 +327,6 @@ pub(crate) fn pbc_channel(
         .ok_or(Error::LimitExceeded)?;
     if operations > limits.matrices.max_operations {
         return Err(Error::LimitExceeded);
-    }
-    for (index, op) in circuit.operations().iter().enumerate() {
-        if matches!(op, PbcOp::ConditionalRotate { .. }) {
-            return Err(Error::UnsupportedOperation { index });
-        }
     }
     let destinations: BTreeSet<_> = circuit
         .operations()
@@ -357,9 +363,16 @@ pub(crate) fn pbc_channel(
                 let half = Scalar::integer(1).half();
                 let positive = identity.add(&axis).scale(&half);
                 let negative = identity.add(&axis.scale(&Scalar::integer(-1))).scale(&half);
-                branches = split(branches, [positive, negative], target);
+                branches = split(branches, [positive, negative], target, true);
             }
-            PbcOp::ConditionalRotate { .. } => unreachable!("validated above"),
+            PbcOp::ConditionalRotate { angle, if_one, .. } => {
+                let unitary = rotation(&axis, angle.eighths());
+                for branch in &mut branches {
+                    if branch.outcomes[if_one.index()] {
+                        branch.kraus = unitary.mul(&branch.kraus);
+                    }
+                }
+            }
         }
     }
     apply(&mut branches, &frame_unitary(circuit, &values, dim)?);

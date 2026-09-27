@@ -453,7 +453,7 @@ fn zero_qubit_empty_channels_preserve_classical_state() {
 }
 
 #[test]
-fn resets_and_post_measurement_gates_are_rejected() {
+fn resets_are_rejected_and_post_measurement_gates_are_supported() {
     let limits = ChannelLimits::default();
     for gates in [vec![Gate::reset(0)], vec![Gate::h(0), Gate::reset(0)]] {
         let index = gates.len() - 1;
@@ -480,10 +480,27 @@ fn resets_and_post_measurement_gates_are_rejected() {
     let x = c.x(0).unwrap();
     let m = c.measure(x, None).unwrap();
     c.conditional_pauli(x, m).unwrap();
-    assert_eq!(
-        pbc_channel(&c, &[], limits),
-        Err(Error::UnsupportedOperation { index: 1 })
-    );
+    assert!(pbc_channel(&c, &[], limits).is_ok());
+}
+
+#[test]
+fn conditional_rotation_uses_the_recorded_outcome_after_register_overwrite() {
+    let mut c = PbcCircuit::new(1, 1);
+    let z = c.z(0).unwrap();
+    let x = c.x(0).unwrap();
+    let first = c.measure(z, Some(0)).unwrap();
+    c.measure(c.identity(), Some(0)).unwrap();
+    c.conditional_pauli(x, first).unwrap();
+
+    // The second measurement writes 0 to c0. The conditional X must still
+    // use the first outcome, giving K0=|0><0| and K1=|0><1|.
+    let actual = pbc(&c, &[true]);
+    let mut expected = Matrix::zero(4);
+    expected.set(0, 0, Scalar::integer(1));
+    expected.set(1, 1, Scalar::integer(1));
+    assert_eq!(actual.blocks.len(), 1);
+    assert_eq!(actual.blocks[&vec![false]], expected);
+    assert_trace_preserving(&actual);
 }
 
 #[test]
@@ -595,6 +612,7 @@ fn unitary_channels_agree_with_unitary_matrices() {
         vec![Branch {
             kraus: u,
             classical: vec![],
+            outcomes: vec![],
         }],
     );
     assert_eq!(check(&c, &[]).compare(&expected), Ok(()));

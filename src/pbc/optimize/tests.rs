@@ -195,6 +195,35 @@ fn measurements_are_barriers_and_channels_are_preserved() {
     assert_eq!(c.measurement_count(), 1);
 }
 
+#[test]
+fn conditional_rotations_preserve_the_exact_channel_through_frame_moves() {
+    use crate::semantics::channel::{ChannelLimits, pbc_channel};
+
+    for strategy in [Strategy::Merge, Strategy::Litinski] {
+        let mut c = PbcCircuit::new(2, 1);
+        let z0 = c.z(0).unwrap();
+        let x0 = c.x(0).unwrap();
+        let z1 = c.z(1).unwrap();
+        c.rotate(z0, PauliAngle::new(2)).unwrap();
+        c.rotate(z1, PauliAngle::new(1)).unwrap();
+        let first = c.measure(x0, Some(0)).unwrap();
+        c.measure(c.identity(), Some(0)).unwrap();
+        c.conditional_rotate(x0, PauliAngle::new(1), first).unwrap();
+        c.rotate(z1, PauliAngle::new(1)).unwrap();
+        c.rotate(z1, PauliAngle::new(1)).unwrap();
+        c.push_output_clifford(Gate::h(0)).unwrap();
+
+        let limits = ChannelLimits::default();
+        let before = pbc_channel(&c, &[true], limits).unwrap();
+        c.optimize_rotations(OptimizeOptions {
+            strategy,
+            ..OptimizeOptions::default()
+        })
+        .unwrap();
+        assert_eq!(pbc_channel(&c, &[true], limits).unwrap(), before);
+    }
+}
+
 fn random_word(n: usize, rng: &mut StdRng) -> String {
     let mut w: String = (0..n)
         .map(|_| ['I', 'X', 'Y', 'Z'][rng.gen_range(0..4)])
