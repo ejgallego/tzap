@@ -174,3 +174,24 @@ fn packing_counts_live_values_and_the_new_axis() {
     let (axes, _) = pack(&c.arena, 1, &[z.as_ref()], 4).unwrap();
     assert!(axes.words_len() <= 4);
 }
+
+/// Slots freed by an early product remain allocated while later roots grow
+/// the intern table; both allocations must fit at the same time.
+#[test]
+fn packing_counts_retained_slots_after_their_values_die() {
+    let mut c = PbcCircuit::new(4, 0);
+    let singles: Vec<_> = (0..4).map(|q| c.x(q).unwrap().as_ref()).collect();
+    let left = c.product(singles[0], singles[1]).unwrap();
+    let right = c.product(singles[2], singles[3]).unwrap();
+    let product = c.product(left, right).unwrap();
+    let mut roots = vec![product];
+    for q in 0..4 {
+        roots.push(c.x(q).unwrap().as_ref());
+        roots.push(c.z(q).unwrap().as_ref());
+    }
+    assert_eq!(
+        pack(&c.arena, 4, &roots, 22).err(),
+        Some(PbcError::ExpansionLimit)
+    );
+    assert!(pack(&c.arena, 4, &roots, 30).is_ok());
+}

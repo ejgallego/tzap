@@ -2,9 +2,8 @@
 //! Clifford rotations into the output frame, and generalized
 //! multiproduct-commutation (MCR) group swaps.
 //!
-//! Every axis
-//! (rotations, measurements, conditional rotations, and the output frame's
-//! images) is packed once into canonical bit planes and interned. Then rounds
+//! Operation axes and output-frame images that may be affected are packed
+//! into canonical bit planes and interned. Then rounds
 //! of two steps run until a round removes no T:
 //!
 //! 1. **Stream.** One pass over all operations. A rotation merges into the
@@ -69,8 +68,8 @@ pub struct OptimizeOptions {
     /// Also report the T depth before and after (costs one layering pass
     /// each).
     pub measure_depth: bool,
-    /// Bound on packed storage, in u64 words: the interned axes, the values
-    /// live while packing, and the Clifford carried to the frame (three
+    /// Bound on packed storage, in u64 words: the interned axes, value slots
+    /// retained while packing, and the Clifford carried to the frame (three
     /// images per qubit it has touched). Exceeding it fails with
     /// `ExpansionLimit` and leaves the circuit unchanged; it is checked before
     /// each allocation.
@@ -186,12 +185,9 @@ impl PbcCircuit {
             rotations_before: rotations(self),
             ..OptimizeStats::default()
         };
-        // Roots: every operation's axis, then the output frame's images.
         let n = self.num_qubits;
-        let mut roots: Vec<PauliRef> = self.operations.iter().map(|op| op.axis().0).collect();
-        for q in 0..n as u32 {
-            roots.extend([self.output_frame.x(q), self.output_frame.z(q)]);
-        }
+        let (roots, frame_rows) = self.optimization_roots();
+        let operation_count = self.operations.len();
         let (axes, records) = pack(&self.arena, n, &roots, options.max_packed_words)?;
         let mut items: Vec<Item> = self
             .operations
@@ -223,11 +219,12 @@ impl PbcCircuit {
                 }),
             })
             .collect();
-        let mut frame: Vec<(u32, i8)> = records[self.operations.len()..].to_vec();
+        let mut frame: Vec<(u32, i8)> = records[operation_count..].to_vec();
 
         let mut optimizer = Optimizer {
             axes,
             options,
+            num_qubits: n,
             last: Vec::new(),
             touching: std::array::from_fn(|_| Vec::new()),
             scratch: Vec::new(),
@@ -357,17 +354,61 @@ impl PbcCircuit {
             });
         }
         if frame_changed {
-            for q in 0..n {
-                let (x, sx) = frame[2 * q];
-                let (z, sz) = frame[2 * q + 1];
-                self.output_frame.x[q] = signed(handle(&mut self.arena, x), sx);
-                self.output_frame.z[q] = signed(handle(&mut self.arena, z), sz);
+            for ((q, is_z), (axis, sign)) in frame_rows.into_iter().zip(frame) {
+                let image = signed(handle(&mut self.arena, axis), sign);
+                if is_z {
+                    self.output_frame.z[q] = image;
+                } else {
+                    self.output_frame.x[q] = image;
+                }
             }
         }
         self.operations = output;
         stats.t_after = self.t_count();
         stats.rotations_after = rotations(self);
         Ok(stats)
+    }
+
+    /// Operation roots followed by frame rows whose expressions could touch
+    /// an operated-on qubit. DAG reachability is a conservative support test:
+    /// cancellations may select extra rows but cannot omit affected ones.
+    fn optimization_roots(&self) -> (Vec<PauliRef>, Vec<(usize, bool)>) {
+        let mut roots: Vec<_> = self.operations.iter().map(|op| op.axis().0).collect();
+        let mut acted = vec![false; self.num_qubits];
+        let mut visited = vec![false; self.arena.nodes.len()];
+        let mut stack: Vec<usize> = roots.iter().map(|r| r.node).collect();
+        while let Some(node) = stack.pop() {
+            if visited[node] {
+                continue;
+            }
+            visited[node] = true;
+            match self.arena.nodes[node] {
+                PauliNode::Identity => {}
+                PauliNode::Single { qubit, .. } => acted[qubit as usize] = true,
+                PauliNode::Product(a, b) => stack.extend([a.node, b.node]),
+            }
+        }
+        let mut relevant = vec![false; self.arena.nodes.len()];
+        for (node, entry) in self.arena.nodes.iter().enumerate() {
+            relevant[node] = match *entry {
+                PauliNode::Identity => false,
+                PauliNode::Single { qubit, .. } => acted[qubit as usize],
+                PauliNode::Product(a, b) => relevant[a.node] || relevant[b.node],
+            };
+        }
+        let mut frame_rows = Vec::new();
+        for q in 0..self.num_qubits as u32 {
+            for (is_z, image) in [
+                (false, self.output_frame.x(q)),
+                (true, self.output_frame.z(q)),
+            ] {
+                if relevant[image.node] {
+                    frame_rows.push((q as usize, is_z));
+                    roots.push(image);
+                }
+            }
+        }
+        (roots, frame_rows)
     }
 }
 
@@ -432,9 +473,34 @@ fn t_count(rots: &[Rot]) -> usize {
     rots.iter().filter(|r| r.k % 2 != 0).count()
 }
 
+/// Apply a rewrite independently to each rotation segment between barriers.
+fn rewrite_segments(
+    items: &mut Vec<Item>,
+    mut rewrite: impl FnMut(&mut Vec<Rot>) -> usize,
+) -> usize {
+    let mut changed = 0;
+    let mut output = Vec::with_capacity(items.len());
+    let mut segment = Vec::new();
+    for &item in items.iter() {
+        match item {
+            Item::Rot(rot) => segment.push(rot),
+            Item::Barrier { .. } => {
+                changed += rewrite(&mut segment);
+                output.extend(segment.drain(..).map(Item::Rot));
+                output.push(item);
+            }
+        }
+    }
+    changed += rewrite(&mut segment);
+    output.extend(segment.drain(..).map(Item::Rot));
+    *items = output;
+    changed
+}
+
 struct Optimizer<'a> {
     axes: Axes,
     options: OptimizeOptions,
+    num_qubits: usize,
     /// Per axis: position of its latest live rotation in the segment being
     /// merged, or NONE. Reset after every sweep.
     last: Vec<u32>,
@@ -466,10 +532,13 @@ impl Optimizer<'_> {
         frame: &mut [(u32, i8)],
         merge: bool,
     ) -> Result<usize, PbcError> {
-        let num_qubits = frame.len() / 2;
         let l = self.axes.l;
         let to_frame = self.options.clifford_to_frame;
-        let mut f = Clifford::identity(if to_frame { num_qubits } else { 0 }, l, Axes::signature);
+        let mut f = Clifford::identity(
+            if to_frame { self.num_qubits } else { 0 },
+            l,
+            Axes::signature,
+        );
         let mut word = vec![0u64; 2 * l];
         // F† (sign W) F as (id, sign). New axes count against the budget; on
         // failure the pass stops and the circuit is left unchanged.
@@ -661,23 +730,7 @@ impl Optimizer<'_> {
         if self.options.window == 0 {
             return 0;
         }
-        let mut swaps = 0;
-        let mut output = Vec::with_capacity(items.len());
-        let mut segment = Vec::new();
-        for &item in items.iter() {
-            match item {
-                Item::Rot(rot) => segment.push(rot),
-                Item::Barrier { .. } => {
-                    swaps += self.swaps(&mut segment);
-                    output.extend(segment.drain(..).map(Item::Rot));
-                    output.push(item);
-                }
-            }
-        }
-        swaps += self.swaps(&mut segment);
-        output.extend(segment.drain(..).map(Item::Rot));
-        *items = output;
-        swaps
+        rewrite_segments(items, |segment| self.swaps(segment))
     }
 
     /// Whether `rot`'s axis commutes with every live rotation after position

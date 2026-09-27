@@ -219,8 +219,8 @@ pub(super) fn normalize(k: i32) -> i8 {
 /// axis id and sign: the root evaluates to `sign * W`.
 ///
 /// Nodes are evaluated once, in arena order (children are always older), and
-/// each value is freed after its last use. `max_words` bounds the live and
-/// interned packed storage, in u64 words.
+/// each value's slot is reused after its last use. `max_words` bounds the
+/// retained slot allocation and interned packed storage, in u64 words.
 pub(super) fn pack(
     arena: &PauliArena,
     num_qubits: usize,
@@ -266,11 +266,10 @@ pub(super) fn pack(
     let mut phases: Vec<u8> = Vec::new();
     let mut free: Vec<u32> = Vec::new();
     let mut node_slot = vec![NONE; arena.nodes.len()];
-    let mut live = 0usize;
     let mut scratch = vec![0u64; stride];
 
-    let check = |live: usize, axes: &Axes| {
-        let words = (live + axes.len())
+    let check = |allocated: usize, axes: &Axes| {
+        let words = (allocated + axes.len())
             .checked_mul(stride)
             .ok_or(PbcError::ExpansionLimit)?;
         if words > max_words {
@@ -319,7 +318,6 @@ pub(super) fn pack(
                     if uses[child] == 0 {
                         free.push(node_slot[child]);
                         node_slot[child] = NONE;
-                        live -= 1;
                     }
                 }
                 (p % 4) as u8
@@ -328,7 +326,7 @@ pub(super) fn pack(
         let slot = match free.pop() {
             Some(slot) => slot,
             None => {
-                check(live + 1, &axes)?;
+                check(slots.len() / stride + 1, &axes)?;
                 slots.resize(slots.len() + stride, 0);
                 phases.push(0);
                 phases.len() as u32 - 1
@@ -338,7 +336,6 @@ pub(super) fn pack(
         slots[s * stride..(s + 1) * stride].copy_from_slice(&scratch);
         phases[s] = phase;
         node_slot[node] = slot;
-        live += 1;
 
         // Pack the operations rooted here.
         while next_root < roots.len() && roots[next_root].0 == node {
@@ -351,18 +348,17 @@ pub(super) fn pack(
                 2 => (-1, reference.scaled(super::super::Phase::MinusOne)),
                 _ => return Err(PbcError::NonHermitianAxis),
             };
-            // The live values count against the budget alongside the axes.
+            // Freed slots remain allocated, so count all retained slots.
             let id = axes.intern(
                 &slots[s * stride..(s + 1) * stride],
                 Some(handle),
-                live * stride,
+                slots.len(),
             )?;
             records[root] = (id, sign);
             uses[node] -= 1;
             if uses[node] == 0 {
                 free.push(slot);
                 node_slot[node] = NONE;
-                live -= 1;
             }
         }
     }

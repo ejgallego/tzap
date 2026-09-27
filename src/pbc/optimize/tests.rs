@@ -678,6 +678,62 @@ fn clifford_storage_counts_only_touched_qubits() {
     );
 }
 
+/// A sparse circuit on thousands of declared qubits packs only frame rows
+/// whose support can meet an operation. Its result agrees with the same
+/// three-qubit circuit, including a frame row for a spectator qubit whose
+/// image overlaps an operated-on qubit.
+#[test]
+fn sparse_cross_word_circuit_optimizes_with_a_small_budget() {
+    use crate::semantics::channel::{ChannelLimits, pbc_channel};
+    let make = |n: usize, high: u32, spectator: u32| {
+        let mut c = PbcCircuit::new(n, 1);
+        let x0 = c.x(0).unwrap();
+        let zh = c.z(high).unwrap();
+        let cross = c.product(x0.as_ref(), zh.as_ref()).unwrap();
+        let cross = c.hermitian_axis(cross, 10_000).unwrap();
+        c.rotate(cross, PauliAngle::new(2)).unwrap();
+        let z0 = c.z(0).unwrap();
+        c.rotate(z0, PauliAngle::new(1)).unwrap();
+        let x0 = c.x(0).unwrap();
+        c.measure(x0, Some(0)).unwrap();
+        c.push_output_clifford(Gate::h(high)).unwrap();
+        c.push_output_clifford(Gate::cnot {
+            control: high,
+            target: spectator,
+        })
+        .unwrap();
+        c
+    };
+    let mut small = make(3, 1, 2);
+    let mut large = make(4096, 65, 129);
+    let before = pbc_channel(&small, &[false], ChannelLimits::default()).unwrap();
+    let options = OptimizeOptions {
+        max_packed_words: 4096,
+        ..OptimizeOptions::default()
+    };
+    let small_stats = small.optimize_rotations(options).unwrap();
+    let large_stats = large.optimize_rotations(options).unwrap();
+    assert_eq!(
+        pbc_channel(&small, &[false], ChannelLimits::default()).unwrap(),
+        before
+    );
+    assert_eq!(small_stats.t_after, large_stats.t_after);
+    assert_eq!(
+        small_stats.cliffords_to_frame,
+        large_stats.cliffords_to_frame
+    );
+    let normalize = |text: String| {
+        text.lines()
+            .skip(2)
+            .map(|line| line.replace("129", "2").replace("65", "1"))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        normalize(large.to_text().unwrap()),
+        normalize(small.to_text().unwrap())
+    );
+}
+
 /// `rounds: 0` leaves the rotations alone, for both strategies.
 #[test]
 fn zero_rounds_change_nothing() {

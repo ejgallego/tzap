@@ -27,22 +27,7 @@ impl Optimizer<'_> {
         // Initial Cliffords, if any, go to the end first.
         frame_changed |= self.stream(items, frame, false)? > 0;
         for _ in 0..self.options.rounds {
-            let mut combined = 0;
-            let mut output = Vec::with_capacity(items.len());
-            let mut segment = Vec::new();
-            for &item in items.iter() {
-                match item {
-                    Item::Rot(rot) => segment.push(rot),
-                    Item::Barrier { .. } => {
-                        combined += self.layer_segment(&mut segment);
-                        output.extend(segment.drain(..).map(Item::Rot));
-                        output.push(item);
-                    }
-                }
-            }
-            combined += self.layer_segment(&mut segment);
-            output.extend(segment.drain(..).map(Item::Rot));
-            *items = output;
+            let combined = rewrite_segments(items, |segment| self.layer_segment(segment));
             self.stats.merges += combined;
             if combined == 0 {
                 break;
