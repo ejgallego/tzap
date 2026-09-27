@@ -78,6 +78,7 @@ fn assert_schema(report: &Json, context: &str) {
             "fixpoints",
             "cache_dir",
             "seconds",
+            "pbc",
         ],
         "{context}: unexpected top-level shape"
     );

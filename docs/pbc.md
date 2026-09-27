@@ -7,7 +7,22 @@ Pauli-product rotations and measurements, followed by a Clifford frame.
 tzap input.qasm --to-pbc -o output.pbc
 ```
 
-Conversion runs after optimization and any requested decompositions. The input
+`--to-pbc` turns gate-level optimization off, since PBC has its own: after any
+requested decompositions, the circuit is converted, and then the rotation
+optimizer lowers the T count by merging same-axis rotations, moving each
+rotation past the rotations it commutes with to reach its partner. `--pbc-no-opt` skips the rotation optimizer.
+To run gate-level optimization first, pass `-O1`–`-O3`, `-Osuper`, or
+`--passes`, where conversion is the pass `ToPbc`, listed after the gate passes,
+optionally followed by the rotation optimizer `PbcOpt`:
+
+```bash
+tzap input.qasm --passes CancelGates,ToPbc,PbcOpt -o output.pbc
+```
+
+tzap reports the number of π/8 rotations and, if any, of Clifford rotations
+and measurements, with the minimum, median, and maximum weight of each.
+
+The input
 must have no resets; for Rz gates, also pass `--decompose-rz`. Measurements may
 appear anywhere, including mid-circuit.
 
@@ -119,7 +134,7 @@ widen later axes. When an axis would exceed N, the Clifford gates since the
 last such point are instead emitted in place as π/4 and π/2 rotations
 (`r 2`, `r 4`), and the frame restarts from the identity. Those rotations have
 weight at most 2, since an entangling gate needs two qubits. With N below 3,
-CCX and CCZ are decomposed into Clifford+T first. With `--pbc-opt`, the
+CCX and CCZ are decomposed into Clifford+T first. Under a bound, the rotation
 optimizer keeps Clifford rotations in place rather than moving them into the
 frame, so the bound still holds.
 
@@ -131,16 +146,16 @@ qubits 2
 registers 2
 r 2 1 Z0
 r 2 1 X0
-r 2 1 Z0
-r 2 1 Z0
+r 4 1 Z0
 r 2 1 X1
 r -2 1 Z0 X1
 r 1 1 Z1
 m 1 Z1 -> c0
 ```
 
-The first three rotations are H and the next three are CX, so the frame is
-empty. Bound 2 needs no flush and gives the unbounded output (`r 1 1 X0 Z1`,
+The first rotations are H (`r 2 Z0; r 2 X0; r 2 Z0`) and CX
+(`r 2 Z0; r 2 X1; r -2 Z0 X1`); the optimizer merged the two adjacent `r 2 Z0`
+into `r 4 Z0`. The frame is empty. Bound 2 needs no flush and gives the unbounded output (`r 1 1 X0 Z1`,
 `m 1 X0 Z1`, and the frame).
 
 ## Visualizer

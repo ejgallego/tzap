@@ -47,6 +47,14 @@ fn optimize(c: &mut PbcCircuit, options: OptimizeOptions) -> OptimizeStats {
     stats
 }
 
+/// The default options with MCR swaps on (groups of up to 8 rotations).
+fn mcr() -> OptimizeOptions {
+    OptimizeOptions {
+        window: 8,
+        ..OptimizeOptions::default()
+    }
+}
+
 #[test]
 fn commuting_rotations_merge_and_anticommuting_ones_block() {
     // Z0 T, X1 T, Z0 T: X1 commutes with Z0, so the two T merge into S.
@@ -89,14 +97,11 @@ fn design_note_mcr_example_reduces_six_to_two() {
         ("IZ", 1),
     ];
     let mut c = rotations(2, &layers);
-    let stats = optimize(&mut c, OptimizeOptions::default());
+    let stats = optimize(&mut c, mcr());
     assert_eq!((stats.t_before, stats.t_after, stats.swaps), (6, 2, 1));
     // Without swaps, ordinary merging cannot cross the XX/YY block.
     let mut c = rotations(2, &layers);
-    let no_swaps = OptimizeOptions {
-        window: 0,
-        ..OptimizeOptions::default()
-    };
+    let no_swaps = OptimizeOptions { window: 0, ..mcr() };
     assert_eq!(optimize(&mut c, no_swaps).t_after, 6);
 }
 
@@ -126,7 +131,7 @@ fn design_note_four_versus_four_example_reduces_twelve_to_four() {
     let b = [("XXI", 1), ("YYI", 1), ("XXZ", 1), ("YYZ", 1)];
     let layers: Vec<_> = a.iter().chain(&b).chain(&a).copied().collect();
     let mut c = rotations(3, &layers);
-    let stats = optimize(&mut c, OptimizeOptions::default());
+    let stats = optimize(&mut c, mcr());
     assert_eq!((stats.t_before, stats.t_after, stats.swaps), (12, 4, 1));
 }
 
@@ -346,12 +351,12 @@ fn seeded_fuzz_on_planted_mcr_patterns() {
         }
         let layers: Vec<(&str, i64)> = layers.iter().map(|(w, k)| (w.as_str(), *k)).collect();
         let mut c = rotations(n, &layers);
-        optimize(&mut c, OptimizeOptions::default());
+        optimize(&mut c, mcr());
         // Without frame moves, even-angle patterns still need the swap.
         let mut c = rotations(n, &layers);
         let no_frame = OptimizeOptions {
             clifford_to_frame: false,
-            ..OptimizeOptions::default()
+            ..mcr()
         };
         swaps += optimize(&mut c, no_frame).swaps;
     }
@@ -416,7 +421,7 @@ fn eager_swaps_accept_merges_that_keep_t() {
     ];
     let no_frame = OptimizeOptions {
         clifford_to_frame: false,
-        ..OptimizeOptions::default()
+        ..mcr()
     };
     let mut c = rotations(2, &layers);
     let eager = optimize(&mut c, no_frame);

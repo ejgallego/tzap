@@ -438,6 +438,17 @@ impl PbcCircuit {
         Ok(weights)
     }
 
+    /// The Pauli weight of every operation's axis, measurements included, in
+    /// operation order. Materializes the axes within `max_work`.
+    pub fn axis_weights(&self, max_work: usize) -> Result<Vec<usize>, PbcError> {
+        let mut weights = Vec::with_capacity(self.operations.len());
+        self.visit_axes(max_work, |_, _, factors| {
+            weights.push(factors.len());
+            Ok(())
+        })?;
+        Ok(weights)
+    }
+
     /// The largest axis weights: of non-Clifford rotations and measurements,
     /// and of Clifford rotations (angles that are multiples of pi/4), 0 when
     /// there are none. Materializes the axes within `max_work`, as

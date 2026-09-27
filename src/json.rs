@@ -173,6 +173,96 @@ pub(crate) struct RunInfo<'a> {
     pub(crate) output_path: Option<&'a str>,
     pub(crate) output_gate_set: GateSet,
     pub(crate) seconds: f64,
+    /// Gate-level optimization was off (`--to-pbc` without `-O*`/`--passes`).
+    pub(crate) gate_opts_off: bool,
+    /// The output is PBC text rather than QASM.
+    pub(crate) output_is_pbc: bool,
+    /// The PBC passes the run listed in `--passes` (`ToPbc`, `PbcOpt`).
+    pub(crate) pbc_passes: &'a [&'static str],
+    /// PBC conversion and optimization, when the run produced PBC.
+    pub(crate) pbc: Option<&'a PbcReport>,
+}
+
+/// Minimum, median, and maximum of a set of axis weights.
+#[derive(Clone, Copy)]
+pub(crate) struct WeightStats {
+    pub(crate) min: usize,
+    pub(crate) median: f64,
+    pub(crate) max: usize,
+}
+
+/// Operation counts of a PBC circuit, with axis weight statistics (`None`
+/// for an empty kind, or when weights exceeded the materialization budget).
+pub(crate) struct PbcCounts {
+    pub(crate) pi8_rotations: usize,
+    pub(crate) clifford_rotations: usize,
+    pub(crate) measurements: usize,
+    pub(crate) pi8_weight: Option<WeightStats>,
+    pub(crate) clifford_weight: Option<WeightStats>,
+    pub(crate) measurement_weight: Option<WeightStats>,
+}
+
+/// The rotation optimizer's work.
+pub(crate) struct PbcOptimization {
+    pub(crate) output: PbcCounts,
+    pub(crate) merges: usize,
+    pub(crate) mcr_swaps: usize,
+    pub(crate) cliffords_to_frame: usize,
+    pub(crate) seconds: f64,
+}
+
+pub(crate) struct PbcReport {
+    pub(crate) max_weight: Option<usize>,
+    pub(crate) converted: PbcCounts,
+    pub(crate) convert_seconds: f64,
+    /// `None` when the optimizer was not run (or failed).
+    pub(crate) optimization: Option<PbcOptimization>,
+}
+
+fn weight_value(stats: Option<WeightStats>) -> Value {
+    Value::some(stats, |w| {
+        Value::Object(vec![
+            ("min", Value::Int(w.min)),
+            ("median", Value::Float(w.median)),
+            ("max", Value::Int(w.max)),
+        ])
+    })
+}
+
+fn pbc_counts_value(c: &PbcCounts) -> Value {
+    Value::Object(vec![
+        ("pi8_rotations", Value::Int(c.pi8_rotations)),
+        ("clifford_rotations", Value::Int(c.clifford_rotations)),
+        ("measurements", Value::Int(c.measurements)),
+        (
+            "weight",
+            Value::Object(vec![
+                ("pi8_rotations", weight_value(c.pi8_weight)),
+                ("clifford_rotations", weight_value(c.clifford_weight)),
+                ("measurements", weight_value(c.measurement_weight)),
+            ]),
+        ),
+    ])
+}
+
+fn pbc_value(pbc: &PbcReport) -> Value {
+    Value::Object(vec![
+        ("max_weight", Value::some(pbc.max_weight, Value::Int)),
+        ("converted", pbc_counts_value(&pbc.converted)),
+        ("convert_seconds", Value::Float(pbc.convert_seconds)),
+        (
+            "optimization",
+            Value::some(pbc.optimization.as_ref(), |o| {
+                Value::Object(vec![
+                    ("output", pbc_counts_value(&o.output)),
+                    ("merges", Value::Int(o.merges)),
+                    ("mcr_swaps", Value::Int(o.mcr_swaps)),
+                    ("cliffords_to_frame", Value::Int(o.cliffords_to_frame)),
+                    ("seconds", Value::Float(o.seconds)),
+                ])
+            }),
+        ),
+    ])
 }
 
 fn metrics_value(m: Metrics) -> Value {
@@ -199,7 +289,7 @@ fn reduction(before: usize, after: usize) -> Value {
     Value::Float((before as f64 - after as f64) / before as f64 * 100.0)
 }
 
-fn options_value(options: &Options) -> Value {
+fn options_value(options: &Options, run: &RunInfo<'_>) -> Value {
     let level = match options.level {
         Level::O1 => "O1",
         Level::O2 => "O2",
@@ -208,7 +298,15 @@ fn options_value(options: &Options) -> Value {
     };
     let (qubits, window_gates, murm_entries) = options.superopt.resolved(options.level);
     Value::Object(vec![
-        ("level", Value::str(level)),
+        // `null` when gate-level optimization was off (`--to-pbc` alone).
+        (
+            "level",
+            if run.gate_opts_off {
+                Value::Null
+            } else {
+                Value::str(level)
+            },
+        ),
         (
             "passes",
             Value::some(options.passes.as_ref(), |passes| {
@@ -216,6 +314,7 @@ fn options_value(options: &Options) -> Value {
                     passes
                         .iter()
                         .map(|pass| Value::str(pass_name(*pass)))
+                        .chain(run.pbc_passes.iter().map(|&name| Value::str(name)))
                         .collect(),
                 )
             }),
@@ -278,10 +377,18 @@ pub(crate) fn render(
             Value::Object(vec![
                 ("path", Value::some(run.output_path, Value::str)),
                 ("stdout", Value::Bool(run.output_path == Some("-"))),
-                ("gate_set", gate_set_value(run.output_gate_set)),
+                // `null` for PBC output, which has no gates.
+                (
+                    "gate_set",
+                    if run.pbc.is_some() && run.output_is_pbc {
+                        Value::Null
+                    } else {
+                        gate_set_value(run.output_gate_set)
+                    },
+                ),
             ]),
         ),
-        ("options", options_value(options)),
+        ("options", options_value(options, run)),
         (
             "metrics",
             Value::Object(vec![
@@ -396,6 +503,10 @@ pub(crate) fn render(
             }),
         ),
         ("seconds", Value::Float(run.seconds)),
+        // `null` unless the run converted to PBC (`--to-pbc`, `ToPbc`, or
+        // `--visualize-pbc`). `metrics` describes the gate circuit before
+        // conversion.
+        ("pbc", Value::some(run.pbc, pbc_value)),
     ])
     .document()
 }

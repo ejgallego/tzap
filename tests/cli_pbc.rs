@@ -18,6 +18,7 @@ fn convert(source: &str) -> String {
         "-o",
         "-",
         "--to-pbc",
+        "--pbc-no-opt",
         "--passes",
         "CancelGates",
         "--quiet",
@@ -105,7 +106,15 @@ fn stdout_has_only_pbc_and_full_readout_retains_frame() {
     );
     assert!(
         run.stderr
-            .contains("retaining quantum and classical outputs")
+            .contains("s\n\t├─ 0 π/8 rotations · 1 measurement\n"),
+        "{}",
+        run.stderr
+    );
+    assert!(
+        run.stderr
+            .contains("\t└─ measurement weight min/median/max: 1/1/1\n"),
+        "{}",
+        run.stderr
     );
 }
 
@@ -166,13 +175,21 @@ fn default_pipeline_decomposes_rz_before_conversion() {
 
 #[test]
 fn native_ccx_ccz_and_cz_export_without_decomposition_flags() {
-    let run = Tzap::new(&["-", "-o", "-", "--to-pbc", "--passes", "CancelGates"])
-        .stdin(&qasm(
-            3,
-            "ccx q[0],q[1],q[2];\nccz q[0],q[1],q[2];\ncz q[0],q[1];",
-        ))
-        .run()
-        .ok("native multi-qubit gates");
+    let run = Tzap::new(&[
+        "-",
+        "-o",
+        "-",
+        "--to-pbc",
+        "--pbc-no-opt",
+        "--passes",
+        "CancelGates",
+    ])
+    .stdin(&qasm(
+        3,
+        "ccx q[0],q[1],q[2];\nccz q[0],q[1],q[2];\ncz q[0],q[1];",
+    ))
+    .run()
+    .ok("native multi-qubit gates");
     assert_eq!(
         run.stdout
             .lines()
@@ -188,8 +205,15 @@ fn native_ccx_ccz_and_cz_export_without_decomposition_flags() {
 #[test]
 fn unsupported_inputs_fail_even_without_output_destination() {
     for (body, error) in [
-        ("reset q[0];", "Reset"),
-        ("rz(pi/5) q[0];", "--decompose-rz"),
+        ("reset q[0];", "gate 1 (reset q0): PBC has no resets"),
+        (
+            "rz(pi/5) q[0];",
+            "gate 1 (rz(0.6283) q0): Rz needs --decompose-rz",
+        ),
+        (
+            "h q[1];\ncx q[0],q[0];",
+            "gate 2 (cnot q0, q0): a gate's qubits must be distinct",
+        ),
     ] {
         let run = Tzap::new(&["-", "--to-pbc", "--passes", "CancelGates"])
             .stdin(&qasm(2, body))
@@ -301,42 +325,93 @@ fn default_pipeline_converts_mid_circuit_measurements() {
     );
 }
 
-/// --pbc-opt merges rotations after conversion and reports the T counts;
-/// it requires --to-pbc.
+/// --to-pbc optimizes the PBC rotations by default and reports the T counts;
+/// --pbc-no-opt skips that, and requires PBC output.
 #[test]
-fn pbc_opt_merges_rotations_and_reports_t_counts() {
+fn to_pbc_optimizes_rotations_unless_pbc_no_opt() {
     // T on q0, then CX (its Z image is unchanged), then T on q0 again: the two
     // Z0 rotations merge into one S rotation, which moves into the frame.
     let source = qasm(2, "t q[0];\ncx q[0],q[1];\nt q[0];");
-    let run = Tzap::new(&[
-        "-",
-        "-o",
-        "-",
-        "--to-pbc",
-        "--pbc-opt",
-        "--passes",
-        "CancelGates",
-    ])
-    .stdin(&source)
-    .run()
-    .ok("PBC optimization");
+    let run = Tzap::new(&["-", "-o", "-", "--to-pbc"])
+        .stdin(&source)
+        .run()
+        .ok("PBC optimization");
     assert!(!run.stdout.contains("\nr "), "{}", run.stdout);
     assert!(run.stdout.contains("f X0 -1 Y0 X1\n"), "{}", run.stdout);
-    assert!(run.stderr.contains("T 2 → 0"), "{}", run.stderr);
+    // Both T rotations merge and the resulting S moves into the frame.
     assert!(
-        run.stderr.contains("1 Cliffords to frame"),
+        run.stderr
+            .contains("s\n\t└─ 2 → 0 π/8 rotations (↓100.0%)\n"),
         "{}",
         run.stderr
     );
-    let plain = Tzap::new(&["-", "-o", "-", "--to-pbc", "--passes", "CancelGates"])
+    assert!(!run.stderr.contains('┌'), "{}", run.stderr);
+    let plain = Tzap::new(&["-", "-o", "-", "--to-pbc", "--pbc-no-opt"])
         .stdin(&source)
         .run()
         .ok("plain conversion");
-    assert!(plain.stderr.contains("PBC T count: 2"), "{}", plain.stderr);
-    Tzap::new(&["-", "--pbc-opt"])
+    assert!(
+        plain.stderr.contains("s\n\t├─ 2 π/8 rotations\n"),
+        "{}",
+        plain.stderr
+    );
+    assert!(
+        plain
+            .stderr
+            .contains("\t└─ π/8 weight min/median/max: 1/1/1\n"),
+        "{}",
+        plain.stderr
+    );
+    assert!(!plain.stderr.contains("Optimized PBC"));
+    Tzap::new(&["-", "--pbc-no-opt"])
         .stdin(&source)
         .run()
-        .failed("--pbc-opt without --to-pbc");
+        .failed("--pbc-no-opt without --to-pbc");
+}
+
+/// --to-pbc alone turns gate-level optimization off and says so; -O* or
+/// --passes turn it back on. Requested decompositions still run.
+#[test]
+fn to_pbc_turns_gate_optimization_off_unless_requested() {
+    // A cancelling H pair and a T/Tdg pair: gate passes remove all four.
+    let source = qasm(1, "h q[0];\nh q[0];\nt q[0];\ntdg q[0];");
+    let notice = "Gate-level optimization is off with --to-pbc";
+    let off = Tzap::new(&["-", "-o", "-", "--to-pbc"])
+        .stdin(&source)
+        .run()
+        .ok("--to-pbc");
+    assert!(off.stderr.contains(notice), "{}", off.stderr);
+    // No gate reduction box: the circuit's figures, then the PBC's.
+    assert!(
+        off.stderr
+            .contains("\t├─ 1 qubit · 4 gates\n\t├─ 0 2q gates · 2 T/Tdg · 4 depth\n"),
+        "{}",
+        off.stderr
+    );
+    assert!(!off.stderr.contains("Final result"), "{}", off.stderr);
+    assert!(
+        off.stderr.contains("s\n\t├─ 2 π/8 rotations"),
+        "{}",
+        off.stderr
+    );
+    for flags in [&["-O3"][..], &["--passes", "CancelGates,PhaseFoldRand"]] {
+        let mut args = vec!["-", "-o", "-", "--to-pbc"];
+        args.extend_from_slice(flags);
+        let on = Tzap::new(&args).stdin(&source).run().ok("explicit");
+        assert!(!on.stderr.contains(notice), "{flags:?}: {}", on.stderr);
+        assert!(on.stderr.contains("4 → 0"), "{flags:?}: {}", on.stderr);
+    }
+    // Without --to-pbc, the default O3 still runs.
+    let qasm_out = Tzap::new(&["-", "-o", "-"]).stdin(&source).run().ok("O3");
+    assert!(!qasm_out.stderr.contains(notice));
+    assert!(qasm_out.stderr.contains("4 → 0"), "{}", qasm_out.stderr);
+    // Rz still needs --decompose-rz, which still runs.
+    let rz = Tzap::new(&["-", "-o", "-", "--to-pbc", "--decompose-rz"])
+        .stdin(&qasm(1, "h q[0];\nrz(pi/4) q[0];"))
+        .run()
+        .ok("Rz decomposition");
+    assert!(rz.stdout.starts_with("qubits 1\nregisters 1\n"));
+    assert!(rz.stdout.contains("r "), "{}", rz.stdout);
 }
 
 /// --visualize-pbc writes an SVG drawing, alone or together with --to-pbc.
@@ -357,7 +432,7 @@ fn visualize_pbc_writes_an_svg() {
     ))
     .run()
     .ok("drawing");
-    assert!(run.stderr.contains("Wrote PBC drawing"), "{}", run.stderr);
+    assert!(run.stderr.contains("wrote PBC drawing"), "{}", run.stderr);
     let svg = std::fs::read_to_string(&path).unwrap();
     assert!(svg.starts_with("<svg") && svg.contains("</svg>"));
     // One green T rotation box and one blue measurement box.
@@ -373,7 +448,7 @@ fn visualize_pbc_writes_an_svg() {
 fn pbc_max_weight_flushes_cliffords_as_rotations() {
     let doc = include_str!("../docs/pbc.md");
     let source = qasm(2, "h q[0];\ncx q[0],q[1];\nt q[1];\nmeasure q[1] -> c[0];");
-    let expected = "qubits 2\nregisters 2\nr 2 1 Z0\nr 2 1 X0\nr 2 1 Z0\nr 2 1 Z0\nr 2 1 X1\n\
+    let expected = "qubits 2\nregisters 2\nr 2 1 Z0\nr 2 1 X0\nr 4 1 Z0\nr 2 1 X1\n\
                     r -2 1 Z0 X1\nr 1 1 Z1\nm 1 Z1 -> c0\n";
     assert!(
         doc.contains(expected),
@@ -394,7 +469,16 @@ fn pbc_max_weight_flushes_cliffords_as_rotations() {
     .ok("bounded conversion");
     assert_eq!(run.stdout, expected);
     assert!(
-        run.stderr.contains("PBC max weight: 1 (bound 1)"),
+        run.stderr
+            .contains("s\n\t├─ 1 π/8 rotation · 6 Clifford rotations · 1 measurement\n"),
+        "{}",
+        run.stderr
+    );
+    assert!(
+        run.stderr.contains(
+            "s\n\t├─ 1 → 1 π/8 rotation (↓0.0%)\n\t├─ 6 → 5 Clifford rotations (↓16.7%)\n\t\
+             ├─ π/8 weight min/median/max: 1/1/1\n\t└─ Clifford weight min/median/max: 1/1/2\n"
+        ),
         "{}",
         run.stderr
     );
@@ -423,4 +507,179 @@ fn pbc_max_weight_flushes_cliffords_as_rotations() {
             .run()
             .failed("invalid --pbc-max-weight");
     }
+}
+
+/// ToPbc and PbcOpt are passes: listed after the gate passes, they match
+/// --to-pbc (with and without --pbc-no-opt), and may run with no gate passes.
+#[test]
+fn to_pbc_and_pbc_opt_are_passes() {
+    let source = qasm(2, "t q[0];\ncx q[0],q[1];\nt q[0];\nh q[1];\nh q[1];");
+    let run = |args: &[&str]| {
+        let mut all = vec!["-", "-o", "-"];
+        all.extend_from_slice(args);
+        Tzap::new(&all).stdin(&source).run().ok("PBC passes")
+    };
+    let flags = run(&["--passes", "CancelGates", "--to-pbc"]);
+    let passes = run(&["--passes", "CancelGates,ToPbc,PbcOpt"]);
+    assert_eq!(passes.stdout, flags.stdout);
+    assert!(
+        passes
+            .stderr
+            .contains("s\n\t└─ 2 → 0 π/8 rotations (↓100.0%)"),
+        "{}",
+        passes.stderr
+    );
+    assert_eq!(
+        run(&["--passes", "CancelGates", "--to-pbc", "--pbc-no-opt"]).stdout,
+        run(&["--passes", "CancelGates,ToPbc"]).stdout
+    );
+    // No gate passes: the uncancelled H pair folds into the frame, where it
+    // cancels, leaving the two unmerged T rotations.
+    let bare = run(&["--passes", "ToPbc"]);
+    assert_eq!(
+        bare.stdout,
+        "qubits 2\nregisters 2\nr 1 1 Z0\nr 1 1 Z0\nf X0 1 X0 X1\nf Z1 1 Z0 Z1\n"
+    );
+    let optimized = run(&["--passes", "ToPbc,PbcOpt"]);
+    assert!(!optimized.stdout.contains("\nr "), "{}", optimized.stdout);
+    for bad in [
+        "PbcOpt",
+        "ToPbc,CancelGates",
+        "ToPbc,ToPbc",
+        "ToPbc,PbcOpt,PbcOpt",
+    ] {
+        Tzap::new(&["-", "--passes", bad])
+            .stdin(&source)
+            .run()
+            .failed(bad);
+    }
+    for flag in ["--to-pbc", "--pbc-no-opt"] {
+        Tzap::new(&["-", "--passes", "ToPbc", flag])
+            .stdin(&source)
+            .run()
+            .failed(flag);
+    }
+}
+
+/// PBC input problems are reported before any gate-level work, naming the
+/// instruction; --fixpoint needs gate passes to repeat.
+#[test]
+fn pbc_input_is_checked_before_optimization() {
+    let run = Tzap::new(&["-", "--to-pbc", "-O3"])
+        .stdin(&qasm(2, "h q[0];\nt q[0];\ncx q[1],q[1];"))
+        .run()
+        .failed("repeated operand");
+    assert!(
+        run.stderr
+            .contains("gate 3 (cnot q1, q1): a gate's qubits must be distinct"),
+        "{}",
+        run.stderr
+    );
+    assert!(!run.stderr.contains("Gate-level"), "{}", run.stderr);
+    // Rz is fine when a pass decomposes it.
+    Tzap::new(&["-", "--to-pbc", "--decompose-rz"])
+        .stdin(&qasm(1, "rz(pi/4) q[0];"))
+        .run()
+        .ok("decomposed Rz");
+    let fixpoint = Tzap::new(&["-", "--to-pbc", "--fixpoint"])
+        .stdin(&qasm(1, "t q[0];"))
+        .run()
+        .failed("--fixpoint without gate passes");
+    assert!(fixpoint.stderr.contains("use -O3"), "{}", fixpoint.stderr);
+    Tzap::new(&["-", "--to-pbc", "--passes", "CancelGates", "--fixpoint"])
+        .stdin(&qasm(1, "t q[0];"))
+        .run()
+        .ok("--fixpoint with --passes");
+}
+
+/// The report: one line when the optimizer changes nothing, notices that
+/// match the flags, and the main output written before the drawing.
+#[test]
+fn pbc_report_lines_match_the_run() {
+    let source = qasm(1, "h q[0];\nt q[0];\nmeasure q[0] -> c[0];");
+    let run = Tzap::new(&["-", "--to-pbc", "--pbc-no-opt", "--superopt-gates", "base"])
+        .stdin(&source)
+        .run()
+        .ok("no optimizer");
+    assert!(
+        run.stderr
+            .contains("Gate-level optimization is off with --to-pbc; pass -O3"),
+        "{}",
+        run.stderr
+    );
+    assert!(
+        run.stderr
+            .contains("--superopt-* has no effect without gate-level optimization"),
+        "{}",
+        run.stderr
+    );
+    let optimized = Tzap::new(&["-", "--to-pbc"])
+        .stdin(&source)
+        .run()
+        .ok("nothing to optimize");
+    assert!(
+        optimized.stderr.contains("(the PBC is optimized instead)"),
+        "{}",
+        optimized.stderr
+    );
+    assert!(
+        optimized.stderr.contains("s\n\t└─ no reduction"),
+        "{}",
+        optimized.stderr
+    );
+    assert!(!optimized.stderr.contains('┌'), "{}", optimized.stderr);
+
+    let dir = tempfile::tempdir().unwrap();
+    let pbc = dir.path().join("out.pbc");
+    let bad_svg = dir.path().join("missing").join("x.svg");
+    Tzap::new(&[
+        "-",
+        "--to-pbc",
+        "-o",
+        pbc.to_str().unwrap(),
+        "--visualize-pbc",
+        bad_svg.to_str().unwrap(),
+    ])
+    .stdin(&source)
+    .run()
+    .failed("unwritable drawing");
+    assert!(
+        std::fs::read_to_string(&pbc)
+            .unwrap()
+            .starts_with("qubits 1\n")
+    );
+}
+
+/// --json describes the PBC: counts, weights, and the optimizer's work.
+#[test]
+fn json_reports_the_pbc() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("out.pbc");
+    let source = qasm(2, "t q[0];\ncx q[0],q[1];\nt q[0];\nmeasure q[1] -> c[0];");
+    let json = |args: &[&str]| {
+        let mut all = vec!["-", "-o", path.to_str().unwrap(), "--json"];
+        all.extend_from_slice(args);
+        Tzap::new(&all).stdin(&source).run().ok("--json").stdout
+    };
+    let off = json(&["--to-pbc"]);
+    for expected in [
+        "\"level\": null",
+        "\"gate_set\": null",
+        "\"pi8_rotations\": 2",
+        "\"pi8_rotations\": 0",
+        "\"measurements\": 1",
+        "\"merges\": 1",
+        "\"cliffords_to_frame\": 1",
+        "\"max_weight\": null",
+    ] {
+        assert!(off.contains(expected), "missing {expected}:\n{off}");
+    }
+    let passes = json(&["--passes", "CancelGates,ToPbc"]);
+    assert!(
+        passes.contains("\"CancelGates\",\n      \"ToPbc\""),
+        "{passes}"
+    );
+    assert!(passes.contains("\"optimization\": null"), "{passes}");
+    let qasm_only = json(&[]);
+    assert!(qasm_only.contains("\"pbc\": null"), "{qasm_only}");
 }

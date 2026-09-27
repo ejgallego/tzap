@@ -118,7 +118,10 @@ See the [PBC format](docs/pbc.md) for the syntax and examples.
 tzap input.qasm --to-pbc -o output.pbc
 ```
 
-Conversion runs last, after optimization and requested decompositions. Inputs
+`--to-pbc` turns gate-level optimization off (pass `-O1`–`-O3`, `-Osuper`, or
+`--passes` to keep it), converts after any requested decompositions, and then
+optimizes the PBC rotations: same-axis rotations merge after moving past the
+rotations they commute with, lowering the T count. `--pbc-no-opt` skips that optimizer. Inputs
 must have no resets; measurements may appear anywhere, including mid-circuit.
 Use `--decompose-rz` for Rz.
 Export preserves all quantum and classical outputs, including post-measurement
@@ -143,10 +146,11 @@ lines interleave in execution order): +1 gives bit 0,
 list is the identity). Register writes may overwrite earlier values. Trailing
 `f` records encode `C†XqC` and `C†ZqC` for the output Clifford C; omitted
 identity rows are implicit. This frame preserves quantum outputs.
-`-o -` writes PBC to stdout. JSON metrics describe the optimized gate circuit
-before conversion.
-Add `--pbc-opt` to merge commuting same-axis rotations and apply MCR group
-swaps after conversion, lowering the PBC T count.
+`-o -` writes PBC to stdout. JSON `metrics` describe the gate circuit before
+conversion; the `pbc` key has the PBC's rotation and measurement counts, axis
+weights, and the optimizer's merges.
+Conversion and the PBC optimizer are also passes, `ToPbc` and `PbcOpt`, listed
+after the gate passes: `--passes CancelGates,ToPbc,PbcOpt`.
 `--pbc-max-weight N` bounds the weight of every π/8 rotation and measurement,
 emitting Cliffords as π/4 rotations where the frame would widen an axis (see
 [docs/pbc.md](docs/pbc.md#weight-bound)).

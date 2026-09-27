@@ -124,7 +124,7 @@ Common keyword options are:
 | `parallel` | `False` | Enable the native parallel optimizer |
 | `superopt_gates` | `"auto"` | MURM basis: `auto`, `base`, or an exact comma-separated gate list |
 
-Explicit pass names are the same as the CLI's `--passes` values:
+Explicit pass names are the CLI's gate `--passes` values (not `ToPbc`/`PbcOpt`):
 `DecomposeToffoli`, `DecomposeCz`, `DecomposeRz`, `CancelGates`, `SuperOpt`,
 `PhaseFoldRand`, and `CnotMin`.
 

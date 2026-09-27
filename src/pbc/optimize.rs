@@ -40,7 +40,9 @@ use words::{Axes, Rot, anticommutes, normalize, pack, product};
 pub struct OptimizeOptions {
     /// Rotations a merge candidate may be separated by.
     pub lookback: usize,
-    /// Maximum length of each group in an MCR swap. 0 disables swaps.
+    /// Maximum length of each group in an MCR swap. 0 (the default)
+    /// disables swaps: rotations then only move past individual commuting
+    /// rotations to merge.
     pub window: usize,
     /// Per run triple, how many shorter group variants to try besides the
     /// full runs: suffixes of A and prefixes of C.
@@ -74,7 +76,7 @@ impl Default for OptimizeOptions {
     fn default() -> Self {
         Self {
             lookback: 1 << 20,
-            window: 8,
+            window: 0,
             candidates: 16,
             rounds: 8,
             clifford_to_frame: true,
