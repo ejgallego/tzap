@@ -1,0 +1,12 @@
+⚡️ tzap v0.7.0
+  Parsed /home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm (202.5 KB) in 0.002s
+	├─ 96 qubits · 17,658 gates
+	└─ Circuit gates: {h, t, tdg, cx}
+  Optimizing input circuit
+  ┌─ Final result · 40.2% fewer gates · 0.003s ──────────────┐
+  │ Gates    ━━━━━━━━╸───────────── ↓40.2% · 17,658 → 10,562 │
+  │ 2q gates ────────────────────── ↓ 0.0% ·  6,268 →  6,268 │
+  │ T/Tdg    ━━━━━━━━━╸──────────── ↓42.4% ·  7,168 →  4,128 │
+  │ Depth    ━━━━━╸──────────────── ↓23.7% ·  1,315 →  1,003 │
+  └──────────────────────────────────────────────────────────┘
+  wrote /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf32-run-1-rust.qasm

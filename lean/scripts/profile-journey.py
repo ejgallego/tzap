@@ -48,10 +48,14 @@ def records_directory(campaign):
     return Path(campaign['directory'])
 
 
+def campaigns(catalog):
+    return [catalog['final'], *catalog.get('fresh_campaigns', []), *catalog['experiments']]
+
+
 def import_evidence(source, evidence, catalog):
     require(not evidence.exists(), f'Refusing to overwrite evidence: {evidence}')
     files = set(catalog['artifacts'])
-    for campaign in [catalog['final'], *catalog['experiments']]:
+    for campaign in campaigns(catalog):
         directory = records_directory(campaign)
         files.add(campaign['validation'])
         for name in ['runs.jsonl', 'manifest.json', 'identity-check.json', 'summary.json']:
@@ -80,7 +84,7 @@ def import_evidence(source, evidence, catalog):
         path.write_bytes(data)
         inventory.append(dict(path=relative, bytes=len(data), sha256=hashlib.sha256(data).hexdigest()))
     write_json(evidence / 'archive.json', dict(files=inventory, external_captures=captures,
-               source_revision='5d5f16919efcec130e93c7190d69cf01fcd5a8f3'))
+               source_revision='26a4f17a2cd6a9f028f06903b9f4eab5f4230986'))
 
 
 def verify_archive(evidence):
@@ -97,6 +101,7 @@ def validation_node(evidence, campaign, case):
     kind = campaign['validation_kind']
     keys = {
         'final': ['qasm_bytes_identical', 'metrics_identical'],
+        'fresh': ['outputs_identical', 'metrics_identical'],
         'classic': ['metrics_identical_across_all_runs', 'outputs_identical', 'identity_valid'],
         'hadamard': ['all_exit_zero', 'all_metrics_identical', 'retained_output_byte_identical', 'identity_stable'],
         'modern': ['metrics_identical'],
@@ -111,22 +116,26 @@ def validation_node(evidence, campaign, case):
     return node
 
 
-def load_campaign(evidence, campaign, audit):
+def load_campaign(evidence, campaign, audit, include_cases=None):
     directory = evidence / records_directory(campaign)
     capture_manifest = read_json(directory / 'manifest.json')
     identity = read_json(directory / 'identity-check.json')
     require(identity.get('valid') is True or identity == {'drift': []}, f'Invalid identity: {directory}')
     originals = jsonl(directory / 'runs.jsonl')
-    cases = sorted({r['case'] for r in originals}) if campaign['validation_kind'] == 'final' else [campaign['case']]
+    selected_lines = [(line, row) for line, row in enumerate(originals, 1)
+                      if include_cases is None or row.get('case', campaign.get('case')) in include_cases]
+    kind = campaign['validation_kind']
+    cases = sorted({r.get('case', campaign.get('case')) for _, r in selected_lines}) \
+        if kind in {'final', 'fresh'} else [campaign['case']]
     validated = {case: validation_node(evidence, campaign, case) for case in cases}
     metrics_by_case, result = {}, []
-    for line, row in enumerate(originals, 1):
+    for line, row in selected_lines:
         case = row.get('case', campaign.get('case'))
         timed_out = row.get('timed_out', False) or row.get('status') == 'timeout'
         success = row['exit_code'] == 0 and not timed_out
         require(not any(row.get(key) for key in ['evidence_error', 'launch_error', 'interrupted']),
                 f'Harness failure: {directory}:{line}')
-        require(success or (campaign['validation_kind'] == 'final' and case == 'qft20'
+        require(success or (kind in {'final', 'fresh'} and case == 'qft20'
                             and row['label'] == 'baseline' and timed_out),
                 f'Unexpected unsuccessful observation: {directory}:{line}')
         if success:
@@ -141,7 +150,7 @@ def load_campaign(evidence, campaign, audit):
                 recorded = [[key, int(before.replace(',', '')), int(after.replace(',', ''))]
                             for key, before, after in node['metrics']]
                 require(metrics == recorded, f'Validation record mismatch: {directory}:{line}')
-            if campaign['validation_kind'] == 'final':
+            if kind == 'final':
                 require(row['output_sha256'] == node['output_sha256'], f'QASM hash mismatch: {directory}:{line}')
                 require({key: after for key, before, after in metrics} == node['independently_counted_output'],
                         f'Independent metric check mismatch: {directory}:{line}')
@@ -158,9 +167,9 @@ def load_campaign(evidence, campaign, audit):
                           source_file=str(records_directory(campaign) / 'runs.jsonl'), source_line=line,
                           validation_record=campaign['validation'], case=case,
                           validation_sha256=digest(evidence / campaign['validation']),
-                          validation_scope='All retained QASM and metrics' if campaign['validation_kind'] == 'final'
+                          validation_scope='All retained QASM and metrics' if kind in {'final', 'fresh'}
                           else 'Every run reported metrics; final retained QASM pair')
-        if campaign['validation_kind'] == 'final':
+        if kind in {'final', 'fresh'}:
             # The tzap three-way harness uses zero-based slots; the skill requires positive slots.
             normalized.update(source_slot=row['slot'], slot=row['slot'] + 1)
         if timed_out:
@@ -169,10 +178,15 @@ def load_campaign(evidence, campaign, audit):
     for case in cases:
         n = sum(r['case'] == case and r['validated'] for r in result)
         node = validated[case]
+        if kind == 'fresh':
+            successful = [r for r in result if r['case'] == case and r['validated']]
+            require(len({r['output_sha256'] for r in successful}) == 1,
+                    f'Per-run QASM hashes differ: {case}')
         recorded = next((node[key] for key in ['successful_invocations', 'runs', 'invocations'] if key in node), None)
         if recorded is not None:
             require(n == recorded, f'Validation count mismatch: {case}')
     audit.append(dict(directory=str(records_directory(campaign)), rows=len(result),
+                      source_lines=[line for line, _ in selected_lines],
                       validated_rows=sum(r['validated'] for r in result),
                       validation=campaign['validation'], per_run_stderr_metrics_rechecked=True))
     return result
@@ -239,19 +253,27 @@ def self_viewer(source, destination, title, note):
 
 def build_inputs(evidence, catalog):
     audit = []
-    final = load_campaign(evidence, catalog['final'], audit)
+    old_cases = set(catalog['cases']) - set(catalog['fresh_cases'])
+    old_final = load_campaign(evidence, catalog['final'], audit, old_cases)
+    fresh = {campaign['id']: load_campaign(evidence, campaign, audit)
+             for campaign in catalog['fresh_campaigns']}
+    latest = fresh['original-current-rust']
+    incremental = fresh['nstate-array']
     experiments = [(c, load_campaign(evidence, c, audit)) for c in catalog['experiments']]
     manifest = dict(schema='lean-profile-review-alpha', title=catalog['title'], summary=catalog['summary'],
                     datasets=[], baselines=[], comparisons=[], profiles=[], attribution=catalog['attribution'],
                     progress=dict(note=catalog['progress_note'], selected=[], totals=[]), links=[])
-    common_note = ('One warmup per binary; six measured rounds use all six permutations of the three implementations. '
-                   'Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. '
+    common_note = ('One warmup per binary; six measured rounds use all permutations of the active implementations. '
+                   'Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. '
                    'Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. '
                    'Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.')
     for case in catalog['cases']:
-        rows = [r for r in final if r['case'] == case]
+        is_fresh = case in catalog['fresh_cases']
+        rows = [r for r in (latest if is_fresh else old_final) if r['case'] == case]
         dataset = metadata(rows, f'Original Lean, current Lean and Rust · {case}',
-                           'Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release',
+                           ('Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release'
+                            if is_fresh else
+                            '2026-09-10 final campaign: original Lean 2c29be4; combined Lean ba401fb; Rust 2c29be4, rustc 1.89.0 release'),
                            f'final-{case}')
         manifest['datasets'].append(dataset)
         write_jsonl(JOURNEY / dataset['samples'], rows)
@@ -263,13 +285,32 @@ def build_inputs(evidence, catalog):
         if case != 'qft20':
             item = dict(id=f'total-{case}', title=f'Total improvement · {case}', note=note, dataset=dataset['id'],
                         control='baseline', candidate='current', decision_status='accepted',
-                        decision='Measured cumulative improvement; all six implementation commits combined')
+                        decision=('Measured cumulative improvement; all seven implementation commits combined'
+                                  if is_fresh else
+                                  'Measured cumulative improvement; first six implementation commits combined'))
             manifest['comparisons'].append(item)
             manifest['progress']['totals'].append(item['id'])
         item = dict(id=f'rust-{case}', title=f'Rust comparison · {case}', note=note, dataset=dataset['id'],
                     control='current', candidate='rust',
                     decision='Application comparison: Rust is faster; this is not an additional Lean optimization')
         manifest['comparisons'].append(item)
+    array_note = ('Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. '
+                  'The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. '
+                  'Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. '
+                  'The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.')
+    for case in catalog['fresh_cases']:
+        rows = [r for r in incremental if r['case'] == case]
+        dataset = metadata(rows, f'Nonlinear Array state · {case}',
+                           'Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference',
+                           f'nstate-array-data-{case}')
+        manifest['datasets'].append(dataset)
+        write_jsonl(JOURNEY / dataset['samples'], rows)
+        item = dict(id=f'nstate-array-{case}', title=f'Nonlinear Array state · {case}',
+                    note=array_note, dataset=dataset['id'], control='baseline', candidate='current',
+                    decision_status='accepted',
+                    decision='Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding')
+        manifest['comparisons'].append(item)
+        manifest['progress']['selected'].append(item['id'])
     for campaign, rows in experiments:
         dataset = metadata(rows, campaign['title'], campaign['identity'], 'capture-' + campaign['id'])
         manifest['datasets'].append(dataset)
@@ -297,7 +338,7 @@ def build_inputs(evidence, catalog):
                observations=sum(c['rows'] for c in audit), datasets=len(manifest['datasets']),
                output_validation='Archived campaign checks plus every successful stderr rechecked; no exit-code-only inference'))
     write_json(JOURNEY / 'review.json', manifest)
-    return manifest, final
+    return manifest, latest
 
 
 def overview(final):
@@ -349,7 +390,7 @@ def main():
     if args.plots:
         overview(final)
         manifest['profiles'].insert(0,dict(id='overview',title='Fresh three-way comparison',kind='image',path='views/overview.svg',
-            boundary=BOUNDARY,identity='Single final campaign; baseline 2c29be4, current ba401fb, Rust 2c29be4',
+            boundary=BOUNDARY,identity='Fresh O1 campaign; baseline 2c29be4, current 26a4f17, Rust 26a4f17',
             note='Six measured observations per completed series, black median ticks, full ranges. Logarithmic seconds. The > marker is the original QFT 60-second timeout, not a completed sample or median.'))
         write_json(JOURNEY / 'review.json', manifest)
     evidence_index(evidence, inventory)
@@ -362,7 +403,7 @@ def main():
         builder={str(p.relative_to(args.skill_dir)):digest(p) for p in tool_files},
         adapter_sha256=digest(Path(__file__)), catalog_sha256=digest(JOURNEY / 'catalog.json'),
         archive_sha256=digest(evidence / 'archive.json'),
-        note='No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.')
+        note='Fresh 2026-09-28 and retained historical captures are immutable inputs; shared JSONL datasets, model and figures are derived.')
     if args.plots:
         import matplotlib
         generator.update(matplotlib=matplotlib.__version__)

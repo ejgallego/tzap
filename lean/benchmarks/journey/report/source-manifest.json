@@ -1,15 +1,15 @@
 {
   "schema": "lean-profile-review-alpha",
   "title": "tzap: a verified optimizer’s performance journey",
-  "summary": "Six implementation commits made the Lean CLI 1.7–10.4× faster on completed original-baseline cases. QFT now finishes in 2.14 seconds, while the original executable reaches the 60-second limit. Rust remains 16–121× faster. The fresh final comparison validates identical outputs; each earlier experiment retains its own control and decision.\n\nThis report reuses the 2026-09-10 evidence. It runs no benchmarks. Start with the baseline and directly measured totals, then inspect individual improvements and rejected ownership experiments. Timings and samples are noisy; hashes, generated code and proof contracts provide different kinds of evidence.",
+  "summary": "Seven implementation commits make the Lean CLI 1.6–9.9× faster on completed original-baseline O1 cases. QFT now finishes in 2.17 seconds, while the original executable reaches the 60-second limit. Rust remains 16–141× faster across the retained suite. The fresh 2026-09-28 campaigns validate identical outputs and isolate the nonlinear-state Array change; each earlier experiment retains its own control and decision.\n\nStart with the baseline and directly measured totals, then inspect individual improvements and rejected ownership experiments. Timings and samples are noisy; hashes, generated code and proof contracts provide different kinds of evidence.",
   "datasets": [
     {
       "id": "final-gf16",
       "title": "Original Lean, current Lean and Rust · gf16",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "identity": "Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf16-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf16-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf16-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
         "current",
@@ -22,8 +22,8 @@
       "title": "Original Lean, current Lean and Rust · gf32",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "identity": "Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf32-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf32-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf32-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
         "current",
@@ -36,8 +36,8 @@
       "title": "Original Lean, current Lean and Rust · gf64",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "identity": "Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf64-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf64-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/gf64-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
         "current",
@@ -50,8 +50,8 @@
       "title": "Original Lean, current Lean and Rust · hwb8",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/hwb8-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "identity": "Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/hwb8-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/hwb8-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/hwb8-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
         "current",
@@ -64,8 +64,8 @@
       "title": "Original Lean, current Lean and Rust · chebyshev",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/chebyshev-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "identity": "Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/chebyshev-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/chebyshev-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/chebyshev-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
         "current",
@@ -78,8 +78,8 @@
       "title": "Original Lean, current Lean and Rust · qft20",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
-      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-warmup-0-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/qft20-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "identity": "Fresh final campaign: original Lean 2c29be4; current Lean 26a4f17; current Rust 26a4f17, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/qft20-warmup-0-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/qft20-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/qft20-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
         "current",
@@ -92,7 +92,7 @@
       "title": "Original Lean, current Lean and Rust · gf32-o3",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "identity": "2026-09-10 final campaign: original Lean 2c29be4; combined Lean ba401fb; Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
       "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf32-o3-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
@@ -106,7 +106,7 @@
       "title": "Original Lean, current Lean and Rust · gf64-o3",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
       "cohort": "-O3; CPU 2; warm synthesis tables; fresh OS entropy",
-      "identity": "Final campaign: original Lean 2c29be4; combined Lean ba401fb; unchanged Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "identity": "2026-09-10 final campaign: original Lean 2c29be4; combined Lean ba401fb; Rust 2c29be4, rustc 1.89.0 release; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
       "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/baseline '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/current '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-summary-20260910/rust '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O3 -o /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf64-o3-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
       "configurations": [
         "baseline",
@@ -114,6 +114,90 @@
         "rust"
       ],
       "samples": "inputs/final-gf64-o3.jsonl"
+    },
+    {
+      "id": "nstate-array-data-gf16",
+      "title": "Nonlinear Array state · gf16",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-rebased-20260928/baseline-before-nstate-array '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf16-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf16-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap '/home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf16-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/nstate-array-data-gf16.jsonl"
+    },
+    {
+      "id": "nstate-array-data-gf32",
+      "title": "Nonlinear Array state · gf32",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-rebased-20260928/baseline-before-nstate-array '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf32-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf32-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap '/home/egallego/lean/tzap/benchmarks/feynman/gf2^32_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf32-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/nstate-array-data-gf32.jsonl"
+    },
+    {
+      "id": "nstate-array-data-gf64",
+      "title": "Nonlinear Array state · gf64",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-rebased-20260928/baseline-before-nstate-array '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf64-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf64-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap '/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm' -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/gf64-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/nstate-array-data-gf64.jsonl"
+    },
+    {
+      "id": "nstate-array-data-hwb8",
+      "title": "Nonlinear Array state · hwb8",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-rebased-20260928/baseline-before-nstate-array /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/hwb8-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/hwb8-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap /home/egallego/lean/tzap/benchmarks/feynman/hwb8.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/hwb8-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/nstate-array-data-hwb8.jsonl"
+    },
+    {
+      "id": "nstate-array-data-chebyshev",
+      "title": "Nonlinear Array state · chebyshev",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-rebased-20260928/baseline-before-nstate-array /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/chebyshev-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/chebyshev-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/chebyshev-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/nstate-array-data-chebyshev.jsonl"
+    },
+    {
+      "id": "nstate-array-data-qft20",
+      "title": "Nonlinear Array state · qft20",
+      "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
+      "cohort": "-O1; CPU 2; synthesis tables unused; fresh OS entropy",
+      "identity": "Fresh incremental campaign: Lean 951fb26 → 26a4f17; Rust 26a4f17 retained as a reference; Lean 4.33.1; Lake release; mathlib 0df444a; AMD Ryzen AI 9 HX 370, CPU 2; shared machine",
+      "command": "baseline: taskset -c 2 /home/egallego/lean/tzap/experiments/lean-rebased-20260928/baseline-before-nstate-array /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/qft20-run-1-baseline.qasm\ncurrent: taskset -c 2 /home/egallego/lean/tzap/lean/.lake/build/bin/tzap-lean /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/qft20-run-1-current.qasm\nrust: taskset -c 2 /home/egallego/lean/tzap/target/release/tzap /home/egallego/lean/tzap/benchmarks/qft/qft_q020_d32421.qasm -O1 -o /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-current-rust/qft20-run-1-rust.qasm --no-parallel --cache-dir /home/egallego/lean/tzap/experiments/lean-rust-20260910/rust-cache",
+      "configurations": [
+        "baseline",
+        "current",
+        "rust"
+      ],
+      "samples": "inputs/nstate-array-data-qft20.jsonl"
     },
     {
       "id": "capture-tags-gf64",
@@ -263,56 +347,56 @@
     {
       "id": "original-gf16",
       "title": "gf16: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf16",
       "configuration": "baseline"
     },
     {
       "id": "original-gf32",
       "title": "gf32: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf32",
       "configuration": "baseline"
     },
     {
       "id": "original-gf64",
       "title": "gf64: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf64",
       "configuration": "baseline"
     },
     {
       "id": "original-hwb8",
       "title": "hwb8: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-hwb8",
       "configuration": "baseline"
     },
     {
       "id": "original-chebyshev",
       "title": "chebyshev: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-chebyshev",
       "configuration": "baseline"
     },
     {
       "id": "original-qft20",
       "title": "qft20: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.",
       "dataset": "final-qft20",
       "configuration": "baseline"
     },
     {
       "id": "original-gf32-o3",
       "title": "gf32-o3: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf32-o3",
       "configuration": "baseline"
     },
     {
       "id": "original-gf64-o3",
       "title": "gf64-o3: original Lean",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf64-o3",
       "configuration": "baseline"
     }
@@ -321,17 +405,17 @@
     {
       "id": "total-gf16",
       "title": "Total improvement · gf16",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf16",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; all seven implementation commits combined"
     },
     {
       "id": "rust-gf16",
       "title": "Rust comparison · gf16",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf16",
       "control": "current",
       "candidate": "rust",
@@ -340,17 +424,17 @@
     {
       "id": "total-gf32",
       "title": "Total improvement · gf32",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf32",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; all seven implementation commits combined"
     },
     {
       "id": "rust-gf32",
       "title": "Rust comparison · gf32",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf32",
       "control": "current",
       "candidate": "rust",
@@ -359,17 +443,17 @@
     {
       "id": "total-gf64",
       "title": "Total improvement · gf64",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf64",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; all seven implementation commits combined"
     },
     {
       "id": "rust-gf64",
       "title": "Rust comparison · gf64",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf64",
       "control": "current",
       "candidate": "rust",
@@ -378,17 +462,17 @@
     {
       "id": "total-hwb8",
       "title": "Total improvement · hwb8",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-hwb8",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; all seven implementation commits combined"
     },
     {
       "id": "rust-hwb8",
       "title": "Rust comparison · hwb8",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-hwb8",
       "control": "current",
       "candidate": "rust",
@@ -397,17 +481,17 @@
     {
       "id": "total-chebyshev",
       "title": "Total improvement · chebyshev",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-chebyshev",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; all seven implementation commits combined"
     },
     {
       "id": "rust-chebyshev",
       "title": "Rust comparison · chebyshev",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-chebyshev",
       "control": "current",
       "candidate": "rust",
@@ -416,7 +500,7 @@
     {
       "id": "rust-qft20",
       "title": "Rust comparison · qft20",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check. The original Lean warmup timed out at 60.0047 s without output; it has no measured baseline or median. Current/Rust alone alternate AB/BA over six measured rounds.",
       "dataset": "final-qft20",
       "control": "current",
       "candidate": "rust",
@@ -425,17 +509,17 @@
     {
       "id": "total-gf32-o3",
       "title": "Total improvement · gf32-o3",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf32-o3",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; first six implementation commits combined"
     },
     {
       "id": "rust-gf32-o3",
       "title": "Rust comparison · gf32-o3",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf32-o3",
       "control": "current",
       "candidate": "rust",
@@ -444,21 +528,81 @@
     {
       "id": "total-gf64-o3",
       "title": "Total improvement · gf64-o3",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf64-o3",
       "control": "baseline",
       "candidate": "current",
       "decision_status": "accepted",
-      "decision": "Measured cumulative improvement; all six implementation commits combined"
+      "decision": "Measured cumulative improvement; first six implementation commits combined"
     },
     {
       "id": "rust-gf64-o3",
       "title": "Rust comparison · gf64-o3",
-      "note": "One warmup per binary; six measured rounds use all six permutations of the three implementations. Round IDs preserve the original matching and execution slots. All 161 completed invocations have matching QASM and four independently checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
+      "note": "One warmup per binary; six measured rounds use all permutations of the active implementations. Round IDs preserve the original matching and execution slots. All completed invocations have matching QASM and four checked output metrics. Six repetitions expose the large gaps on this costly representative suite; they do not establish small effects. Normal CLI reporting is included; no profiler or verbose diagnostics. Rust is sequential and omits Lean’s serialization round-trip check.",
       "dataset": "final-gf64-o3",
       "control": "current",
       "candidate": "rust",
       "decision": "Application comparison: Rust is faster; this is not an additional Lean optimization"
+    },
+    {
+      "id": "nstate-array-gf16",
+      "title": "Nonlinear Array state · gf16",
+      "note": "Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.",
+      "dataset": "nstate-array-data-gf16",
+      "control": "baseline",
+      "candidate": "current",
+      "decision_status": "accepted",
+      "decision": "Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding"
+    },
+    {
+      "id": "nstate-array-gf32",
+      "title": "Nonlinear Array state · gf32",
+      "note": "Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.",
+      "dataset": "nstate-array-data-gf32",
+      "control": "baseline",
+      "candidate": "current",
+      "decision_status": "accepted",
+      "decision": "Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding"
+    },
+    {
+      "id": "nstate-array-gf64",
+      "title": "Nonlinear Array state · gf64",
+      "note": "Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.",
+      "dataset": "nstate-array-data-gf64",
+      "control": "baseline",
+      "candidate": "current",
+      "decision_status": "accepted",
+      "decision": "Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding"
+    },
+    {
+      "id": "nstate-array-hwb8",
+      "title": "Nonlinear Array state · hwb8",
+      "note": "Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.",
+      "dataset": "nstate-array-data-hwb8",
+      "control": "baseline",
+      "candidate": "current",
+      "decision_status": "accepted",
+      "decision": "Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding"
+    },
+    {
+      "id": "nstate-array-chebyshev",
+      "title": "Nonlinear Array state · chebyshev",
+      "note": "Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.",
+      "dataset": "nstate-array-data-chebyshev",
+      "control": "baseline",
+      "candidate": "current",
+      "decision_status": "accepted",
+      "decision": "Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding"
+    },
+    {
+      "id": "nstate-array-qft20",
+      "title": "Nonlinear Array state · qft20",
+      "note": "Fresh 2026-09-28 campaign on CPU 2. One warmup and six order-balanced rounds per implementation. The control is the rebased Lean executable immediately before this change; the candidate stores nonlinear fingerprints in an Array. Every Lean and Rust invocation completed, and all serialized QASM hashes and four reported metrics agree within each workload. The paired distributions support the large arithmetic-circuit gains; small general-circuit effects remain descriptive.",
+      "dataset": "nstate-array-data-qft20",
+      "control": "baseline",
+      "candidate": "current",
+      "decision_status": "accepted",
+      "decision": "Accepted: indexed nonlinear fingerprint state removes linked-list traversal and prefix rebuilding"
     },
     {
       "id": "tags-gf64",
@@ -578,7 +722,7 @@
       "kind": "image",
       "path": "views/overview.svg",
       "boundary": "Native CLI invocation through parsing, optimization, reporting, serialization, file write and exit, including harness bookkeeping; Lean also checks the serialization round trip",
-      "identity": "Single final campaign; baseline 2c29be4, current ba401fb, Rust 2c29be4",
+      "identity": "Fresh O1 campaign; baseline 2c29be4, current 26a4f17, Rust 26a4f17",
       "note": "Six measured observations per completed series, black median ticks, full ranges. Logarithmic seconds. The > marker is the original QFT 60-second timeout, not a completed sample or median."
     },
     {
@@ -690,6 +834,26 @@
       "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
       "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
       "note": "Preserved experimental patch; not production code. An explicit count argument forces the computation before the pass call."
+    },
+    {
+      "id": "array-self",
+      "title": "Nonlinear Array state: gf64 self costs",
+      "kind": "viewer",
+      "path": "views/array-self.html",
+      "comparison": "nstate-array-gf64",
+      "boundary": "Separate instrumented native CLI capture; aggregated cycles:u self weights (%) at 997 Hz; no chronological axis",
+      "identity": "2026-09-28; Lean 4.33.1; executable 662fe507; CPU 2; gf2^64 O1",
+      "note": "Complete gf64 CLI. 2,392 samples, none lost. List.get and List.set are absent; lean_copy_expand_array is 0.38% self weight. Allocation/free and GMP-backed Nat arithmetic dominate the remaining leaf costs. Call chains are not inferred from this self view."
+    },
+    {
+      "id": "code-array-state",
+      "title": "Nonlinear Array-state generated C",
+      "kind": "raw",
+      "path": "evidence/experiments/lean-rebased-20260928/profile-gf64-nstate-array/PhaseFoldNonlinear-array.c",
+      "comparison": "nstate-array-gf64",
+      "boundary": "Deterministic generated-code evidence; no sampling clock or time units",
+      "identity": "Generated from Lean revision 26a4f17 with Lean 4.33.1",
+      "note": "NState.step uses array size, borrowed reads and array updates. List.get and List.set are absent from the executable module; the runtime can reuse exclusive state and array owners."
     }
   ],
   "attribution": [
@@ -699,7 +863,7 @@
     },
     {
       "title": "From asymptotic scans to preparation placement",
-      "text": "Array tags removed repeated list indexing and prefix reconstruction. Caching finite samples removed repeated packing. Hadamard sweeps removed whole-list restarts after each successful rewrite. Finally, keeping sampled entropy packed removed an unnecessary word/bit/word round trip. Each source change has its corresponding invariant or equivalence proof. The rejected eta-expanded helper illustrates why generated C, rather than source placement alone, mattered."
+      "text": "Array tags removed repeated list indexing and prefix reconstruction. Caching finite samples removed repeated packing. Hadamard sweeps removed whole-list restarts after each successful rewrite. Keeping sampled entropy packed removed an unnecessary word/bit/word round trip. The latest change applies the same indexed-state lesson to nonlinear fingerprints: generated C now uses array access/update, and List.get/List.set disappear from the sampled hotspots. Each source change has its corresponding invariant or equivalence proof. The rejected eta-expanded helper illustrates why generated C, rather than source placement alone, mattered."
     },
     {
       "title": "Linearity was a mechanism question, not a promised speedup",
@@ -707,7 +871,7 @@
     },
     {
       "title": "What the profiles can support",
-      "text": "Early DWARF chains had impossible callers, so inclusive flamegraphs were discarded. The bundled viewers display self instruction-pointer weights from the intended native executables. They are instrumented runs separate from the acceptance timing distributions. The old QFT profile is a 60-second prefix; the later profiles complete the CLI, so their phase mixes differ. No synthetic chronology or Perfetto timeline is presented.\n\nAfter the accepted changes, allocation, list scans and O3 table loading remain useful targets to attribute. A small array-copy percentage does not prove that all ownership costs are negligible."
+      "text": "The fresh final O1 campaign has 120 invocations: 119 successes and the single original QFT warmup timeout. The fresh incremental campaign has 126 successful invocations. All successful output files match within their workload, and stderr scans reproduce gate counts, two-qubit counts, T-counts and depth. The final branch passes the full Lake build, including affected refinement proofs and regression guards. Earlier campaigns validate every run’s reported metrics and the final retained QASM pair; their runners reused output paths, so they do not preserve a distinct QASM file for every historical run."
     },
     {
       "title": "Correctness and identity",
@@ -715,8 +879,14 @@
     }
   ],
   "progress": {
-    "note": "The cumulative rows come from one fresh three-way campaign: original Lean 2c29be4, combined Lean ba401fb and unchanged Rust 2c29be4. Each completed series has six measured runs; every retained output agrees within its case. The earlier selected rows compare each experiment with its own control. They are not a cumulative curve and their savings must not be added or multiplied. Rejected trials remain visible. QFT’s original 60.0047-second timeout has no completed median; its current median is 2.1391 s and Rust’s is 0.07336 s. Current/Rust comparisons for all eight cases appear under Experiments.",
+    "note": "The O1 cumulative rows come from the fresh 2026-09-28 three-way campaign: original Lean 2c29be4, current Lean 26a4f17 and current Rust 26a4f17. The two O3 rows retain the 2026-09-10 final campaign. Each completed series has six measured runs; every retained output agrees within its case. The nonlinear Array rows use a second fresh campaign against the immediately preceding rebased Lean executable. Other selected rows compare each experiment with its own control. They are not a cumulative curve and their savings must not be added or multiplied. Rejected trials remain visible. QFT’s original control times out during warmup and has no completed median; current Lean is 2.174 s and Rust is 0.07213 s.",
     "selected": [
+      "nstate-array-gf16",
+      "nstate-array-gf32",
+      "nstate-array-gf64",
+      "nstate-array-hwb8",
+      "nstate-array-chebyshev",
+      "nstate-array-qft20",
       "tags-gf64",
       "tags-chebyshev",
       "sweeps-chebyshev",

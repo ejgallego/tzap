@@ -1,25 +1,26 @@
 {
-  "numerical_comparisons": 26,
+  "numerical_comparisons": 32,
   "baselines": 8,
-  "datasets": 19,
-  "original_observations": 348,
+  "datasets": 25,
+  "original_observations": 474,
   "source_projection_exact": true,
   "timeout_censored": true,
   "rejected_observations_included": true,
   "profile_and_figure_hashes_valid": true,
   "negative_validation_and_corruption_checks": true,
-  "checker_sha256": "0f2eaa77672a3b0a00db32ad611e676595495630943af0b8a7ec12bd983d975a",
-  "report_html_sha256": "634bbbf4adea62e81af55697d1a373db8cbd7acd6ed8e80e7ef0145040b9de46",
-  "model_sha256": "435ad5cee7ceca6b94e8ecf3d79522a62eb75e86cd4c2956aec6cff98951b29c",
+  "checker_sha256": "2b7310a42eed465e7e90bfdcb3e45428179dcabf732e44d5be428b84271d3904",
+  "report_html_sha256": "1596823923062ea738095aafa8d9aa33be2120a155e54539e075156057e0d1ef",
+  "model_sha256": "d67380d3fc1eecef13e3b3534d6e664835bb394390275ccad5ce279aa51ea107",
   "previous_report": {
-    "comparisons": 26,
+    "retained_comparisons": 14,
+    "refreshed_comparisons": 12,
     "baseline_entries": 8,
     "completed_baselines": 7,
     "statistics_exact": true,
-    "previous_model_sha256": "13f49d2d7d4f7ad5aa269f0d98ea03c5d361e501f582d1ca35e5c2b527c40951"
+    "previous_model_sha256": "435ad5cee7ceca6b94e8ecf3d79522a62eb75e86cd4c2956aec6cff98951b29c"
   },
   "browser": {
-    "http_artifacts_checked": 893,
+    "http_artifacts_checked": 1415,
     "viewports": [
       1280,
       768,

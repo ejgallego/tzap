@@ -86,8 +86,10 @@ def numerical_check(root):
             require(len(series['outcomes']) == sum(r['configuration'] == name for r in rows), 'Dropped outcome')
             check_statistics([r['elapsed_ns']/1e9 for r in selected], series['statistics'].get('wall_s'))
     audit = json.loads((root / 'audit.json').read_text())
-    expected_sources = {(c['directory']+'/runs.jsonl', line) for c in audit['campaigns'] for line in range(1,c['rows']+1)}
-    require(seen_sources == expected_sources and len(seen_sources) == 348, 'Incomplete original observation coverage')
+    expected_sources = {(c['directory']+'/runs.jsonl', line) for c in audit['campaigns']
+                        for line in c.get('source_lines', range(1, c['rows'] + 1))}
+    require(seen_sources == expected_sources and len(seen_sources) == audit['observations'],
+            'Incomplete original observation coverage')
     for item in model['baselines']:
         rows = [r for r in datasets[item['dataset']] if r['configuration'] == item['configuration'] and r['included']]
         check_statistics([r['elapsed_ns']/1e9 for r in rows], item['series']['statistics'].get('wall_s'))
@@ -112,14 +114,21 @@ def numerical_check(root):
 
 def compare_previous(model, previous):
     old = json.loads((previous / 'report/review-data.json').read_text())
+    refreshed = {f'{kind}-{case}' for kind in ['total', 'rust']
+                 for case in ['gf16', 'gf32', 'gf64', 'hwb8', 'chebyshev', 'qft20']}
     for item in old['comparisons']:
+        if item['id'] in refreshed:
+            continue
         current = next(c for c in model['comparisons'] if c['id'] == item['id'])
         for key in ['control', 'candidate', 'paired_saving_s', 'candidate_faster', 'pair_ids', 'savings', 'median_reduction_pct']:
             require(current['statistics'][key] == item['statistics'][key], 'Changed retained comparison: '+item['id']+'/'+key)
     for item in old['baselines']:
+        if item['id'].removeprefix('original-') in ['gf16', 'gf32', 'gf64', 'hwb8', 'chebyshev', 'qft20']:
+            continue
         current = next(b for b in model['baselines'] if b['id'] == item['id'])
         require(current['series']['statistics'] == item['series']['statistics'], 'Changed retained baseline')
-    return dict(comparisons=len(old['comparisons']), baseline_entries=len(old['baselines']),
+    return dict(retained_comparisons=len(old['comparisons']) - len(refreshed),
+                refreshed_comparisons=len(refreshed), baseline_entries=len(old['baselines']),
                 completed_baselines=sum(bool(b['series']['statistics'].get('wall_s')) for b in old['baselines']),
                 statistics_exact=True, previous_model_sha256=digest(previous / 'report/review-data.json'))
 
@@ -161,7 +170,7 @@ def browser_check(root, url, screenshots):
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(url, wait_until='networkidle')
-        require(page.locator('section.test').count() == 10, 'Missing grouped tests')
+        require(page.locator('section.test').count() == 11, 'Missing grouped tests')
         require(page.locator('h1').inner_text().startswith('tzap:'), 'Wrong report')
         require(page.locator('#test-baseline tbody.benchmark').count() == 8, 'Baseline is not one group of eight benchmarks')
         require('Warmup; no median' in page.locator('#original-qft20').inner_text(), 'Timeout lost its scope')
@@ -213,7 +222,8 @@ def browser_check(root, url, screenshots):
         for removed in ['synthesis tables unused', 'measured: 6 completed', 'One warmup per binary']:
             require(removed not in visible_text, 'Repeated metadata still visible: '+removed)
         plots = page.locator('section.test .plots img')
-        require(plots.count() == 28, 'Missing distribution or overview plot')
+        require(plots.count() == len(model['comparisons']) + 2,
+                'Missing distribution or overview plot')
         require(plots.evaluate_all('els => els.every(e => !e.closest("details"))'), 'Plots are still collapsed')
         for plot in plots.all():
             require(plot.is_visible(), 'Plot not displayed by default')
@@ -250,7 +260,7 @@ def browser_check(root, url, screenshots):
         search.fill('there-is-no-such-experiment')
         require(page.locator('section.test:visible').count() == 0, 'Empty filter failed')
         search.fill('')
-        require(page.locator('section.test:visible').count() == 10, 'Filter reset failed')
+        require(page.locator('section.test:visible').count() == 11, 'Filter reset failed')
         decision = page.get_by_label('Decision', exact=True)
         decision.select_option('rejected')
         require(page.locator('section.test:visible').count() == 2, 'Decision filter failed')
@@ -258,7 +268,7 @@ def browser_check(root, url, screenshots):
         require(page.locator('section.test:visible').count() == 1, 'Combined filters failed')
         search.fill('')
         decision.select_option('accepted')
-        require(page.locator('section.test:visible').count() == 6, 'Accepted filter failed')
+        require(page.locator('section.test:visible').count() == 7, 'Accepted filter failed')
         decision.select_option('reference')
         require(page.locator('section.test:visible').count() == 2, 'Reference filter failed')
         decision.select_option('all')
@@ -303,8 +313,9 @@ def main():
     args=parser.parse_args()
     model=numerical_check(args.root)
     negative_checks()
+    observation_count=json.loads((args.root/'audit.json').read_text())['observations']
     result={'numerical_comparisons':len(model['comparisons']),'baselines':len(model['baselines']),
-            'datasets':len(model['datasets']),'original_observations':348,
+            'datasets':len(model['datasets']),'original_observations':observation_count,
             'source_projection_exact':True,'timeout_censored':True,'rejected_observations_included':True,
             'profile_and_figure_hashes_valid':True,'negative_validation_and_corruption_checks':True,
             'checker_sha256':digest(Path(__file__)),

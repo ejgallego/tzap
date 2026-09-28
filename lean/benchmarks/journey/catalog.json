@@ -1,6 +1,6 @@
 {
   "title": "tzap: a verified optimizer’s performance journey",
-  "summary": "Six implementation commits made the Lean CLI 1.7–10.4× faster on completed original-baseline cases. QFT now finishes in 2.14 seconds, while the original executable reaches the 60-second limit. Rust remains 16–121× faster. The fresh final comparison validates identical outputs; each earlier experiment retains its own control and decision.\n\nThis report reuses the 2026-09-10 evidence. It runs no benchmarks. Start with the baseline and directly measured totals, then inspect individual improvements and rejected ownership experiments. Timings and samples are noisy; hashes, generated code and proof contracts provide different kinds of evidence.",
+  "summary": "Seven implementation commits make the Lean CLI 1.6–9.9× faster on completed original-baseline O1 cases. QFT now finishes in 2.17 seconds, while the original executable reaches the 60-second limit. Rust remains 16–141× faster across the retained suite. The fresh 2026-09-28 campaigns validate identical outputs and isolate the nonlinear-state Array change; each earlier experiment retains its own control and decision.\n\nStart with the baseline and directly measured totals, then inspect individual improvements and rejected ownership experiments. Timings and samples are noisy; hashes, generated code and proof contracts provide different kinds of evidence.",
   "final": {
     "directory": "experiments/lean-summary-20260910/runs",
     "validation": "experiments/lean-summary-20260910/validation.json",
@@ -161,7 +161,7 @@
       "decision_status": "rejected"
     }
   ],
-  "progress_note": "The cumulative rows come from one fresh three-way campaign: original Lean 2c29be4, combined Lean ba401fb and unchanged Rust 2c29be4. Each completed series has six measured runs; every retained output agrees within its case. The earlier selected rows compare each experiment with its own control. They are not a cumulative curve and their savings must not be added or multiplied. Rejected trials remain visible. QFT’s original 60.0047-second timeout has no completed median; its current median is 2.1391 s and Rust’s is 0.07336 s. Current/Rust comparisons for all eight cases appear under Experiments.",
+  "progress_note": "The O1 cumulative rows come from the fresh 2026-09-28 three-way campaign: original Lean 2c29be4, current Lean 26a4f17 and current Rust 26a4f17. The two O3 rows retain the 2026-09-10 final campaign. Each completed series has six measured runs; every retained output agrees within its case. The nonlinear Array rows use a second fresh campaign against the immediately preceding rebased Lean executable. Other selected rows compare each experiment with its own control. They are not a cumulative curve and their savings must not be added or multiplied. Rejected trials remain visible. QFT’s original control times out during warmup and has no completed median; current Lean is 2.174 s and Rust is 0.07213 s.",
   "attribution": [
     {
       "title": "A full application boundary",
@@ -169,7 +169,7 @@
     },
     {
       "title": "From asymptotic scans to preparation placement",
-      "text": "Array tags removed repeated list indexing and prefix reconstruction. Caching finite samples removed repeated packing. Hadamard sweeps removed whole-list restarts after each successful rewrite. Finally, keeping sampled entropy packed removed an unnecessary word/bit/word round trip. Each source change has its corresponding invariant or equivalence proof. The rejected eta-expanded helper illustrates why generated C, rather than source placement alone, mattered."
+      "text": "Array tags removed repeated list indexing and prefix reconstruction. Caching finite samples removed repeated packing. Hadamard sweeps removed whole-list restarts after each successful rewrite. Keeping sampled entropy packed removed an unnecessary word/bit/word round trip. The latest change applies the same indexed-state lesson to nonlinear fingerprints: generated C now uses array access/update, and List.get/List.set disappear from the sampled hotspots. Each source change has its corresponding invariant or equivalence proof. The rejected eta-expanded helper illustrates why generated C, rather than source placement alone, mattered."
     },
     {
       "title": "Linearity was a mechanism question, not a promised speedup",
@@ -177,7 +177,7 @@
     },
     {
       "title": "What the profiles can support",
-      "text": "Early DWARF chains had impossible callers, so inclusive flamegraphs were discarded. The bundled viewers display self instruction-pointer weights from the intended native executables. They are instrumented runs separate from the acceptance timing distributions. The old QFT profile is a 60-second prefix; the later profiles complete the CLI, so their phase mixes differ. No synthetic chronology or Perfetto timeline is presented.\n\nAfter the accepted changes, allocation, list scans and O3 table loading remain useful targets to attribute. A small array-copy percentage does not prove that all ownership costs are negligible."
+      "text": "The fresh final O1 campaign has 120 invocations: 119 successes and the single original QFT warmup timeout. The fresh incremental campaign has 126 successful invocations. All successful output files match within their workload, and stderr scans reproduce gate counts, two-qubit counts, T-counts and depth. The final branch passes the full Lake build, including affected refinement proofs and regression guards. Earlier campaigns validate every run’s reported metrics and the final retained QASM pair; their runners reused output paths, so they do not preserve a distinct QASM file for every historical run."
     },
     {
       "title": "Correctness and identity",
@@ -305,6 +305,28 @@
       "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
       "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
       "note": "Preserved experimental patch; not production code. An explicit count argument forces the computation before the pass call."
+    },
+    {
+      "id": "array-self",
+      "title": "Nonlinear Array state: gf64 self costs",
+      "source": "experiments/lean-rebased-20260928/profile-gf64-nstate-array/self.csv",
+      "kind": "viewer",
+      "path": "views/array-self.html",
+      "comparison": "nstate-array-gf64",
+      "boundary": "Separate instrumented native CLI capture; aggregated cycles:u self weights (%) at 997 Hz; no chronological axis",
+      "identity": "2026-09-28; Lean 4.33.1; executable 662fe507; CPU 2; gf2^64 O1",
+      "note": "Complete gf64 CLI. 2,392 samples, none lost. List.get and List.set are absent; lean_copy_expand_array is 0.38% self weight. Allocation/free and GMP-backed Nat arithmetic dominate the remaining leaf costs. Call chains are not inferred from this self view."
+    },
+    {
+      "id": "code-array-state",
+      "title": "Nonlinear Array-state generated C",
+      "source": "experiments/lean-rebased-20260928/profile-gf64-nstate-array/PhaseFoldNonlinear-array.c",
+      "kind": "raw",
+      "path": "unused",
+      "comparison": "nstate-array-gf64",
+      "boundary": "Deterministic generated-code evidence; no sampling clock or time units",
+      "identity": "Generated from Lean revision 26a4f17 with Lean 4.33.1",
+      "note": "NState.step uses array size, borrowed reads and array updates. List.get and List.set are absent from the executable module; the runtime can reuse exclusive state and array owners."
     }
   ],
   "artifacts": [
@@ -374,14 +396,22 @@
     "lean/benchmarks/2026-09-10-pass-ownership.md",
     "lean/benchmarks/2026-09-10-runtime-summary.md",
     "lean/benchmarks/2026-09-10-rust-comparison.md",
-    "lean/benchmarks/2026-09-10-tag-state.md"
+    "lean/benchmarks/2026-09-10-tag-state.md",
+    "experiments/lean-rebased-20260928/provenance-nstate-array.json",
+    "experiments/lean-rebased-20260928/provenance-original-current-rust.json",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/profile.json",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/self.csv",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/PhaseFoldNonlinear-array.c",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/source/PhaseFoldNonlinear.lean",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/source/NonlinearRefinement.lean"
   ],
   "external_captures": [
     "experiments/lean-runtime-20260910/baseline-gf64.perf.data",
     "experiments/lean-runtime-20260910/cached-qft20.perf.data",
     "experiments/lean-hadamard-sweep-20260910/accepted-qft.perf.data",
     "experiments/lean-packed-samples-20260910/final-qft.perf.data",
-    "experiments/lean-fixpoint-20260910/lazy-o3.perf.data"
+    "experiments/lean-fixpoint-20260910/lazy-o3.perf.data",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/perf.data"
   ],
   "tests": [
     {
@@ -445,10 +475,24 @@
       ]
     },
     {
+      "id": "test-nstate-array",
+      "title": "7. Nonlinear fingerprint Array state",
+      "short_title": "Nonlinear Array",
+      "note": "Replaces linked-list indexed reads and updates in the nonlinear phase-fold inner loop.",
+      "benchmarks": [
+        "nstate-array-gf16",
+        "nstate-array-gf32",
+        "nstate-array-gf64",
+        "nstate-array-hwb8",
+        "nstate-array-chebyshev",
+        "nstate-array-qft20"
+      ]
+    },
+    {
       "id": "test-combined",
       "title": "Combined changes vs baseline",
       "short_title": "Combined",
-      "note": "Original Lean 2c29be4 → current Lean ba401fb, measured together.",
+      "note": "Original Lean 2c29be4 → current Lean 26a4f17 for O1; retained 2026-09-10 checkpoint for O3. Each row is directly measured.",
       "benchmarks": [
         "total-gf16",
         "total-gf32",
@@ -463,7 +507,7 @@
       "id": "test-rust",
       "title": "Current Lean vs Rust",
       "short_title": "Rust",
-      "note": "Complete CLI timings. Lean includes its serialization round-trip check; Rust runs sequentially.",
+      "note": "Current O1 Lean and Rust binaries come from revision 26a4f17. Lean includes its serialization round-trip check; Rust runs sequentially. O3 retains the earlier final campaign.",
       "benchmarks": [
         "rust-gf16",
         "rust-gf32",
@@ -490,6 +534,28 @@
       "benchmarks": [
         "rejected-count-only"
       ]
+    }
+  ],
+  "fresh_cases": [
+    "gf16",
+    "gf32",
+    "gf64",
+    "hwb8",
+    "chebyshev",
+    "qft20"
+  ],
+  "fresh_campaigns": [
+    {
+      "id": "original-current-rust",
+      "directory": "experiments/lean-rebased-20260928/compare-original-current-rust",
+      "validation": "experiments/lean-rebased-20260928/compare-original-current-rust/summary.json",
+      "validation_kind": "fresh"
+    },
+    {
+      "id": "nstate-array",
+      "directory": "experiments/lean-rebased-20260928/compare-current-rust",
+      "validation": "experiments/lean-rebased-20260928/compare-current-rust/summary.json",
+      "validation_kind": "fresh"
     }
   ]
 }

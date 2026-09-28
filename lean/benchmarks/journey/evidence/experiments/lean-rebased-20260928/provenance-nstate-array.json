@@ -1,0 +1,19 @@
+{
+  "baseline": {
+    "revision": "951fb26b968db0e4e0cb9da5e86b1454e39b6b65",
+    "build": "Lake release defaults; Lean 4.33.1; rebased tzap before the NState array change",
+    "sha256": "f2929452f7ab72bd9c970692ddf985e6982631b60fb361454d9cf759a8f1ddd3"
+  },
+  "current": {
+    "revision": "26a4f17a2cd6a9f028f06903b9f4eab5f4230986",
+    "build": "Lake release defaults; Lean 4.33.1; nonlinear fingerprints stored in an Array",
+    "sha256": "662fe5071089ef229bffbadffcc09f3ffa28d109038752bd5ef45fb20a0f8461"
+  },
+  "rust": {
+    "revision": "26a4f17a2cd6a9f028f06903b9f4eab5f4230986",
+    "build": "cargo build --release --bin tzap; rustc 1.89.0",
+    "cargo": "cargo 1.89.0 (c24e10642 2025-06-23)",
+    "sha256": "2bcdab205cd8c4b86044cd6e1285f0d6a6f16c0e2b55745f0ee9f6cf91ee6ab5"
+  },
+  "mathlib_revision": "0df444a360eaa60ab8c11dca51a86af692955474"
+}

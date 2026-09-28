@@ -76,8 +76,15 @@ test_singleton_overflow_and_display_units (test_review_observations.ObservationT
 test_three_way_permutations_preserve_slots_and_explicit_contrasts (test_review_observations.ObservationTests) ... ok
 test_unmatched_members_are_visible_not_silently_paired (test_review_observations.ObservationTests) ... ok
 test_warmup_timeout_is_not_a_measured_baseline (test_review_observations.ObservationTests) ... ok
+test_baseline_precedes_progress_and_overview_is_in_evidence (test_review_presentation.PresentationTests) ... ok
+test_conflicting_group_explanations_and_invalid_labels_fail_before_output (test_review_presentation.PresentationTests) ... ok
+test_disclosure_visibility_includes_summaries_and_open_contents (test_review_presentation.PresentationTests) ... ok
+test_experiment_index_targets_group_explanation_and_preserves_row_anchor (test_review_presentation.PresentationTests) ... ok
+test_grouped_control_and_candidate_share_units_across_boundary (test_review_presentation.PresentationTests) ... ok
+test_grouping_preserves_all_contrasts_and_does_not_pool_datasets (test_review_presentation.PresentationTests) ... ok
+test_unavailable_outcomes_remain_visible_in_grouped_rows (test_review_presentation.PresentationTests) ... ok
 
 ----------------------------------------------------------------------
-Ran 78 tests in 6.352s
+Ran 85 tests in 6.274s
 
 OK

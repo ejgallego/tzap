@@ -1,93 +1,17 @@
 {
-  "date": "2026-09-12",
+  "date": "2026-09-28",
   "no_original_experiment_directory": true,
-  "datasets": 19,
-  "source_manifest_exact": true,
-  "dataset_bytes_and_hashes_exact": true,
-  "statistics_exact": true,
+  "observations": 474,
+  "datasets": 25,
   "baselines": 8,
-  "comparisons": 26,
-  "browser": {
-    "http_artifacts_checked": 893,
-    "viewports": [
-      1280,
-      768,
-      390
-    ],
-    "browser_errors": [],
-    "test_and_decision_filters": true,
-    "self_profile_toggle_and_filter": true,
-    "grouped_benchmarks_and_warmup_timeout": true,
-    "compact_descriptions_and_exact_command_toggles": true,
-    "plots_visible_by_default": true,
-    "displayed_timings_match_evidence": true,
-    "paired_benchmark_rows": true,
-    "relative_performance_verified": true,
-    "plot_size_control": true
-  },
-  "original_model_sha256": "435ad5cee7ceca6b94e8ecf3d79522a62eb75e86cd4c2956aec6cff98951b29c",
-  "rebuilt_model_sha256": "ff025c7670cd9e639917e6f5381c32779bb69c9caae10dd0dc279f91e3544c52",
-  "original_generator": {
-    "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
-    "builder": {
-      "scripts/review_data.py": "31e10baa8af52b9c989f35e2fb50a72038a533281b0abeb00e0d59af723d585f",
-      "scripts/review_format.py": "5d000a8543d85515a2f1b534b9e5fa31f9c5a7c0349e94f64388022fda0db87d",
-      "scripts/review_html.py": "6c2bf36897c6bef6a3f2842a753f8f220af032e9d2bc5f2ca7e89c48987c0d9e",
-      "scripts/review_observations.py": "7ab9179603310fd04e521eaa32b0720177b28c833d30c7b8055cc97163d8f036",
-      "scripts/review_plots.py": "23463e524eb4438fc9e845e3d40c8f4471cfe444d4cbda53f3aa95d3d78278be",
-      "scripts/build_review.py": "81fd6cd8d348dace39c5e37cf1b5f526bed3ebf7f68a1a24efd885c776582446",
-      "assets/review.css": "17dc903a2cf43bbf64c565f40c60631bd49102e238dfe808b0a38e461673f2e5",
-      "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
-      "assets/review.js": "16178894bb4d5fedc3f3741316682770afdcd5538ba81f758c38698108096da9"
-    },
-    "adapter_sha256": "73f3e067827e54ef703bd29d8696c0728e452d57228e82efcda0ccc49cbaf999",
-    "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
-    "archive_sha256": "31d0466dfb4f08b632ba0c2ec87f4471079b61727168514a8b4b6e8356bfff9f",
-    "note": "No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.",
-    "matplotlib": "3.10.9",
-    "presentation": {
-      "renderer_sha256": "8ea892515cf36317c250b1a15b6396d7c6961b0fa5094706a4ad841d7c1a3ba0",
-      "css_sha256": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
-      "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
-      "tests": 10,
-      "files_sha256": {
-        "index.html": "634bbbf4adea62e81af55697d1a373db8cbd7acd6ed8e80e7ef0145040b9de46",
-        "review.css": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
-        "review.js": "7c1ecf7f25491572022008b6c4c8a6c2bb475210428d3571b554f578e8328ac1",
-        "presentation.json": "1ad8cf4d52d56e9688b9b8f40e86ae5f79d8bd894ddccfb0d6d465b70bf6b7af"
-      }
-    }
-  },
-  "rebuilt_generator": {
-    "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
-    "builder": {
-      "scripts/review_data.py": "31e10baa8af52b9c989f35e2fb50a72038a533281b0abeb00e0d59af723d585f",
-      "scripts/review_format.py": "5d000a8543d85515a2f1b534b9e5fa31f9c5a7c0349e94f64388022fda0db87d",
-      "scripts/review_html.py": "6c2bf36897c6bef6a3f2842a753f8f220af032e9d2bc5f2ca7e89c48987c0d9e",
-      "scripts/review_observations.py": "7ab9179603310fd04e521eaa32b0720177b28c833d30c7b8055cc97163d8f036",
-      "scripts/review_plots.py": "23463e524eb4438fc9e845e3d40c8f4471cfe444d4cbda53f3aa95d3d78278be",
-      "scripts/build_review.py": "81fd6cd8d348dace39c5e37cf1b5f526bed3ebf7f68a1a24efd885c776582446",
-      "assets/review.css": "17dc903a2cf43bbf64c565f40c60631bd49102e238dfe808b0a38e461673f2e5",
-      "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
-      "assets/review.js": "16178894bb4d5fedc3f3741316682770afdcd5538ba81f758c38698108096da9"
-    },
-    "adapter_sha256": "73f3e067827e54ef703bd29d8696c0728e452d57228e82efcda0ccc49cbaf999",
-    "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
-    "archive_sha256": "31d0466dfb4f08b632ba0c2ec87f4471079b61727168514a8b4b6e8356bfff9f",
-    "note": "No new measurements. Archived captures are immutable inputs; shared JSONL datasets, model and figures are derived.",
-    "matplotlib": "3.10.9",
-    "presentation": {
-      "renderer_sha256": "8ea892515cf36317c250b1a15b6396d7c6961b0fa5094706a4ad841d7c1a3ba0",
-      "css_sha256": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
-      "catalog_sha256": "25583c79ae39057e6d66905357e211955ff931e1dbccbd99897a166e8701031b",
-      "tests": 10,
-      "files_sha256": {
-        "index.html": "634bbbf4adea62e81af55697d1a373db8cbd7acd6ed8e80e7ef0145040b9de46",
-        "review.css": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
-        "review.js": "7c1ecf7f25491572022008b6c4c8a6c2bb475210428d3571b554f578e8328ac1",
-        "presentation.json": "1ad8cf4d52d56e9688b9b8f40e86ae5f79d8bd894ddccfb0d6d465b70bf6b7af"
-      }
-    }
-  },
-  "note": "Model paths identify each build location and figure hashes may differ; shared observations and statistics are identical."
+  "comparisons": 32,
+  "dataset_hashes_exact": true,
+  "baseline_statistics_exact": true,
+  "comparison_statistics_exact": true,
+  "original_model_sha256": "d67380d3fc1eecef13e3b3534d6e664835bb394390275ccad5ce279aa51ea107",
+  "rebuilt_model_sha256": "1927bef165cbdd0c0cc7165ade6077489be5a8f2158787784a127048a06936b5",
+  "original_source_manifest_sha256": "e59bdde93552d37bac812a4406014fb0bc7feb7812d941471f7948b528dcb7f4",
+  "rebuilt_source_manifest_sha256": "e59bdde93552d37bac812a4406014fb0bc7feb7812d941471f7948b528dcb7f4",
+  "generator_code_hashes_exact": true,
+  "note": "The bundle was copied to /tmp without ignored experiment directories and rebuilt with the installed skill. Absolute build paths can change model bytes; dataset hashes and every baseline/comparison statistic remain exact."
 }

@@ -3,15 +3,15 @@
 Open [the generated report](report/index.html). It includes the fresh
 original/current/Rust comparison, eleven selected comparisons from the earlier
 experiments, three searchable native self profiles, and the rejected designs.
-The report was regenerated on 2026-09-12 using lean-profile-skill source revision
-`f14b45ad47b88d30e3706d6da8854491906ba9cc`.
-It uses 348 retained observations in 19 shared JSONL datasets, with 26 explicit
-comparisons and eight original-baseline entries. QFT's entry has only a timed-out
-warmup. No new benchmark runs were needed. Its current optimizer identity is
-`ba401fb`, as measured in the final campaign at `5d5f169`.
+The report was regenerated on 2026-09-28 with the installed lean-profile-skill;
+[skill-verification.json](skill-verification.json) records its 44 files by
+SHA-256. It uses 474 retained observations in 25 shared JSONL datasets, with 32
+explicit comparisons and eight original-baseline entries. QFT's original entry
+has only a timed-out warmup. The fresh O1 campaigns measure current Lean and
+Rust at `26a4f17`; the two O3 rows retain the 2026-09-10 checkpoint.
 
-The developer view groups these benchmarks into ten tests: baseline, five
-optimization steps, combined changes, Rust, and two rejected designs. Each test
+The developer view groups these benchmarks into eleven tests: baseline, six
+accepted optimization groups, combined changes, Rust, and two rejected designs. Each test
 has one table with a short benchmark description per row. Comparison rows show
 baseline and candidate medians together, their IQRs, and relative performance:
 the median ratio plus percent less/more wall time. Open the description to see
@@ -34,11 +34,13 @@ bundled here. No remote assets or uploads are needed to read this report.
 
 ## Reading the evidence
 
-The directly measured totals use the original Lean binary at `2c29be4`, current
-Lean at `ba401fb`, and unchanged Rust at `2c29be4`, all measured in one campaign.
-Each complete series has six observations and one excluded warmup. The original
-QFT warmup was killed at 60 seconds; it is not a measured baseline or median.
-Current Lean and Rust complete all eight workloads.
+The fresh O1 totals use the original Lean binary at `2c29be4`, current Lean at
+`26a4f17`, and current Rust at `26a4f17`, all measured in one campaign. A second
+fresh campaign compares the rebased Lean executable immediately before the
+nonlinear Array change with `26a4f17` and Rust. Each complete series has six
+observations and one excluded warmup. The original QFT warmup was killed at 60
+seconds; it is not a measured baseline or median. The retained O3 rows use the
+2026-09-10 final campaign.
 
 The earlier experiments compare each candidate with its own control. Their
 medians must not be combined into a cumulative speedup curve. The two initial
@@ -73,10 +75,9 @@ python3 lean/scripts/profile-journey.py \
   --out lean/benchmarks/journey/report-new
 ```
 
-Use the tested source checkout for `--skill-dir`: the installed copy under
-`~/.codex/skills/lean-profile-skill` still matched the previous report's version
-when this review ran. We tested an isolated copy of the clean source checkout
-at `/home/egallego/lean/lean-profile-skill`; the installed copy was unchanged.
+Use the tested installed copy for `--skill-dir`:
+`~/.codex/skills/lean-profile-skill`. Tests ran against an isolated byte-for-byte
+copy under `/tmp`; the installed files were not modified.
 
 For all standalone SVG/PNG distribution plots and the three-way overview:
 
@@ -129,7 +130,7 @@ The updated skill handles units and dense ticks directly, so the earlier local
 ## Validation
 
 The independent checker compares typed JSONL fields back to their original
-lines, verifies each of the 348 source observations appears exactly once,
+lines, verifies each of the 474 source observations appears exactly once,
 recomputes quartiles, medians and matched differences, and checks evidence/figure
 hashes, warmup timeouts and inclusion of valid rejected trials:
 
@@ -156,12 +157,12 @@ The completed [verification record](verification.json) includes numerical,
 artifact-hash, negative-input and browser checks. A separate
 [relocated rebuild check](rebuild-verification.json) confirms that copying only
 the bundled evidence and scripts reproduces the statistics and JSONL hashes.
-The checker also accepts `--previous /path/to/prior/journey` to compare all
-26 statistics records and seven completed baselines against the former report.
+The checker also accepts `--previous /path/to/prior/journey` to verify that all
+historical statistics not intentionally refreshed remain exact.
 
 The [skill test record](skill-verification.json) identifies the tested skill by
-source commit and file hashes. Its [78 Python tests](testing/python-tests.log)
-(including plots) and [10 JavaScript tests](testing/javascript-tests.log) passed.
+its complete file-hash inventory. Its [85 Python tests](testing/python-tests.log)
+(including plots) and [11 JavaScript tests](testing/javascript-tests.log) passed.
 Tests ran from an isolated copy of the source checkout. The command
 importer was also checked against all eleven retained historical captures:
 
