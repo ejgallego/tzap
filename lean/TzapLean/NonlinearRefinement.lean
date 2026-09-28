@@ -29,7 +29,7 @@ theorem PackedEvaluation.flip {draws : Nat → Tag} (evaluation : PackedEvaluati
 /-- The runtime and symbolic states carry the same degree and evaluated value on every wire. -/
 def NonlinearSim (draws : Nat → Tag) (evaluation : PackedEvaluation draws)
     (symbolic : NonlinearAState) (runtime : NState) : Prop :=
-  runtime.fingerprints.length = symbolic.wires.length ∧
+  runtime.fingerprints.size = symbolic.wires.length ∧
   runtime.fresh = symbolic.fresh ∧
   ∀ q, (runtime.fpOf q).value = evaluation.eval (symbolic.wireOf q).polynomial ∧
     (runtime.fpOf q).degree = (symbolic.wireOf q).degree
@@ -39,7 +39,8 @@ theorem nonlinearSim_initial (draws : Nat → Tag) (evaluation : PackedEvaluatio
     NonlinearSim draws evaluation (NonlinearAState.initial n) (NState.initial draws n) := by
   refine ⟨by simp [NState.initial, NonlinearAState.initial], rfl, fun q => ?_⟩
   simp only [NState.fpOf, NState.initial, NonlinearAState.wireOf,
-    NonlinearAState.initial, getD_map_range]
+    NonlinearAState.initial, List.getElem?_toArray, ← List.getD_eq_getElem?_getD,
+    getD_map_range]
   by_cases hq : q < n
   · simp [hq, Fingerprint.fresh, TrackedPolynomial.fresh, evaluation.var_eq]
   · simp [hq, Fingerprint.zero, TrackedPolynomial.zero, evaluation.zero]
@@ -54,24 +55,24 @@ theorem nonlinearSim_set {draws : Nat → Tag} {evaluation : PackedEvaluation dr
     {symbolicFresh runtimeFresh : Nat} (hfresh : runtimeFresh = symbolicFresh) :
     NonlinearSim draws evaluation
       ⟨symbolic.wires.set q polynomial, symbolicFresh⟩
-      ⟨runtime.fingerprints.set q fingerprint, runtimeFresh⟩ := by
+      ⟨runtime.fingerprints.setIfInBounds q fingerprint, runtimeFresh⟩ := by
   obtain ⟨hlen, -, hwire⟩ := hsim
   refine ⟨by simp [hlen], hfresh, fun r => ?_⟩
   simp only [NState.fpOf, NonlinearAState.wireOf]
   by_cases hr : r = q
   · subst r
-    by_cases hq : q < runtime.fingerprints.length
-    · rw [List.getD_eq_getElem?_getD, List.getElem?_set_self hq,
+    by_cases hq : q < runtime.fingerprints.size
+    · rw [Array.getElem?_setIfInBounds_self_of_lt hq,
         List.getD_eq_getElem?_getD, List.getElem?_set_self (hlen ▸ hq)]
       exact ⟨hvalue, hdegree⟩
-    · rw [List.getD_eq_getElem?_getD,
-        List.getElem?_eq_none (by simpa using Nat.le_of_not_lt hq),
+    · rw [Array.getElem?_eq_none (by simpa using Nat.le_of_not_lt hq),
         List.getD_eq_getElem?_getD,
         List.getElem?_eq_none (by simpa [hlen] using Nat.le_of_not_lt hq)]
       simpa [NState.fpOf, NonlinearAState.wireOf, List.getD_eq_getElem?_getD,
-        List.getElem?_eq_none (by simpa using Nat.le_of_not_lt hq),
+        Array.getElem?_eq_none (by simpa using Nat.le_of_not_lt hq),
         List.getElem?_eq_none (by simpa [hlen] using Nat.le_of_not_lt hq)] using hwire q
-  · simp only [List.getD_eq_getElem?_getD, List.getElem?_set,
+  · rw [Array.getElem?_setIfInBounds_ne (Ne.symm hr),
+      List.getD_eq_getElem?_getD, List.getElem?_set,
       if_neg (by simpa using Ne.symm hr)]
     exact hwire r
 

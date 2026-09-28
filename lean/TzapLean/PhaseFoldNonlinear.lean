@@ -15,44 +15,45 @@ refinement and nonlinear collision theorem are connected in `GF128Bridge.lean`.
 
 namespace TzapLean
 
-/-- Per-wire nonlinear fingerprints and the next unused random draw. -/
+/-- Per-wire nonlinear fingerprints and the next unused random draw.  Fingerprints use an
+array because the optimizer reads and updates wires by index in its inner loop. -/
 structure NState where
-  fingerprints : List Fingerprint
+  fingerprints : Array Fingerprint
   fresh : Nat
 
 namespace NState
 
 /-- Wire `q`'s fingerprint, or the constant zero outside the represented register. -/
 def fpOf (st : NState) (q : Qubit) : Fingerprint :=
-  st.fingerprints.getD q Fingerprint.zero
+  st.fingerprints[q]?.getD Fingerprint.zero
 
 /-- The packed field value used as the phase-group key. -/
 def tagOf (st : NState) (q : Qubit) : Tag := (st.fpOf q).value
 
 /-- Each input wire begins as an independent degree-one variable. -/
 def initial (draws : Nat → Tag) (n : Nat) : NState where
-  fingerprints := (List.range n).map (fun i => Fingerprint.fresh (draws i))
+  fingerprints := ((List.range n).map (fun i => Fingerprint.fresh (draws i))).toArray
   fresh := n
 
 /-- Rust-compatible nonlinear transfer functions. -/
 def step (draws : Nat → Tag) (st : NState) (g : Gate) : NState :=
   match g with
   | .x q =>
-      { st with fingerprints := st.fingerprints.set q ((st.fpOf q).add Fingerprint.one) }
+      { st with fingerprints := st.fingerprints.setIfInBounds q ((st.fpOf q).add Fingerprint.one) }
   | .cnot c t =>
-      { st with fingerprints := st.fingerprints.set t ((st.fpOf t).add (st.fpOf c)) }
+      { st with fingerprints := st.fingerprints.setIfInBounds t ((st.fpOf t).add (st.fpOf c)) }
   | .h q =>
-      { fingerprints := st.fingerprints.set q (Fingerprint.fresh (draws st.fresh))
+      { fingerprints := st.fingerprints.setIfInBounds q (Fingerprint.fresh (draws st.fresh))
         fresh := st.fresh + 1 }
   | .ccx c₁ c₂ t =>
       match (st.fpOf c₁).mul? (st.fpOf c₂) with
       | some product =>
-          { st with fingerprints := st.fingerprints.set t ((st.fpOf t).add product) }
+          { st with fingerprints := st.fingerprints.setIfInBounds t ((st.fpOf t).add product) }
       | none =>
-          { fingerprints := st.fingerprints.set t (Fingerprint.fresh (draws st.fresh))
+          { fingerprints := st.fingerprints.setIfInBounds t (Fingerprint.fresh (draws st.fresh))
             fresh := st.fresh + 1 }
   | .reset q =>
-      { st with fingerprints := st.fingerprints.set q Fingerprint.zero }
+      { st with fingerprints := st.fingerprints.setIfInBounds q Fingerprint.zero }
   | _ => st
 
 def steps (draws : Nat → Tag) (st : NState) : List Gate → NState
