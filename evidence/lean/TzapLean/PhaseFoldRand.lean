@@ -1,0 +1,438 @@
+import TzapLean.PhaseFoldProof
+import TzapLean.RandPass
+import TzapLean.ExecutableRandPass
+
+/-!
+# `PhaseFoldRand` as a `RandPass`
+
+Everything is in place: `phaseFoldGates_correct` says the pass is right whenever its tags are
+faithful, and `collides_probability_le` says unfaithful tags are unlikely. Putting the two
+together gives the obligation `RandPass` demands,
+
+```
+Pr_{s ← uniform} [ ⟦phaseFold s c⟧ ≠ ⟦c⟧ ]  ≤  C(L, 2) · 2⁻ᵏ
+```
+
+where `L` is the number of parities (and complements) this circuit makes the pass compare.
+The seed is one ideal uniform `k`-bit tag per variable — `Sample (varBound c) k`.
+`phaseFoldWithSample_eq_run` records the pure correspondence between the executable's sampled
+transformation and the ideal model. The CLI uses the OS-backed runner with `k = 128`.
+-/
+
+namespace TzapLean
+
+open scoped ENNReal
+
+open Form
+
+/-! ## Well-formedness is preserved -/
+
+theorem emitRotation_wf (q : Qubit) (a : ℚ) : ∀ g ∈ emitRotation q a, g.Wf := by
+  by_cases h0 : BlockState.angleMod a = 0
+  · rw [emitRotation_eq_nil h0]; simp
+  · cases hcl : classifyQuarterPi (BlockState.angleMod a) with
+    | some j =>
+        rw [emitRotation_eq_diagRun h0 hcl]
+        match j with
+        | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 => intro g hg; fin_cases hg <;> trivial
+        | (i + 8) => intro g hg; simp [diagRun] at hg
+    | none =>
+        rw [emitRotation_eq_rz h0 hcl]
+        intro g hg
+        rw [List.mem_singleton.1 hg]
+        trivial
+
+theorem emitAll_wf {gs : List Gate} (h : ∀ g ∈ gs, g.Wf) : ∀ g ∈ emitAll gs, g.Wf := by
+  induction gs with
+  | nil => intro g hg; simp [emitAll] at hg
+  | cons x gs ih =>
+      intro g hg
+      rw [emitAll] at hg
+      rcases List.mem_append.1 hg with hg | hg
+      · cases hrot : rotAngle x with
+        | some p =>
+            obtain ⟨a, q⟩ := p
+            rw [hrot] at hg
+            exact emitRotation_wf q a g hg
+        | none =>
+            rw [hrot] at hg
+            rw [List.mem_singleton.1 hg]
+            exact h x (by simp)
+      · exact ih (fun y hy => h y (by simp [hy])) g hg
+
+theorem foldFrom_wf {k : Nat} (wdraws : Nat → Tag) (targets : Array Bool) :
+    ∀ (N : Nat) (gs : List Gate), gs.length ≤ N → ∀ (at_ : Nat) (ts : TState k),
+      (∀ g ∈ gs, g.Wf) → ∀ g ∈ foldFrom wdraws targets ts at_ gs, g.Wf := by
+  intro N
+  induction N with
+  | zero =>
+      intro gs hgs at_ ts _ g hg
+      rw [List.eq_nil_of_length_eq_zero (Nat.le_zero.1 hgs)] at hg
+      simp at hg
+  | succ N ih =>
+      intro gs hlen at_ ts hwf
+      cases gs with
+      | nil => intro g hg; simp at hg
+      | cons x gs =>
+          have hlenN : gs.length ≤ N := by
+            simp only [List.length_cons] at hlen
+            omega
+          have keep : foldFrom wdraws targets ts at_ (x :: gs)
+                = x :: foldFrom wdraws targets (ts.step wdraws x) (at_ + 1) gs →
+              ∀ g ∈ foldFrom wdraws targets ts at_ (x :: gs), g.Wf := by
+            intro heq g hg
+            rw [heq] at hg
+            rcases List.mem_cons.1 hg with rfl | hg
+            · exact hwf g (by simp)
+            · exact ih gs hlenN _ _ (fun y hy => hwf y (by simp [hy])) g hg
+          cases hrot : rotAngle x with
+          | none => exact keep (foldFrom_cons_none hrot)
+          | some p =>
+              obtain ⟨θ, q⟩ := p
+              by_cases hsel : targets[at_]?.getD true = true
+              case neg => exact keep (foldFrom_cons_keep hrot (Or.inl (by simpa using hsel)))
+              case pos =>
+              cases hm : mergeInto wdraws ts (ts.tagOf q) θ gs with
+              | none => exact keep (foldFrom_cons_keep hrot (Or.inr hm))
+              | some gs' =>
+                  obtain ⟨M, rest, g', φ, q', sign, hgseq, hgs'eq, -, -, -⟩ :=
+                    mergeInto_spec wdraws (ts.tagOf q) θ gs gs' ts hm
+                  have hlen'' : gs'.length ≤ N := by
+                    have := mergeInto_length wdraws (ts.tagOf q) θ gs gs' ts hm
+                    omega
+                  have hwf' : ∀ y ∈ gs', y.Wf := by
+                    intro y hy
+                    rw [hgs'eq] at hy
+                    rcases List.mem_append.1 hy with hy | hy
+                    · exact hwf y (by rw [hgseq]; simp [hy])
+                    · rcases List.mem_cons.1 hy with rfl | hy
+                      · trivial
+                      · exact hwf y (by rw [hgseq]; simp [hy])
+                  intro g hg
+                  rw [foldFrom_cons_merge hrot hsel hm] at hg
+                  exact ih gs' hlen'' (at_ + 1) ts hwf' g hg
+
+theorem phaseFoldGates_wf {k n : Nat} (wdraws : Nat → Tag) {gs : List Gate}
+    (h : ∀ g ∈ gs, g.Wf) : ∀ g ∈ phaseFoldGates k wdraws n gs, g.Wf :=
+  emitAll_wf (foldFrom_wf (k := k) wdraws _ gs.length gs le_rfl 0 _ h)
+
+/-! ## Operand ranges are preserved
+
+`Wf` above is about *distinctness*; this is about *range*, and together they are what
+the optimizer's checked representation and output boundary require. The two arguments have the same shape
+because the pass only ever invents one kind of gate: a diagonal rotation on a wire the gate
+it replaced already used. -/
+
+theorem diagRun_shape (j : Nat) (q : Qubit) :
+    ∀ g ∈ diagRun j q, g.qubitsOf = [q] ∧ g.cbitsOf = [] := by
+  match j with
+  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 =>
+      intro g hg; fin_cases hg <;> exact ⟨rfl, rfl⟩
+  | (i + 8) => intro g hg; simp [diagRun] at hg
+
+theorem emitRotation_shape (q : Qubit) (a : ℚ) :
+    ∀ g ∈ emitRotation q a, g.qubitsOf = [q] ∧ g.cbitsOf = [] := by
+  by_cases h0 : BlockState.angleMod a = 0
+  · rw [emitRotation_eq_nil h0]; simp
+  · cases hcl : classifyQuarterPi (BlockState.angleMod a) with
+    | some j => rw [emitRotation_eq_diagRun h0 hcl]; exact diagRun_shape j q
+    | none =>
+        rw [emitRotation_eq_rz h0 hcl]
+        intro g hg
+        rw [List.mem_singleton.1 hg]
+        exact ⟨rfl, rfl⟩
+
+/-- A gate the folder can re-emit lives on one of its own wires. -/
+theorem rotAngle_mem {g : Gate} {a : ℚ} {q : Qubit} (h : rotAngle g = some (a, q)) :
+    q ∈ g.qubitsOf := by
+  cases g <;> simp_all [rotAngle, Gate.qubitsOf]
+
+theorem emitRotation_inRange {n m : Nat} {g : Gate} {q : Qubit} {a : ℚ}
+    (hg : g.InRange n m) (hq : q ∈ g.qubitsOf) : ∀ g' ∈ emitRotation q a, g'.InRange n m := by
+  intro g' hg'
+  obtain ⟨h₁, h₂⟩ := emitRotation_shape q a g' hg'
+  exact Gate.InRange.onWire hg hq h₁ h₂
+
+theorem emitAll_inRange {n m : Nat} {gs : List Gate} (h : ∀ g ∈ gs, g.InRange n m) :
+    ∀ g ∈ emitAll gs, g.InRange n m := by
+  induction gs with
+  | nil => intro g hg; simp [emitAll] at hg
+  | cons x gs ih =>
+      intro g hg
+      rw [emitAll] at hg
+      rcases List.mem_append.1 hg with hg | hg
+      · cases hrot : rotAngle x with
+        | some p =>
+            obtain ⟨a, q⟩ := p
+            rw [hrot] at hg
+            exact emitRotation_inRange (h x (by simp)) (rotAngle_mem hrot) g hg
+        | none =>
+            rw [hrot] at hg
+            rw [List.mem_singleton.1 hg]
+            exact h x (by simp)
+      · exact ih (fun y hy => h y (by simp [hy])) g hg
+
+theorem foldFrom_inRange {k n m : Nat} (wdraws : Nat → Tag) (targets : Array Bool) :
+    ∀ (N : Nat) (gs : List Gate), gs.length ≤ N → ∀ (at_ : Nat) (ts : TState k),
+      (∀ g ∈ gs, g.InRange n m) →
+        ∀ g ∈ foldFrom wdraws targets ts at_ gs, g.InRange n m := by
+  intro N
+  induction N with
+  | zero =>
+      intro gs hgs at_ ts _ g hg
+      rw [List.eq_nil_of_length_eq_zero (Nat.le_zero.1 hgs)] at hg
+      simp at hg
+  | succ N ih =>
+      intro gs hlen at_ ts hin
+      cases gs with
+      | nil => intro g hg; simp at hg
+      | cons x gs =>
+          have hlenN : gs.length ≤ N := by
+            simp only [List.length_cons] at hlen
+            omega
+          have keep : foldFrom wdraws targets ts at_ (x :: gs)
+                = x :: foldFrom wdraws targets (ts.step wdraws x) (at_ + 1) gs →
+              ∀ g ∈ foldFrom wdraws targets ts at_ (x :: gs), g.InRange n m := by
+            intro heq g hg
+            rw [heq] at hg
+            rcases List.mem_cons.1 hg with rfl | hg
+            · exact hin g (by simp)
+            · exact ih gs hlenN _ _ (fun y hy => hin y (by simp [hy])) g hg
+          cases hrot : rotAngle x with
+          | none => exact keep (foldFrom_cons_none hrot)
+          | some p =>
+              obtain ⟨θ, q⟩ := p
+              by_cases hsel : targets[at_]?.getD true = true
+              case neg => exact keep (foldFrom_cons_keep hrot (Or.inl (by simpa using hsel)))
+              case pos =>
+              cases hm : mergeInto wdraws ts (ts.tagOf q) θ gs with
+              | none => exact keep (foldFrom_cons_keep hrot (Or.inr hm))
+              | some gs' =>
+                  obtain ⟨M, rest, g', φ, q', sign, hgseq, hgs'eq, -, hrot', -⟩ :=
+                    mergeInto_spec wdraws (ts.tagOf q) θ gs gs' ts hm
+                  have hlen'' : gs'.length ≤ N := by
+                    have := mergeInto_length wdraws (ts.tagOf q) θ gs gs' ts hm
+                    omega
+                  have hin' : ∀ y ∈ gs', y.InRange n m := by
+                    intro y hy
+                    rw [hgs'eq] at hy
+                    rcases List.mem_append.1 hy with hy | hy
+                    · exact hin y (by rw [hgseq]; simp [hy])
+                    · rcases List.mem_cons.1 hy with rfl | hy
+                      · -- the merged rotation sits on the wire of the gate it replaced
+                        exact Gate.InRange.onWire
+                          (hin g' (by rw [hgseq]; simp)) (rotAngle_mem hrot') rfl rfl
+                      · exact hin y (by rw [hgseq]; simp [hy])
+                  intro g hg
+                  rw [foldFrom_cons_merge hrot hsel hm] at hg
+                  exact ih gs' hlen'' (at_ + 1) ts hin' g hg
+
+/-- **Phase folding keeps every operand in range.** -/
+theorem phaseFoldGates_inRange {k n' n m : Nat} (wdraws : Nat → Tag) {gs : List Gate}
+    (h : ∀ g ∈ gs, g.InRange n m) :
+    ∀ g ∈ phaseFoldGates k wdraws n' gs, g.InRange n m :=
+  emitAll_inRange (foldFrom_inRange (k := k) wdraws _ gs.length gs le_rfl 0 _ h)
+
+/-! ## The compared parities are bounded -/
+
+theorem bounded_formsOf {n : Nat} {st : AState} (hst : st.Bounded) {m : Nat}
+    (h : st.fresh ≤ m) : ∀ p ∈ formsOf n st, Form.Bounded m p := by
+  intro p hp
+  rcases List.mem_cons.1 hp with rfl | hp
+  · exact Form.bounded_const _ false
+  · rcases List.mem_map.1 hp with ⟨q, -, rfl⟩
+    exact Form.bounded_mono h (hst q)
+
+theorem bounded_visited {n : Nat} : ∀ (gs : List Gate) (st : AState), st.Bounded →
+    ∀ {m : Nat}, st.fresh + gs.countP Gate.allocates ≤ m →
+      ∀ p ∈ visited n st gs, Form.Bounded m p := by
+  intro gs
+  induction gs with
+  | nil =>
+      intro st hst m h p hp
+      exact bounded_formsOf hst (by simpa using h) p hp
+  | cons g gs ih =>
+      intro st hst m h p hp
+      rw [List.countP_cons] at h
+      by_cases hall : Gate.allocates g = true
+      · rw [if_pos hall] at h
+        have hstep : (st.step g).fresh ≤ st.fresh + 1 := by cases g <;> simp [AState.step]
+        rcases List.mem_append.1 hp with hp | hp
+        · exact bounded_formsOf hst (by omega) p hp
+        · exact ih (st.step g) (AState.bounded_step hst g) (by omega) p hp
+      · rw [if_neg hall] at h
+        have hstep : (st.step g).fresh = st.fresh := by
+          cases g <;> simp_all [AState.step, Gate.allocates]
+        rcases List.mem_append.1 hp with hp | hp
+        · exact bounded_formsOf hst (by omega) p hp
+        · exact ih (st.step g) (AState.bounded_step hst g) (by omega) p hp
+
+/-- The forms one run of the pass can compare. -/
+noncomputable def relevantForms (c : RawCircuit) : List Form :=
+  relevant c.numQubits (AState.initial c.numQubits) c.gates
+
+theorem bounded_relevantForms (c : RawCircuit) :
+    ∀ p ∈ relevantForms c, Form.Bounded (varBound c) p := by
+  intro p hp
+  have hbase : ∀ r ∈ visited c.numQubits (AState.initial c.numQubits) c.gates,
+      Form.Bounded (varBound c) r := by
+    refine bounded_visited c.gates (AState.initial c.numQubits) (AState.bounded_initial _) ?_
+    simp [varBound, AState.initial]
+  rcases List.mem_append.1 hp with hp | hp
+  · exact hbase p hp
+  · rcases List.mem_map.1 hp with ⟨r, hr, rfl⟩
+    exact Form.bounded_flip (hbase r hr)
+
+/-! ## Faithful, unless the tags collide -/
+
+theorem faithful_of_not_collides {m k : Nat} {ps : List Form} {sample : Sample m k}
+    (h : ¬ Collides ps sample) : Faithful (liftSample sample) ps := by
+  intro p hp q hq hpq
+  by_contra hne
+  exact h ⟨p, hp, q, hq, hne, hpq⟩
+
+/-! ## Executable randomized phase folding -/
+
+/-- Run phase folding at an explicit sample and package its output as a checked circuit.
+This is the shared pure function used by both the ideal `RandPass` and the OS-backed runner. -/
+def phaseFoldWithSample (k : Nat) (c : Circuit n m) (s : Sample (varBound c.raw) k) :
+    Circuit n m :=
+  ⟨phaseFold k (wordsOf k (liftSample s)) c.raw,
+    (phaseFold_numQubits k _ c.raw).trans c.numQubits_eq,
+    (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
+    phaseFoldGates_wf (wordsOf k (liftSample s)) c.wf⟩
+
+/-- Pack each sampled tag once. Forward merge scans can visit the same draw many times;
+reconstructing its `k` bits at every visit otherwise repeats multiprecision allocation. -/
+def sampleWords {m k : Nat} (s : Sample m k) : Array Tag :=
+  Array.ofFn fun i => bitsToWord (s i)
+
+/-- Looking up a packed sample gives exactly the original stream, including its zero
+padding outside the finite sample. -/
+theorem sampleWords_eq {m k : Nat} (s : Sample m k) :
+    (fun i => (sampleWords s)[i]?.getD 0) = wordsOf k (liftSample s) := by
+  have hz : bitsToWord (k := k) 0 = 0 := by
+    apply Nat.eq_of_testBit_eq
+    intro i
+    simp [bitsToWord, testBit_bitsToWordAux, unbit]
+  funext i
+  by_cases h : i < m <;> simp [sampleWords, wordsOf, liftSample, h, hz]
+
+/-- The executable implementation keeps the packed array outside the lookup closure,
+so every tag is packed once per pass invocation. -/
+def phaseFoldWithSampleCached (k : Nat) (c : Circuit n m) (s : Sample (varBound c.raw) k) :
+    Circuit n m :=
+  let words := sampleWords s
+  ⟨phaseFold k (fun i => words[i]?.getD 0) c.raw,
+    (phaseFold_numQubits k _ c.raw).trans c.numQubits_eq,
+    (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
+    phaseFoldGates_wf (fun i => words[i]?.getD 0) c.wf⟩
+
+/-- A proved compiler rewrite; the ideal randomized model and its sample are unchanged. -/
+@[csimp] theorem phaseFoldWithSample_eq_cached :
+    @phaseFoldWithSample = @phaseFoldWithSampleCached := by
+  funext n m k c s
+  simp only [phaseFoldWithSampleCached, sampleWords_eq, phaseFoldWithSample]
+
+/-- Discard unused high bits from byte-packed entropy. Return the array itself so
+eta expansion cannot move its preparation inside each draw lookup. -/
+def normalizeSampleWords (k : Nat) (rows : Array Tag) : Array Tag :=
+  let modulus := 2 ^ k
+  rows.map (· % modulus)
+
+theorem normalizeSampleWords_eq (m k : Nat) (rows : Array Tag) :
+    (fun i => if i < m then (normalizeSampleWords k rows)[i]?.getD 0 else 0) =
+      wordsOf k (liftSample (sampleOfWords (m := m) rows)) := by
+  funext i
+  by_cases h : i < m
+  · simp only [normalizeSampleWords, wordsOf, liftSample, sampleOfWords, dif_pos h, if_pos h,
+      bitsToWord_wordToBits, Array.getElem?_map, Array.getElem!_eq_getD,
+      Array.getD_eq_getD_getElem?]
+    cases rows[i]? <;> simp
+  · simp [wordsOf, liftSample, h]
+
+/-- The packed executable transformation, proved to agree with the ideal sample view. -/
+def phaseFoldWithWords (k : Nat) (c : Circuit n m) (rows : Array Tag) : Circuit n m :=
+  let bound := varBound c.raw
+  let words := normalizeSampleWords k rows
+  let draws := fun i => if i < bound then words[i]?.getD 0 else 0
+  ⟨phaseFold k draws c.raw,
+    (phaseFold_numQubits k _ c.raw).trans c.numQubits_eq,
+    (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
+    phaseFoldGates_wf draws c.wf⟩
+
+theorem phaseFoldWithWords_eq_sample (k : Nat) (c : Circuit n m) (rows : Array Tag) :
+    phaseFoldWithWords k c rows = phaseFoldWithSample k c (sampleOfWords rows) := by
+  simp only [phaseFoldWithWords, normalizeSampleWords_eq, phaseFoldWithSample]
+
+/-- The sampled IO specification: every invocation obtains fresh OS entropy. -/
+def phaseFoldRandom (k : Nat) (c : Circuit n m) : IO (Circuit n m) := do
+  let s ← randomSample (varBound c.raw) k
+  return phaseFoldWithSample k c s
+
+/-- Pass the owned packed array directly from the entropy reader to phase folding. -/
+def phaseFoldRandomPacked (k : Nat) (c : Circuit n m) : IO (Circuit n m) := do
+  let rows ← randomWords (varBound c.raw) k
+  return phaseFoldWithWords k c rows
+
+/-- Preserve the entire IO action, including the entropy request and error behavior. -/
+@[csimp] theorem phaseFoldRandom_eq_packed : @phaseFoldRandom = @phaseFoldRandomPacked := by
+  funext n m k c
+  simp only [phaseFoldRandom, randomSample, phaseFoldRandomPacked,
+    phaseFoldWithWords_eq_sample]
+  funext world
+  change EST.bind (EST.bind _ _) _ world = EST.bind _ _ world
+  simp only [EST.bind]
+  cases randomWords (varBound c.raw) k world <;> rfl
+
+/-- The runtime phase-folding pass. Its idealized distribution and failure bound are
+`PhaseFoldRand k` below; compilation uses the proved packed IO action. -/
+def PhaseFoldRandExec (k : Nat) : ExecutableRandPass where
+  name := "Phase folding"
+  run := phaseFoldRandom k
+
+/-! ## The pass -/
+
+noncomputable section
+
+/-- **Phase folding, as a randomized pass.** The seed is one uniform `k`-bit tag per
+variable; the failure probability is the chance that two of the parities this circuit makes
+the pass compare hash alike. -/
+def PhaseFoldRand (k : Nat) : RandPass where
+  name := "Phase folding"
+  Seed := fun c => Sample (varBound c.raw) k
+  dist := fun _ => PMF.uniformOfFintype _
+  run := phaseFoldWithSample k
+  error := fun c =>
+    ((relevantForms c.raw).length.choose 2 : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹) ^ k
+  wellFormed_run c s hc := phaseFoldGates_inRange (wordsOf k (liftSample s)) hc
+  flagsOk_run c _ _ := RawCircuit.flagsOk_withGates _ _
+  correct c := by
+    rcases c with ⟨c, rfl, rfl, hc⟩
+    refine le_trans ((PMF.uniformOfFintype (Sample (varBound c) k)).toOuterMeasure_mono ?_)
+      (collides_probability_le (relevantForms c) (bounded_relevantForms c))
+    intro s hs
+    by_contra hcol
+    exact hs.1 (phaseFoldGates_correct (wordToBits_wordsOf k (liftSample s)) c.gates hc
+      (faithful_of_not_collides hcol))
+
+@[simp] theorem PhaseFoldRand_run (k : Nat) (c : Circuit n m)
+    (s : (PhaseFoldRand k).Seed c) :
+    ((PhaseFoldRand k).run c s).raw = phaseFold k (wordsOf k (liftSample s)) c.raw := rfl
+
+/-- **The sampled executable transformation is exactly the transformation in the bound.**
+The remaining assumption is that `IO.getRandomBytes` realizes the model's independent uniform
+sample; that is a platform property, not a theorem about a Lean term. -/
+theorem phaseFoldWithSample_eq_run (k : Nat) (c : Circuit n m)
+    (s : Sample (varBound c.raw) k) :
+    phaseFoldWithSample k c s = (PhaseFoldRand k).run c s := rfl
+
+/-- The failure bound in closed form: with `t` compared parities the pass is wrong with
+probability at most `C(t,2)·2⁻ᵏ`, so doubling the tag width squares the odds against it. -/
+theorem PhaseFoldRand_error (k : Nat) (c : Circuit n m) :
+    (PhaseFoldRand k).error c =
+      ((relevantForms c.raw).length.choose 2 : ℝ≥0∞) * ((2 : ℝ≥0∞)⁻¹) ^ k := rfl
+
+end
+
+end TzapLean

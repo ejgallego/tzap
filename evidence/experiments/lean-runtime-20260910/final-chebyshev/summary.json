@@ -1,0 +1,36 @@
+{
+  "baseline": {
+    "count": 6,
+    "max_ns": 11158157764,
+    "mean_ns": 10872250351.333334,
+    "median_ns": 10862463202.0,
+    "min_ns": 10580466065,
+    "stdev_ns": 215354556.65442201
+  },
+  "candidate": {
+    "count": 6,
+    "max_ns": 2266499653,
+    "mean_ns": 2078910435.1666667,
+    "median_ns": 2059773196.5,
+    "min_ns": 1958751532,
+    "stdev_ns": 101594516.4447248
+  },
+  "candidate_minus_baseline_median_ns": -8802690005.5,
+  "candidate_minus_baseline_median_percent": -81.03769689990062,
+  "identity_check": {
+    "changes": [],
+    "checked_at_utc": "2026-09-10T12:40:08.688101+00:00",
+    "schema": "lean-profile-identity-check-alpha",
+    "valid": true
+  },
+  "paired_delta_median_ns": -8855633271.0,
+  "paired_deltas_ns": [
+    -8515828002,
+    -9015954245,
+    -8891658111,
+    -8866307045,
+    -8625332597,
+    -8844959497
+  ],
+  "warnings": []
+}

@@ -1,0 +1,171 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cycles:u'
+# Event count (approx.): 7092812331
+#
+#     Overhead  Symbol                                                                                                                    IPC   [IPC Coverage]
+# ............  ........................................................................................................................  ....................
+#
+         9.10%  [.] mi_malloc_small                                                                                                       -      -            
+         7.85%  [.] malloc                                                                                                                -      -            
+         6.84%  [.] cfree@GLIBC_2.2.5                                                                                                     -      -            
+         6.06%  [.] _int_free                                                                                                             -      -            
+         4.99%  [.] lp_tzap_x2dlean_TzapLean_mergeInto                                                                                    -      -            
+         4.98%  [.] mi_free                                                                                                               -      -            
+         4.40%  [.] lean_dec_ref_cold                                                                                                     -      -            
+         4.39%  [.] lp_tzap_x2dlean_TzapLean_splitBlocker                                                                                 -      -            
+         3.34%  [.] realloc                                                                                                               -      -            
+         2.66%  [.] __gmpn_copyi_x86_64                                                                                                   -      -            
+         2.47%  [.] __gmpz_init_set                                                                                                       -      -            
+         1.99%  [.] __gmp_default_allocate                                                                                                -      -            
+         1.94%  [.] lp_tzap_x2dlean_TzapLean_TState_step                                                                                  -      -            
+         1.89%  [.] __gmp_default_reallocate                                                                                              -      -            
+         1.79%  [.] lp_tzap_x2dlean_TzapLean_rotAngle                                                                                     -      -            
+         1.79%  [.] __gmpz_n_pow_ui                                                                                                       -      -            
+         1.45%  [.] _int_malloc                                                                                                           -      -            
+         1.26%  [.] lean_inc_heartbeat                                                                                                    -      -            
+         1.26%  [.] lp_tzap_x2dlean_TzapLean_findPartner                                                                                  -      -            
+         1.21%  [.] lean::mpz::~mpz()                                                                                                     -      -            
+         1.21%  [.] lean::lean_del_core_other(lean_object*, unsigned char, lean_object*)                                                  -      -            
+         1.16%  [.] l_List_reverseAux___redArg                                                                                            -      -            
+         1.11%  [.] __gmpz_xor                                                                                                            -      -            
+         1.11%  [.] __gmpz_cmp                                                                                                            -      -            
+         1.00%  [.] lean_string_utf8_get                                                                                                  -      -            
+         0.92%  [.] __gmpn_xor_n                                                                                                          -      -            
+         0.82%  [.] __gmpz_realloc                                                                                                        -      -            
+         0.82%  [.] lp_tzap_x2dlean_TzapLean_Gate_qubitsOf                                                                                -      -            
+         0.77%  [.] __memmove_avx512_unaligned_erms                                                                                       -      -            
+         0.77%  [.] lp_tzap_x2dlean_TzapLean_Gate_support                                                                                 -      -            
+         0.73%  [.] __gmpz_clear                                                                                                          -      -            
+         0.68%  [.] lean::mpz::mpz(unsigned long)                                                                                         -      -            
+         0.63%  [.] lean::utf8_decode(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const&, std:  -      -            
+         0.63%  [.] _int_realloc                                                                                                          -      -            
+         0.58%  [.] lean_nat_pow                                                                                                          -      -            
+         0.58%  [.] __gmpz_sub                                                                                                            -      -            
+         0.53%  [.] lean_nat_big_eq                                                                                                       -      -            
+         0.53%  [.] std::__1::vector<unsigned int, std::__1::allocator<unsigned int> >::emplace_back<unsigned int>(unsigned int&&)::{lam  -      -            
+         0.51%  [.] lean_string_utf8_next                                                                                                 -      -            
+         0.44%  [.] l_String_Slice_trimAscii                                                                                              -      -            
+         0.43%  [.] lp_tzap_x2dlean_TzapLean_commutesPastCnot                                                                             -      -            
+         0.43%  [.] mi_malloc                                                                                                             -      -            
+         0.39%  [.] __gmpz_init_set_ui                                                                                                    -      -            
+         0.34%  [.] lean_nat_big_xor                                                                                                      -      -            
+         0.34%  [.] lean::utf8_strlen(char const*, unsigned long)                                                                         -      -            
+         0.30%  [.] lean_mark_mt                                                                                                          -      -            
+         0.29%  [.] mi_find_page(mi_heap_s*, unsigned long, unsigned long)                                                                -      -            
+         0.29%  [.] lp_tzap_x2dlean_TzapLean_RawCircuit_withGates                                                                         -      -            
+         0.29%  [.] l_String_Slice_Pos_revSkipWhile___at___00String_Slice_trimAscii_spec__1                                               -      -            
+         0.29%  [.] lp_tzap_x2dlean_TzapLean_gatesEqual                                                                                   -      -            
+         0.28%  [.] l_String_splitOnAux                                                                                                   -      -            
+         0.28%  [.] lean::lean_string_utf8_get_core(char const*, unsigned long, unsigned long, unsigned int&)                             -      -            
+         0.26%  [.] lean_apply_1                                                                                                          -      -            
+         0.24%  [.] lean::next_utf8(char const*, unsigned long, unsigned long&)                                                           -      -            
+         0.24%  [.] __gmpz_mul_2exp                                                                                                       -      -            
+         0.24%  [.] lean_free_object                                                                                                      -      -            
+         0.24%  [.] __gmpz_add                                                                                                            -      -            
+         0.24%  [.] lean::mpz::pow(unsigned int) const                                                                                    -      -            
+         0.24%  [.] lean_string_data                                                                                                      -      -            
+         0.19%  [.] mi_free_size                                                                                                          -      -            
+         0.19%  [.] lp_tzap_x2dlean_TzapLean_cancelPairsAux                                                                               -      -            
+         0.19%  [.] l_String_Slice_Pos_skipWhile___at___00String_Slice_trimAscii_spec__0                                                  -      -            
+         0.19%  [.] l_WellFounded_opaqueFix_u2083___at___00String_Slice_toNat_x3f_spec__0___redArg                                        -      -            
+         0.19%  [.] lean::mpz::operator^=(lean::mpz const&)                                                                               -      -            
+         0.19%  [.] lp_tzap_x2dlean_TzapLean_Gate_isUnitary                                                                               -      -            
+         0.19%  [.] lean_copy_expand_array                                                                                                -      -            
+         0.15%  [.] l___private_Init_Data_List_Impl_0__List_takeTR_go___redArg                                                            -      -            
+         0.15%  [.] l_String_Slice_Pos_nextn                                                                                              -      -            
+         0.15%  [.] l_List_drop___redArg                                                                                                  -      -            
+         0.15%  [.] lean::mpz::is_size_t() const                                                                                          -      -            
+         0.15%  [.] l_String_Pos_Raw_isValidForSlice                                                                                      -      -            
+         0.15%  [.] lean_nat_big_sub                                                                                                      -      -            
+         0.15%  [.] __gmpn_sub_n_x86_64                                                                                                   -      -            
+         0.15%  [.] lean_string_mk                                                                                                        -      -            
+         0.15%  [.] lp_tzap_x2dlean_TzapLean_emitAll                                                                                      -      -            
+         0.14%  [.] lp_tzap_x2dlean_List_find_x3f___at___00TzapLean_Qasm_findReg_spec__0                                                  -      -            
+         0.14%  [.] __memcmp_evex_movbe                                                                                                   -      -            
+         0.14%  [.] lean_obj_once_cold                                                                                                    -      -            
+         0.13%  [.] lean_array_push                                                                                                       -      -            
+         0.11%  [.] l___private_Init_Data_Array_Basic_0__Array_anyMUnsafe_any___redArg___lam__0___boxed                                   -      -            
+         0.10%  [.] lp_mathlib_List_filterTR_loop___at___00__private_Mathlib_Tactic_DefEqAbuse_0__Mathlib_Tactic_DefEqAbuse_isIdenticalS  -      -            
+         0.10%  [.] lean_string_utf8_extract                                                                                              -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_Qasm_validate___lam__0___boxed                                                               -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_RawCircuit_ofGates                                                                           -      -            
+         0.10%  [.] lp_tzap_x2dlean_List_forIn_x27_loop___at___00TzapLean_Metrics_of_spec__1___redArg                                     -      -            
+         0.10%  [.] lp_tzap_x2dlean_List_foldlM___at___00TzapLean_Qasm_resolveIdx_spec__0                                                 -      -            
+         0.10%  [.] lean_string_push                                                                                                      -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_cancelCommutingStep                                                                          -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_reduceStep                                                                                   -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_foldFrom                                                                                     -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_Qasm_subscript                                                                               -      -            
+         0.10%  [.] lp_tzap_x2dlean_TzapLean_Qasm_resolveSingle                                                                           -      -            
+         0.10%  [k] 0xffffffff92400ef0                                                                                                    -      -            
+         0.10%  [.] lp_tzap_x2dlean___private_Init_Data_Range_Basic_0__Std_Legacy_Range_forIn_x27_loop___at___00TzapLean_mergeTargets_sp  -      -            
+         0.09%  [.] lean::mpz::mod64() const                                                                                              -      -            
+         0.07%  [.] l_Lean_Parser_nodeInfo                                                                                                -      -            
+         0.05%  [.] l_Lean_Parser_symbolInfo___lam__0                                                                                     -      -            
+         0.05%  [.] lean_st_ref_set                                                                                                       -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_Qasm_splitTrim                                                                               -      -            
+         0.05%  [.] lean_string_eq_cold                                                                                                   -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_Qasm_parseNat                                                                                -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_Qasm_dropSemi                                                                                -      -            
+         0.05%  [.] lean_string_memcmp                                                                                                    -      -            
+         0.05%  [.] l_WellFounded_opaqueFix_u2083___at___00String_Slice_isNat_spec__0___redArg                                            -      -            
+         0.05%  [.] l_String_Slice_toNat_x3f                                                                                              -      -            
+         0.05%  [.] lp_tzap_x2dlean_List_findIdx_x3f_go___at___00TzapLean_Qasm_subscript_spec__1                                          -      -            
+         0.05%  [.] __gmp_default_free                                                                                                    -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_Qasm_parseStatement                                                                          -      -            
+         0.05%  [.] lean_apply_2                                                                                                          -      -            
+         0.05%  [.] lean::mpz::operator-=(lean::mpz const&)                                                                               -      -            
+         0.05%  [.] __gmpz_init                                                                                                           -      -            
+         0.05%  [.] l_List_hasDecEq___redArg                                                                                              -      -            
+         0.05%  [.] lean::mpz::mpz(lean::mpz const&)                                                                                      -      -            
+         0.05%  [.] _mi_page_retire(mi_page_s*)                                                                                           -      -            
+         0.05%  [.] l_List_lengthTR___redArg                                                                                              -      -            
+         0.05%  [.] std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >::push_back(char)                -      -            
+         0.05%  [.] lp_tzap_x2dlean_List_findIdx_x3f_go___at___00TzapLean_Qasm_subscript_spec__0                                          -      -            
+         0.05%  [.] _mi_page_free_collect(mi_page_s*, bool)                                                                               -      -            
+         0.05%  [.] operator delete(void*, unsigned long)                                                                                 -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_matchTag                                                                                     -      -            
+         0.05%  [.] l_Rat_floor                                                                                                           -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_Qasm_lineComment_go                                                                          -      -            
+         0.05%  [.] _mi_page_unfull(mi_page_s*)                                                                                           -      -            
+         0.05%  [.] malloc_consolidate                                                                                                    -      -            
+         0.05%  [.] l_Rat_mul                                                                                                             -      -            
+         0.05%  [.] lp_tzap_x2dlean_TzapLean_bitsToWord___lam__0___boxed                                                                  -      -            
+         0.05%  [.] l_List_decidableBAll___redArg                                                                                         -      -            
+         0.05%  [.] free@plt                                                                                                              -      -            
+         0.05%  [.] l_Rat_sub                                                                                                             -      -            
+         0.05%  [.] lean::mpz::mpz()                                                                                                      -      -            
+         0.05%  [.] lean_alloc_ctor                                                                                                       -      -            
+         0.05%  [.] __gmpn_gcd_11_x86_64                                                                                                  -      -            
+         0.05%  [.] mi_page_free_list_extend(mi_page_s*, unsigned long, unsigned long, mi_stats_s*)                                       -      -            
+         0.05%  [.] __gmpz_cfdiv_r_2exp                                                                                                   -      -            
+         0.05%  [.] lean_string_append                                                                                                    -      -            
+         0.05%  [.] l_Std_DHashMap_Internal_Raw_u2080_insertIfNew___at___00Std_DHashMap_Internal_Raw_u2080_Const_insertManyIfNewUnit___a  -      -            
+         0.05%  [.] l_Std_DTreeMap_Internal_Impl_insert___at___00Lean_NameMap_insert_spec__0___redArg                                     -      -            
+         0.05%  [.] l_Lean_Meta_Simp_registerBuiltinDSimproc                                                                              -      -            
+         0.05%  [.] lean::validate_utf8_one(unsigned char const*, unsigned long, unsigned long&)                                          -      -            
+         0.05%  [.] runtime_initialize_Lean_Meta_Tactic_Grind_Solve                                                                       -      -            
+         0.05%  [.] lean_mark_persistent                                                                                                  -      -            
+         0.05%  [.] lean::validate_utf8(unsigned char const*, unsigned long, unsigned long&, unsigned long&)                              -      -            
+         0.04%  [.] meta_initialize_aesop_Aesop_Main                                                                                      -      -            
+         0.00%  [.] _dl_lookup_symbol_x                                                                                                   -      -            
+         0.00%  [.] _dl_map_object_from_fd                                                                                                -      -            
+         0.00%  [k] 0xffffffff93b63b11                                                                                                    -      -            
+         0.00%  [k] 0xffffffff92400b90                                                                                                    -      -            
+         0.00%  [k] 0xffffffff92400080                                                                                                    -      -            
+         0.00%  [.] 0x00000000000045de                                                                                                    -      -            
+         0.00%  [.] _dl_start                                                                                                             -      -            
+         0.00%  [.] _start                                                                                                                -      -            
+         0.00%  [.] mmap64                                                                                                                -      -            
+         0.00%  [.] 0x00000000000045fd                                                                                                    -      -            
+         0.00%  [.] 0x00000000000045ff                                                                                                    -      -            
+         0.00%  [.] 0x0000000000004603                                                                                                    -      -            
+
+
+#
+# (Tip: Boolean options have negative forms, e.g.: perf report --no-children)
+#

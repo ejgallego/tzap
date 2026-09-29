@@ -1,0 +1,31 @@
+{
+  "python": "3.10.19 (main, Dec  5 2025, 20:25:11) [Clang 21.1.4 ]",
+  "builder": {
+    "scripts/review_data.py": "f256bee2eb245179abd7ff1914326c571a06852fcf380e2f2fc1acc6ac7102fe",
+    "scripts/review_format.py": "5d000a8543d85515a2f1b534b9e5fa31f9c5a7c0349e94f64388022fda0db87d",
+    "scripts/review_html.py": "cde87ea887250e2649a36f8e3bea86caecbb274a2a0d9c1efd2533bfb90325de",
+    "scripts/review_observations.py": "7ab9179603310fd04e521eaa32b0720177b28c833d30c7b8055cc97163d8f036",
+    "scripts/review_plots.py": "6e9007eb17dea77d767af71b1f589c0c0c4c96f0b0b8811c1d0e0b9964ccef3b",
+    "scripts/build_review.py": "81fd6cd8d348dace39c5e37cf1b5f526bed3ebf7f68a1a24efd885c776582446",
+    "assets/review.css": "1516f859daaabde85a95475cfdfff6caa07d6c04d9485782f31f27257e4dbb20",
+    "assets/review.html": "dfd166e6ab0cf82809311e229b85fef3e5a693f3f46208e2d1cde0ccfc5c15a2",
+    "assets/review.js": "b5437b742e3750ed3ae80aa92c3d60f3381b9d695a23cb9aecfc25bb238eaca4"
+  },
+  "adapter_sha256": "acd014811b5584b5eac320954cafae0de46d68adb1ca249e1cf13d884c883461",
+  "catalog_sha256": "ef96114bc363698c38d7d5673aa35edc1a89a986e24ae7cc4d0406f1a8a85cb5",
+  "archive_sha256": "10dbaabb6a73f036212596c55313323c8a00ab215b5957099e203d70b7053a47",
+  "note": "Fresh 2026-09-28 and retained historical captures are immutable inputs; shared JSONL datasets, model and figures are derived.",
+  "matplotlib": "3.10.9",
+  "presentation": {
+    "renderer_sha256": "8ea892515cf36317c250b1a15b6396d7c6961b0fa5094706a4ad841d7c1a3ba0",
+    "css_sha256": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
+    "catalog_sha256": "ef96114bc363698c38d7d5673aa35edc1a89a986e24ae7cc4d0406f1a8a85cb5",
+    "tests": 11,
+    "files_sha256": {
+      "index.html": "1596823923062ea738095aafa8d9aa33be2120a155e54539e075156057e0d1ef",
+      "review.css": "f11d9e8d14780c10a0c8d44d744a9d22302511318a046e1f6480449a10629ef9",
+      "review.js": "7c1ecf7f25491572022008b6c4c8a6c2bb475210428d3571b554f578e8328ac1",
+      "presentation.json": "cb8afaf1339519ff2269790d3c9a7f859406e499b6f3e133fb0d49a883b5b649"
+    }
+  }
+}

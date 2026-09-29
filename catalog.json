@@ -1,0 +1,561 @@
+{
+  "title": "tzap: a verified optimizer’s performance journey",
+  "summary": "Seven implementation commits make the Lean CLI 1.6–9.9× faster on completed original-baseline O1 cases. QFT now finishes in 2.17 seconds, while the original executable reaches the 60-second limit. Rust remains 16–141× faster across the retained suite. The fresh 2026-09-28 campaigns validate identical outputs and isolate the nonlinear-state Array change; each earlier experiment retains its own control and decision.\n\nStart with the baseline and directly measured totals, then inspect individual improvements and rejected ownership experiments. Timings and samples are noisy; hashes, generated code and proof contracts provide different kinds of evidence.",
+  "final": {
+    "directory": "experiments/lean-summary-20260910/runs",
+    "validation": "experiments/lean-summary-20260910/validation.json",
+    "validation_kind": "final"
+  },
+  "cases": [
+    "gf16",
+    "gf32",
+    "gf64",
+    "hwb8",
+    "chebyshev",
+    "qft20",
+    "gf32-o3",
+    "gf64-o3"
+  ],
+  "experiments": [
+    {
+      "id": "tags-gf64",
+      "directory": "experiments/lean-runtime-20260910/final-gf64",
+      "case": "gf64",
+      "validation": "experiments/lean-runtime-20260910/validation.json",
+      "validation_kind": "classic",
+      "title": "1–2. Array tags and cached samples · gf64",
+      "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5",
+      "decision": "Accepted together; controlled comparison covers both commits",
+      "note": "List indexing and prefix reconstruction were visible in the original gf64 self profile. Array indexing removed those paths; generated C releases the old state before mutation. The simulation invariant relates array entries to the symbolic list. A second profile identified repeated packing of bit-function samples. Preparing a finite array once, before capturing it in the lookup closure, is selected by a proved csimp equality. The ideal randomized model remains unchanged.\n\nThe earlier array-only screen was unpinned and inconclusive on Chebyshev. This final paired result measures the two changes together, not an isolated timing claim for each commit. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "tags-chebyshev",
+      "directory": "experiments/lean-runtime-20260910/final-chebyshev",
+      "case": "chebyshev",
+      "validation": "experiments/lean-runtime-20260910/validation.json",
+      "validation_kind": "classic",
+      "title": "1–2. Array tags and cached samples · chebyshev",
+      "identity": "2c29be4 → 447d06f + 88eb89f; binaries 068b6058 → ea8e0ac5",
+      "decision": "Accepted together; controlled comparison covers both commits",
+      "note": "List indexing and prefix reconstruction were visible in the original gf64 self profile. Array indexing removed those paths; generated C releases the old state before mutation. The simulation invariant relates array entries to the symbolic list. A second profile identified repeated packing of bit-function samples. Preparing a finite array once, before capturing it in the lookup closure, is selected by a proved csimp equality. The ideal randomized model remains unchanged.\n\nThe earlier array-only screen was unpinned and inconclusive on Chebyshev. This final paired result measures the two changes together, not an isolated timing claim for each commit. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "sweeps-chebyshev",
+      "directory": "experiments/lean-hadamard-sweep-20260910/accepted-chebyshev",
+      "case": "chebyshev",
+      "validation": "experiments/lean-hadamard-sweep-20260910/accepted-validation.json",
+      "validation_kind": "hadamard",
+      "title": "3. Verified Hadamard sweeps · chebyshev",
+      "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398",
+      "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat",
+      "note": "The old driver restarted a whole-list search after each rewrite. A right-to-left sweep now applies several verified rewrites, with a change flag for length-preserving rules. The existing semantic, operand-range and well-formedness contracts are preserved. An initial single-rewrite check avoids allocating a full sweep for an already irreducible circuit.\n\nThe earlier always-sweep candidate was rejected after a noisy but persistent gf64 slowdown. For QFT, the accepted candidate had six completed runs with a 6.368 s median versus a reused 60-second baseline timeout. That result is censored and is not included as a paired comparison here. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "sweeps-gf64",
+      "directory": "experiments/lean-hadamard-sweep-20260910/accepted-gf64",
+      "case": "gf64",
+      "validation": "experiments/lean-hadamard-sweep-20260910/accepted-validation.json",
+      "validation_kind": "hadamard",
+      "title": "3. Verified Hadamard sweeps · gf64",
+      "identity": "737667f → 32fbf9e; binaries ea8e0ac5 → 0a9b8398",
+      "decision": "Accepted: resolves QFT timeout; Chebyshev improves; arithmetic broadly flat",
+      "note": "The old driver restarted a whole-list search after each rewrite. A right-to-left sweep now applies several verified rewrites, with a change flag for length-preserving rules. The existing semantic, operand-range and well-formedness contracts are preserved. An initial single-rewrite check avoids allocating a full sweep for an already irreducible circuit.\n\nThe earlier always-sweep candidate was rejected after a noisy but persistent gf64 slowdown. For QFT, the accepted candidate had six completed runs with a 6.368 s median versus a reused 60-second baseline timeout. That result is censored and is not included as a paired comparison here. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": false,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "packed-qft20",
+      "directory": "experiments/lean-packed-samples-20260910/final-qft20",
+      "case": "qft20",
+      "validation": "experiments/lean-packed-samples-20260910/validation.json",
+      "validation_kind": "modern",
+      "title": "4. Pass packed entropy directly · qft20",
+      "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592",
+      "decision": "Accepted: removes redundant conversion with IO equality",
+      "note": "The runner already reads random words, but exposed them through bit functions before packing them again. It now normalizes the owned word array once and captures it for indexed lookup. Proofs establish the word/bit/word identity, masking and zero-padding behavior, and equality of IO actions including errors. The high-bit and partial-width guards pass.\n\nA rejected function-returning helper was eta-expanded: normalization moved into every lookup. Adding inline did not solve that code shape. Returning the prepared array before creating the closure did. Generated C confirms the placement; the final QFT self profile no longer samples bitsToWordAux. Profile percentages describe separate noisy captures, not exact allocation counts. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "packed-chebyshev",
+      "directory": "experiments/lean-packed-samples-20260910/final-chebyshev",
+      "case": "chebyshev",
+      "validation": "experiments/lean-packed-samples-20260910/validation.json",
+      "validation_kind": "modern",
+      "title": "4. Pass packed entropy directly · chebyshev",
+      "identity": "32fbf9e → 7628452; binaries 0a9b8398 → 6c11e592",
+      "decision": "Accepted: removes redundant conversion with IO equality",
+      "note": "The runner already reads random words, but exposed them through bit functions before packing them again. It now normalizes the owned word array once and captures it for indexed lookup. Proofs establish the word/bit/word identity, masking and zero-padding behavior, and equality of IO actions including errors. The high-bit and partial-width guards pass.\n\nA rejected function-returning helper was eta-expanded: normalization moved into every lookup. Adding inline did not solve that code shape. Returning the prepared array before creating the closure did. Generated C confirms the placement; the final QFT self profile no longer samples bitsToWordAux. Profile percentages describe separate noisy captures, not exact allocation counts. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "composition-qft",
+      "directory": "experiments/lean-pass-ownership-20260910/final-qft20",
+      "case": "qft20",
+      "validation": "experiments/lean-pass-ownership-20260910/validation.json",
+      "validation_kind": "modern",
+      "title": "5. Consume inputs in unconditional composition · QFT",
+      "identity": "7628452 → fe4fd34; see archived binary identities",
+      "decision": "Accepted ownership cleanup; no substantial timing gain claimed",
+      "note": "Unconditional composition previously used the conditional combinator with an always-true predicate. It retained the input while invoking the pass even though the predicate did not need it. A direct monadic composition removes that owner. The equality theorem preserves IO behavior, and generated C confirms the changed ownership. The measured effect is mostly neutral; fewer retained owners alone do not establish a runtime win. One warmup per binary; six AB/BA pairs on CPU 2. Every run’s four output metrics agree and the final retained QASM pair is identical. Batch Lean build and the relevant proof/test modules passed. Changes are compared within this campaign; times are not combined with other campaigns.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "lazy-gf32-o3",
+      "directory": "experiments/lean-fixpoint-20260910/lazy-gf32-o3",
+      "case": "gf32-o3",
+      "validation": "experiments/lean-fixpoint-20260910/lazy-validation.json",
+      "validation_kind": "modern",
+      "title": "6. Execute fixpoint rounds on demand · gf32-o3",
+      "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05",
+      "decision": "Accepted direct loop; incremental runtime benefit is small and noisy",
+      "note": "The old fixpoint constructor eagerly built a pass/name chain for the entire fuel budget. The direct runner constructs only rounds that execute. Generated C has a tail-loop back edge. The original circuit remains owned during the post-pass length comparison. runFixpointShrink_eq proves equality of the IO action; tests check zero fuel, exhaustion, equal-length changed results, convergence, and error/effect counts.\n\nTen alternating AB/BA pairs were collected because the expected effect was small. gf32 stays flat; gf64 has a 2.7% lower median, but only six of ten pairs improve and its mean changes little. The distributions overlap. The concrete benefit is removing unused fuel-sized construction and its recursive stack. Both compared binaries produce identical retained QASM and per-run metrics.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "lazy-gf64-o3",
+      "directory": "experiments/lean-fixpoint-20260910/lazy-gf64-o3",
+      "case": "gf64-o3",
+      "validation": "experiments/lean-fixpoint-20260910/lazy-validation.json",
+      "validation_kind": "modern",
+      "title": "6. Execute fixpoint rounds on demand · gf64-o3",
+      "identity": "1d14587 → ba401fb; binaries e9bc0f62 → 2be0ae05",
+      "decision": "Accepted direct loop; incremental runtime benefit is small and noisy",
+      "note": "The old fixpoint constructor eagerly built a pass/name chain for the entire fuel budget. The direct runner constructs only rounds that execute. Generated C has a tail-loop back edge. The original circuit remains owned during the post-pass length comparison. runFixpointShrink_eq proves equality of the IO action; tests check zero fuel, exhaustion, equal-length changed results, convergence, and error/effect counts.\n\nTen alternating AB/BA pairs were collected because the expected effect was small. gf32 stays flat; gf64 has a 2.7% lower median, but only six of ten pairs improve and its mean changes little. The distributions overlap. The concrete benefit is removing unused fuel-sized construction and its recursive stack. Both compared binaries produce identical retained QASM and per-run metrics.",
+      "highlight": true,
+      "decision_status": "accepted"
+    },
+    {
+      "id": "rejected-gate-owner",
+      "directory": "experiments/lean-gate-ownership-20260910/confirm-chebyshev",
+      "case": "chebyshev",
+      "validation": "experiments/lean-gate-ownership-20260910/confirm-validation.json",
+      "validation_kind": "modern",
+      "title": "Rejected: release gate-wrapper owner · Chebyshev",
+      "identity": "fe4fd34 versus rejected mapGates; binaries e9bc0f62 → 2bd99eb6",
+      "decision": "Rejected: no material RSS saving and persistent Chebyshev slowdown",
+      "note": "Generated C confirms that extracting fields and releasing the old circuit before the gate transformation removes a real retained owner. The candidate is equivalent to the old wrapper and passed batch builds. It nevertheless failed to improve representative runtime or peak RSS. In ten confirmation pairs Chebyshev is slower in nine, with a 2.4% higher median. The production wrappers were restored.\n\nThe independent RSS runs are instrumented observations, excluded from the wall-time distributions. Their ranges overlap; they are not allocation counts. The patch, original records, final retained-output validation and native-code snapshots are archived. Ten AB/BA pairs support rejecting this trial; they do not explain its causal slowdown.",
+      "highlight": true,
+      "decision_status": "rejected"
+    },
+    {
+      "id": "rejected-count-only",
+      "directory": "experiments/lean-fixpoint-20260910/confirm-gf64-o3",
+      "case": "gf64-o3",
+      "validation": "experiments/lean-fixpoint-20260910/confirm-summary.json",
+      "validation_kind": "summary",
+      "title": "Rejected: retain only the previous gate count · gf64 O3",
+      "identity": "1d14587 versus rejected count-only loop; binaries e9bc0f62 → 3533d0b1",
+      "decision": "Rejected: no measured runtime or memory benefit",
+      "note": "A simple let-binding did not release the input: compilation deferred the pure gate-length computation until after the pass. An explicit count argument forced the intended ownership order. Generated C and the IO equality proof confirmed the candidate, but its larger O3 case slowed in the initial comparison and in eight of ten confirmation pairs. The confirmation median is 5.7% higher, with substantial noise.\n\nNo material peak-RSS saving appeared in separate instrumented checks. We retained the lazy-only loop instead. The chart includes the rejected candidate’s valid observations: inclusion in statistics does not mean acceptance of the optimization. Per-run stderr metrics are rechecked and the recorded final QASM hashes agree.",
+      "highlight": true,
+      "decision_status": "rejected"
+    }
+  ],
+  "progress_note": "The O1 cumulative rows come from the fresh 2026-09-28 three-way campaign: original Lean 2c29be4, current Lean 26a4f17 and current Rust 26a4f17. The two O3 rows retain the 2026-09-10 final campaign. Each completed series has six measured runs; every retained output agrees within its case. The nonlinear Array rows use a second fresh campaign against the immediately preceding rebased Lean executable. Other selected rows compare each experiment with its own control. They are not a cumulative curve and their savings must not be added or multiplied. Rejected trials remain visible. QFT’s original control times out during warmup and has no completed median; current Lean is 2.174 s and Rust is 0.07213 s.",
+  "attribution": [
+    {
+      "title": "A full application boundary",
+      "text": "All headline observations include process startup, parsing, optimization, normal reporting, serialization, output writing and exit. Lean also reparses its output to check the round trip. Rust is explicitly sequential. O3 synthesis caches are already populated, but loading them is inside the measured command. Fresh 128-bit tags come from OS entropy. These are application timings, not a controlled comparison of language overhead.\n\nWe have not measured a complete phase-duration breakdown. Self-profile symbols identify costs to investigate; they do not justify assigning seconds to startup, parsing, optimization or shutdown."
+    },
+    {
+      "title": "From asymptotic scans to preparation placement",
+      "text": "Array tags removed repeated list indexing and prefix reconstruction. Caching finite samples removed repeated packing. Hadamard sweeps removed whole-list restarts after each successful rewrite. Keeping sampled entropy packed removed an unnecessary word/bit/word round trip. The latest change applies the same indexed-state lesson to nonlinear fingerprints: generated C now uses array access/update, and List.get/List.set disappear from the sampled hotspots. Each source change has its corresponding invariant or equivalence proof. The rejected eta-expanded helper illustrates why generated C, rather than source placement alone, mattered."
+    },
+    {
+      "title": "Linearity was a mechanism question, not a promised speedup",
+      "text": "The tag-state mutator already exposed an exclusive array update after releasing its parent. Unconditional composition removed another owner. Releasing gate wrappers and retaining only a count in fixpoint iteration also changed ownership as intended, but did not improve the representative results. Those candidates were rejected. The accepted fixpoint loop removes eager pass construction while preserving the prior ownership during the length comparison.\n\nThe earlier always-sweep Hadamard candidate and eta-expanded sample helper are documented as rejected designs in the archived reports and patches; they are not mixed into accepted distributions."
+    },
+    {
+      "title": "What the profiles can support",
+      "text": "The fresh final O1 campaign has 120 invocations: 119 successes and the single original QFT warmup timeout. The fresh incremental campaign has 126 successful invocations. All successful output files match within their workload, and stderr scans reproduce gate counts, two-qubit counts, T-counts and depth. The final branch passes the full Lake build, including affected refinement proofs and regression guards. Earlier campaigns validate every run’s reported metrics and the final retained QASM pair; their runners reused output paths, so they do not preserve a distinct QASM file for every historical run."
+    },
+    {
+      "title": "Correctness and identity",
+      "text": "The final branch passed a batch Lake build, including affected proof modules and regression guards. Beam was used for speculative checks without replacing those builds with saved server checkpoints. The final suite has 162 invocations: 161 successes and the single original QFT timeout. All successful output files match within their workload and independent scans reproduce gate counts, two-qubit counts, T-counts and depth. Earlier campaigns validate each run’s reported metrics and the final retained QASM pair; their runners reused output paths, so they do not preserve a distinct QASM file for every historical run."
+    }
+  ],
+  "profiles": [
+    {
+      "id": "original-self",
+      "title": "Original gf64: list and allocation costs",
+      "source": "experiments/lean-runtime-20260910/baseline-gf64-self.txt",
+      "kind": "viewer",
+      "path": "views/original-self.html",
+      "comparison": "tags-gf64",
+      "boundary": "Separate instrumented native CLI capture; aggregated cycles:u self weights (%) at 997 Hz; no chronological axis",
+      "identity": "2026-09-10; Lean 4.33.1; capture binary/input identity in archived campaign records",
+      "note": "Original executable 068b6058. Early capture was unpinned. About 9K self samples, none lost. Invalid DWARF caller stacks were discarded; this view uses resolved self instruction pointers only. No caller or phase-duration claim is inferred from a symbol name."
+    },
+    {
+      "id": "packed-self",
+      "title": "Packed-entropy QFT: remaining self costs",
+      "source": "experiments/lean-packed-samples-20260910/final-qft-self.csv",
+      "kind": "viewer",
+      "path": "views/packed-self.html",
+      "comparison": "packed-qft20",
+      "boundary": "Separate instrumented native CLI capture; aggregated cycles:u self weights (%) at 997 Hz; no chronological axis",
+      "identity": "2026-09-10; Lean 4.33.1; capture binary/input identity in archived campaign records",
+      "note": "Complete QFT CLI, CPU 2, executable 6c11e592. 2,400 samples, none lost. Call chains were not collected. Allocation remains visible after bitsToWordAux disappears. Weights describe this capture, not a chronological timeline or absolute per-function time."
+    },
+    {
+      "id": "lazy-self",
+      "title": "Current gf32 O3: allocation and table work",
+      "source": "experiments/lean-fixpoint-20260910/lazy-o3-self.csv",
+      "kind": "viewer",
+      "path": "views/lazy-self.html",
+      "comparison": "lazy-gf32-o3",
+      "boundary": "Separate instrumented native CLI capture; aggregated cycles:u self weights (%) at 997 Hz; no chronological axis",
+      "identity": "2026-09-10; Lean 4.33.1; capture binary/input identity in archived campaign records",
+      "note": "Complete gf32 O3 CLI, CPU 2, warm synthesis table, executable 2be0ae05. 827 samples, none lost; no call chains. Array copy/expansion is 0.32% of self weight. This short profile cannot explain a two-percent timing change or establish allocation counts."
+    },
+    {
+      "id": "code-3",
+      "title": "Array tag-state generated C",
+      "kind": "raw",
+      "source": "experiments/lean-runtime-20260910/PhaseFold-array.c",
+      "path": "unused",
+      "comparison": "tags-gf64",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Inspect TState.step: the state owner is released before the array update. Shared snapshots may still cause copies. Source hash is recorded by the builder."
+    },
+    {
+      "id": "code-4",
+      "title": "Verified sweep implementation",
+      "kind": "raw",
+      "source": "lean/TzapLean/Cancel.lean",
+      "path": "unused",
+      "comparison": "sweeps-chebyshev",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Final source snapshot includes reduceSweep and its semantic, well-formedness and operand-range proofs. The change flag handles length-preserving rules."
+    },
+    {
+      "id": "code-5",
+      "title": "Packed IO path in generated C",
+      "kind": "raw",
+      "source": "experiments/lean-packed-samples-20260910/prepared-PhaseFoldRand.c",
+      "path": "unused",
+      "comparison": "packed-qft20",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Normalization precedes construction of the lookup closure. This is deterministic code-shape evidence, separate from noisy self weights."
+    },
+    {
+      "id": "code-6",
+      "title": "Direct composition generated C",
+      "kind": "raw",
+      "source": "experiments/lean-pass-ownership-20260910/candidate-ExecutableRandPass.c",
+      "path": "unused",
+      "comparison": "composition-qft",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Inspect comp: the unconditional runner does not retain the input for an always-true condition."
+    },
+    {
+      "id": "code-7",
+      "title": "Tail-loop generated C",
+      "kind": "raw",
+      "source": "experiments/lean-fixpoint-20260910/lazy-ExecutableRandPass.c",
+      "path": "unused",
+      "comparison": "lazy-gf64-o3",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Inspect runFixpointShrink: the shrinking branch uses a loop back edge. The input circuit remains owned until the post-pass gate-length comparison."
+    },
+    {
+      "id": "code-8",
+      "title": "Fixpoint equivalence and IO behavior tests",
+      "kind": "raw",
+      "source": "lean/TzapLean/ExecutableRandPassTests.lean",
+      "path": "unused",
+      "comparison": "lazy-gf64-o3",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Tests cover zero fuel, convergence, exhaustion, a changed output of equal length, and error/effect counts. The equality theorem is in ExecutableRandPass.lean in the archive."
+    },
+    {
+      "id": "code-9",
+      "title": "Rejected gate-owner patch",
+      "kind": "raw",
+      "source": "experiments/lean-gate-ownership-20260910/candidate.patch",
+      "path": "unused",
+      "comparison": "rejected-gate-owner",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Preserved experimental patch; not production code. The ownership change was real but did not improve representative runtime or peak RSS."
+    },
+    {
+      "id": "code-10",
+      "title": "Rejected count-only patch",
+      "kind": "raw",
+      "source": "experiments/lean-fixpoint-20260910/owned-count.patch",
+      "path": "unused",
+      "comparison": "rejected-count-only",
+      "boundary": "Deterministic source/generated-code evidence; no sampling clock or time units",
+      "identity": "Exact archived snapshot from the named experiment; final Lean source snapshots at ba401fb",
+      "note": "Preserved experimental patch; not production code. An explicit count argument forces the computation before the pass call."
+    },
+    {
+      "id": "array-self",
+      "title": "Nonlinear Array state: gf64 self costs",
+      "source": "experiments/lean-rebased-20260928/profile-gf64-nstate-array/self.csv",
+      "kind": "viewer",
+      "path": "views/array-self.html",
+      "comparison": "nstate-array-gf64",
+      "boundary": "Separate instrumented native CLI capture; aggregated cycles:u self weights (%) at 997 Hz; no chronological axis",
+      "identity": "2026-09-28; Lean 4.33.1; executable 662fe507; CPU 2; gf2^64 O1",
+      "note": "Complete gf64 CLI. 2,392 samples, none lost. List.get and List.set are absent; lean_copy_expand_array is 0.38% self weight. Allocation/free and GMP-backed Nat arithmetic dominate the remaining leaf costs. Call chains are not inferred from this self view."
+    },
+    {
+      "id": "code-array-state",
+      "title": "Nonlinear Array-state generated C",
+      "source": "experiments/lean-rebased-20260928/profile-gf64-nstate-array/PhaseFoldNonlinear-array.c",
+      "kind": "raw",
+      "path": "unused",
+      "comparison": "nstate-array-gf64",
+      "boundary": "Deterministic generated-code evidence; no sampling clock or time units",
+      "identity": "Generated from Lean revision 26a4f17 with Lean 4.33.1",
+      "note": "NState.step uses array size, borrowed reads and array updates. List.get and List.set are absent from the executable module; the runtime can reuse exclusive state and array owners."
+    }
+  ],
+  "artifacts": [
+    "experiments/lean-fixpoint-20260910/baseline-ExecutableRandPass.c",
+    "experiments/lean-fixpoint-20260910/candidate-ExecutableRandPass.c",
+    "experiments/lean-fixpoint-20260910/decision.json",
+    "experiments/lean-fixpoint-20260910/lazy-ExecutableRandPass.c",
+    "experiments/lean-fixpoint-20260910/lazy-Optimize.c",
+    "experiments/lean-fixpoint-20260910/lazy-build.log",
+    "experiments/lean-fixpoint-20260910/lazy-o3-self.csv",
+    "experiments/lean-fixpoint-20260910/lazy-sizes.json",
+    "experiments/lean-fixpoint-20260910/naive-loop-ExecutableRandPass.c",
+    "experiments/lean-fixpoint-20260910/owned-count.patch",
+    "experiments/lean-fixpoint-20260910/rss-runs.json",
+    "experiments/lean-gate-ownership-20260910/baseline-Circuit.c",
+    "experiments/lean-gate-ownership-20260910/candidate-Circuit.c",
+    "experiments/lean-gate-ownership-20260910/candidate.patch",
+    "experiments/lean-gate-ownership-20260910/clean-build.log",
+    "experiments/lean-gate-ownership-20260910/decision.json",
+    "experiments/lean-gate-ownership-20260910/restored-build.log",
+    "experiments/lean-gate-ownership-20260910/rss-runs.json",
+    "experiments/lean-hadamard-sweep-20260910/accepted-native-size.json",
+    "experiments/lean-hadamard-sweep-20260910/accepted-profile.json",
+    "experiments/lean-hadamard-sweep-20260910/accepted-qft-self.csv",
+    "experiments/lean-hadamard-sweep-20260910/accepted-summary.json",
+    "experiments/lean-hadamard-sweep-20260910/baseline-Cancel.c",
+    "experiments/lean-hadamard-sweep-20260910/decision.json",
+    "experiments/lean-hadamard-sweep-20260910/fastfixpoint-Cancel.c",
+    "experiments/lean-hadamard-sweep-20260910/fastfixpoint-build.log",
+    "experiments/lean-hadamard-sweep-20260910/qft-context.json",
+    "experiments/lean-hadamard-sweep-20260910/sweep-only.patch",
+    "experiments/lean-packed-samples-20260910/candidate-PhaseFoldRand.c",
+    "experiments/lean-packed-samples-20260910/decision.json",
+    "experiments/lean-packed-samples-20260910/final-qft-self.csv",
+    "experiments/lean-packed-samples-20260910/prepared-PhaseFoldRand.c",
+    "experiments/lean-packed-samples-20260910/prepared-array-build.log",
+    "experiments/lean-packed-samples-20260910/profile.json",
+    "experiments/lean-packed-samples-20260910/sizes.json",
+    "experiments/lean-pass-ownership-20260910/baseline-ExecutableRandPass.c",
+    "experiments/lean-pass-ownership-20260910/build.log",
+    "experiments/lean-pass-ownership-20260910/candidate-ExecutableRandPass.c",
+    "experiments/lean-pass-ownership-20260910/decision.json",
+    "experiments/lean-runtime-20260910/PhaseFold-array.c",
+    "experiments/lean-runtime-20260910/PhaseFold-baseline.c",
+    "experiments/lean-runtime-20260910/PhaseFoldRand-cached.c",
+    "experiments/lean-runtime-20260910/baseline-gf64-self.txt",
+    "experiments/lean-runtime-20260910/cached-gf64-self.txt",
+    "experiments/lean-runtime-20260910/cached-qft20-self.txt",
+    "experiments/lean-runtime-20260910/compare-final.py",
+    "experiments/lean-runtime-20260910/context.json",
+    "experiments/lean-runtime-20260910/native-size.json",
+    "experiments/lean-summary-20260910/provenance.json",
+    "experiments/lean-summary-20260910/validate.py",
+    "lean/TzapLean/Cancel.lean",
+    "lean/TzapLean/ExecutableRandPass.lean",
+    "lean/TzapLean/ExecutableRandPassTests.lean",
+    "lean/TzapLean/Optimize.lean",
+    "lean/TzapLean/PhaseFold.lean",
+    "lean/TzapLean/PhaseFoldProof.lean",
+    "lean/TzapLean/PhaseFoldRand.lean",
+    "lean/TzapLean/PhaseFoldTests.lean",
+    "lean/TzapLean/Tests.lean",
+    "lean/benchmarks/2026-09-10-gate-ownership.md",
+    "lean/benchmarks/2026-09-10-hadamard-sweeps.md",
+    "lean/benchmarks/2026-09-10-lazy-fixpoint.md",
+    "lean/benchmarks/2026-09-10-packed-entropy.md",
+    "lean/benchmarks/2026-09-10-pass-ownership.md",
+    "lean/benchmarks/2026-09-10-runtime-summary.md",
+    "lean/benchmarks/2026-09-10-rust-comparison.md",
+    "lean/benchmarks/2026-09-10-tag-state.md",
+    "experiments/lean-rebased-20260928/provenance-nstate-array.json",
+    "experiments/lean-rebased-20260928/provenance-original-current-rust.json",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/profile.json",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/self.csv",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/PhaseFoldNonlinear-array.c",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/source/PhaseFoldNonlinear.lean",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/source/NonlinearRefinement.lean"
+  ],
+  "external_captures": [
+    "experiments/lean-runtime-20260910/baseline-gf64.perf.data",
+    "experiments/lean-runtime-20260910/cached-qft20.perf.data",
+    "experiments/lean-hadamard-sweep-20260910/accepted-qft.perf.data",
+    "experiments/lean-packed-samples-20260910/final-qft.perf.data",
+    "experiments/lean-fixpoint-20260910/lazy-o3.perf.data",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/perf.data"
+  ],
+  "tests": [
+    {
+      "id": "test-baseline",
+      "title": "Baseline",
+      "short_title": "Baseline",
+      "benchmarks": [
+        "original-gf16",
+        "original-gf32",
+        "original-gf64",
+        "original-hwb8",
+        "original-chebyshev",
+        "original-qft20",
+        "original-gf32-o3",
+        "original-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-tags",
+      "title": "1–2. Array tags and cached samples",
+      "short_title": "Tags & samples",
+      "benchmarks": [
+        "tags-gf64",
+        "tags-chebyshev"
+      ]
+    },
+    {
+      "id": "test-sweeps",
+      "title": "3. Hadamard sweeps",
+      "short_title": "Sweeps",
+      "benchmarks": [
+        "sweeps-chebyshev",
+        "sweeps-gf64"
+      ]
+    },
+    {
+      "id": "test-packed",
+      "title": "4. Packed entropy",
+      "short_title": "Packed entropy",
+      "benchmarks": [
+        "packed-qft20",
+        "packed-chebyshev"
+      ]
+    },
+    {
+      "id": "test-composition",
+      "title": "5. Direct composition",
+      "short_title": "Composition",
+      "benchmarks": [
+        "composition-qft"
+      ]
+    },
+    {
+      "id": "test-lazy",
+      "title": "6. Lazy fixpoint rounds",
+      "short_title": "Fixpoint",
+      "note": "Removes unused round construction. Runtime is flat on gf32; the small gf64 improvement is noisy.",
+      "benchmarks": [
+        "lazy-gf32-o3",
+        "lazy-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-nstate-array",
+      "title": "7. Nonlinear fingerprint Array state",
+      "short_title": "Nonlinear Array",
+      "note": "Replaces linked-list indexed reads and updates in the nonlinear phase-fold inner loop.",
+      "benchmarks": [
+        "nstate-array-gf16",
+        "nstate-array-gf32",
+        "nstate-array-gf64",
+        "nstate-array-hwb8",
+        "nstate-array-chebyshev",
+        "nstate-array-qft20"
+      ]
+    },
+    {
+      "id": "test-combined",
+      "title": "Combined changes vs baseline",
+      "short_title": "Combined",
+      "note": "Original Lean 2c29be4 → current Lean 26a4f17 for O1; retained 2026-09-10 checkpoint for O3. Each row is directly measured.",
+      "benchmarks": [
+        "total-gf16",
+        "total-gf32",
+        "total-gf64",
+        "total-hwb8",
+        "total-chebyshev",
+        "total-gf32-o3",
+        "total-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-rust",
+      "title": "Current Lean vs Rust",
+      "short_title": "Rust",
+      "note": "Current O1 Lean and Rust binaries come from revision 26a4f17. Lean includes its serialization round-trip check; Rust runs sequentially. O3 retains the earlier final campaign.",
+      "benchmarks": [
+        "rust-gf16",
+        "rust-gf32",
+        "rust-gf64",
+        "rust-hwb8",
+        "rust-chebyshev",
+        "rust-qft20",
+        "rust-gf32-o3",
+        "rust-gf64-o3"
+      ]
+    },
+    {
+      "id": "test-gate-owner",
+      "title": "Release the gate-wrapper owner",
+      "short_title": "Gate owner",
+      "benchmarks": [
+        "rejected-gate-owner"
+      ]
+    },
+    {
+      "id": "test-count-only",
+      "title": "Retain only the previous gate count",
+      "short_title": "Gate count",
+      "benchmarks": [
+        "rejected-count-only"
+      ]
+    }
+  ],
+  "fresh_cases": [
+    "gf16",
+    "gf32",
+    "gf64",
+    "hwb8",
+    "chebyshev",
+    "qft20"
+  ],
+  "fresh_campaigns": [
+    {
+      "id": "original-current-rust",
+      "directory": "experiments/lean-rebased-20260928/compare-original-current-rust",
+      "validation": "experiments/lean-rebased-20260928/compare-original-current-rust/summary.json",
+      "validation_kind": "fresh"
+    },
+    {
+      "id": "nstate-array",
+      "directory": "experiments/lean-rebased-20260928/compare-current-rust",
+      "validation": "experiments/lean-rebased-20260928/compare-current-rust/summary.json",
+      "validation_kind": "fresh"
+    }
+  ]
+}

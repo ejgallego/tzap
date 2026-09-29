@@ -1,0 +1,20 @@
+{
+  "baseline": {
+    "revision": "2c29be4acb248995b4d8a252b29d1c83d21f8bc4",
+    "build": "Lake release defaults; Lean 4.33.1; original profiling baseline",
+    "sha256": "068b605840482da0c5586495ca562339872af50d1344d144b6d9062cdc2a8029"
+  },
+  "current": {
+    "revision": "ba401fbfca01c701f4c59588e16490b3406c03fe",
+    "build": "Lake release defaults; Lean 4.33.1; batch lake build after lazy fixpoint change",
+    "sha256": "2be0ae05dc6574dd8912934c8a8ccf99772c11cb88a33417e62d306d27f6a469"
+  },
+  "rust": {
+    "revision": "2c29be4acb248995b4d8a252b29d1c83d21f8bc4",
+    "build": "cargo build --release --bin tzap; Rust sources unchanged since this revision",
+    "rustc": "rustc 1.89.0 (29483883e 2025-08-04)\nbinary: rustc\ncommit-hash: 29483883eed69d5fb4db01964cdf2af4d86e9cb2\ncommit-date: 2025-08-04\nhost: x86_64-unknown-linux-gnu\nrelease: 1.89.0\nLLVM version: 20.1.7",
+    "cargo": "cargo 1.89.0 (c24e10642 2025-06-23)",
+    "sha256": "1062b8e9ce33edf3cc885d43cbae7ca09c0e4d5b609a19b72bf8610d05fad40b"
+  },
+  "mathlib_revision": "0df444a360eaa60ab8c11dca51a86af692955474"
+}

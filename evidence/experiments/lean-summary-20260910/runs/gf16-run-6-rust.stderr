@@ -1,0 +1,10 @@
+⚡️ tzap v0.6.0
+  Parsed /home/egallego/lean/tzap/benchmarks/feynman/gf2^16_mult.qasm (50.8 KB) in 0.000s
+	└─ 48 qubits · 4,459 gates
+  ┌─ Final result · 39.4% fewer gates · 0.001s ──────────────────────┐
+  │ Gates    ━━━━━━━━━━━━╸─────────────────── ↓39.4% · 4,459 → 2,703 │
+  │ 2q gates ──────────────────────────────── ↓ 0.0% · 1,581 → 1,581 │
+  │ T/Tdg    ━━━━━━━━━━━━━╸────────────────── ↓42.0% · 1,792 → 1,040 │
+  │ Depth    ━━━━━━━╸──────────────────────── ↓23.6% ·   643 →   491 │
+  └──────────────────────────────────────────────────────────────────┘
+  wrote /home/egallego/lean/tzap/experiments/lean-summary-20260910/runs/gf16-run-6-rust.qasm

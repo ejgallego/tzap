@@ -1,0 +1,12 @@
+⚡️ tzap v0.7.0
+  Parsed /home/egallego/lean/tzap/benchmarks/cobble-t/chebyshev.qasm (1.0 MB) in 0.008s
+	├─ 14 qubits · 112,554 gates
+	└─ Circuit gates: {h, x, s, t, tdg, cx}
+  Optimizing input circuit
+  ┌─ Final result · 14.4% fewer gates · 0.022s ────────────────┐
+  │ Gates    ━━━╸────────────────── ↓14.4% · 112,554 →  96,343 │
+  │ 2q gates ╸───────────────────── ↓ 0.1% ·  20,459 →  20,431 │
+  │ T/Tdg    ━━━━━━━╸────────────── ↓33.5% ·  47,894 →  31,868 │
+  │ Depth    ╸───────────────────── ↓ 1.8% ·  42,955 →  42,193 │
+  └────────────────────────────────────────────────────────────┘
+  wrote /home/egallego/lean/tzap/experiments/lean-rebased-20260928/compare-original-current-rust/chebyshev-warmup-0-rust.qasm

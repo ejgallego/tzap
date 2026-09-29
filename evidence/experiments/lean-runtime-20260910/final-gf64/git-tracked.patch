@@ -1,0 +1,177 @@
+diff --git a/lean/.gitignore b/lean/.gitignore
+index bfb30ec8c762cc74d4ee1593ab48fc091d04ca4c..ed0dd5bbc094b45b9d99920e908592c3304ccfc6 100644
+--- a/lean/.gitignore
++++ b/lean/.gitignore
+@@ -1 +1,2 @@
+ /.lake
++/.beam
+diff --git a/lean/README.md b/lean/README.md
+index f4e1819201265de1aaedb3d1695885b37a5b5261..ef7558fc008953c12fbfd8206075864164be8f1c 100644
+--- a/lean/README.md
++++ b/lean/README.md
+@@ -21,6 +21,9 @@ Optimize an OpenQASM 2.0 circuit and write the result to a file:
+ lake exe tzap-lean input.qasm optimized.qasm
+ ```
+ 
++For repeatable native runtime measurements, see the
++[representative benchmark surface](benchmarks/README.md).
++
+ ## The obligation
+ 
+ Deterministic passes return a checked circuit that is provably equivalent to their input:
+diff --git a/lean/TzapLean/PhaseFold.lean b/lean/TzapLean/PhaseFold.lean
+index 38348f5bdd21eb937c07334d5c7b4dcd9624ba92..6aa9fcd9486c6dd6e32c81e7468ff044f0dc88ac 100644
+--- a/lean/TzapLean/PhaseFold.lean
++++ b/lean/TzapLean/PhaseFold.lean
+@@ -113,29 +113,30 @@ def onesTag (k : Nat) : Tag := 2 ^ k - 1
+ 
+ /-- Per-wire tags, plus the index of the next unused draw. -/
+ structure TState (k : Nat) where
+-  /-- One tag per wire. -/
+-  tags : List Tag
++  /-- One tag per wire, indexed directly by qubit. Arrays avoid traversing and rebuilding
++  a list prefix on every transfer; an exclusively owned state updates in place. -/
++  tags : Array Tag
+   /-- The next unused draw index. -/
+   fresh : Nat
+ 
+ namespace TState
+ 
+ /-- Wire `q`'s tag (the zero tag for a wire the state does not cover). -/
+-def tagOf {k : Nat} (ts : TState k) (q : Qubit) : Tag := ts.tags.getD q 0
++def tagOf {k : Nat} (ts : TState k) (q : Qubit) : Tag := ts.tags[q]?.getD 0
+ 
+ /-- Wire `i` starts out tagged with the `i`-th draw. -/
+ def initial {k : Nat} (wdraws : Nat → Tag) (n : Nat) : TState k where
+-  tags := (List.range n).map wdraws
++  tags := ((List.range n).map wdraws).toArray
+   fresh := n
+ 
+ /-- The Rust transfer functions, on tags. -/
+ def step {k : Nat} (wdraws : Nat → Tag) (ts : TState k) (g : Gate) : TState k :=
+   match g with
+-  | .x q => { ts with tags := ts.tags.set q (ts.tagOf q ^^^ onesTag k) }
+-  | .cnot c t => { ts with tags := ts.tags.set t (ts.tagOf t ^^^ ts.tagOf c) }
+-  | .h q => { tags := ts.tags.set q (wdraws ts.fresh), fresh := ts.fresh + 1 }
+-  | .ccx _ _ t => { tags := ts.tags.set t (wdraws ts.fresh), fresh := ts.fresh + 1 }
+-  | .reset q => { tags := ts.tags.set q (wdraws ts.fresh), fresh := ts.fresh + 1 }
++  | .x q => { ts with tags := ts.tags.setIfInBounds q (ts.tagOf q ^^^ onesTag k) }
++  | .cnot c t => { ts with tags := ts.tags.setIfInBounds t (ts.tagOf t ^^^ ts.tagOf c) }
++  | .h q => { tags := ts.tags.setIfInBounds q (wdraws ts.fresh), fresh := ts.fresh + 1 }
++  | .ccx _ _ t => { tags := ts.tags.setIfInBounds t (wdraws ts.fresh), fresh := ts.fresh + 1 }
++  | .reset q => { tags := ts.tags.setIfInBounds q (wdraws ts.fresh), fresh := ts.fresh + 1 }
+   | _ => ts
+ 
+ /-- The tag state after a gate list. -/
+diff --git a/lean/TzapLean/PhaseFoldProof.lean b/lean/TzapLean/PhaseFoldProof.lean
+index 9f59bd69842883e47b2bcfcb0fc33ab35c9fca1e..4027944da5c35c0cc3c4859c6fb3f8987dddad4f 100644
+--- a/lean/TzapLean/PhaseFoldProof.lean
++++ b/lean/TzapLean/PhaseFoldProof.lean
+@@ -29,7 +29,7 @@ open Form
+ 
+ /-- The tag state and the symbolic state agree, wire by wire. -/
+ def Sim {k : Nat} (draws : Draws k) (st : AState) (ts : TState k) : Prop :=
+-  ts.tags.length = st.par.length ∧ ts.fresh = st.fresh ∧
++  ts.tags.size = st.par.length ∧ ts.fresh = st.fresh ∧
+     ∀ q : Qubit, wordToBits (k := k) (ts.tagOf q) = hash draws (st.parOf q)
+ 
+ theorem getD_map_range {α : Type*} (f : Nat → α) (n q : Nat) (d : α) :
+@@ -55,7 +55,8 @@ theorem sim_initial {k : Nat} {draws : Draws k} {wdraws : Nat → Tag}
+     (hw : ∀ i, wordToBits (k := k) (wdraws i) = draws i) (n : Nat) :
+     Sim draws (AState.initial n) (TState.initial (k := k) wdraws n) := by
+   refine ⟨by simp [TState.initial, AState.initial], rfl, fun q => ?_⟩
+-  rw [AState.initial_parOf, TState.tagOf, TState.initial, getD_map_range]
++  rw [AState.initial_parOf, TState.tagOf, TState.initial, List.getElem?_toArray,
++    ← List.getD_eq_getElem?_getD, getD_map_range]
+   by_cases hq : q < n
+   · rw [if_pos hq, if_pos hq, hw, hash_var]
+   · rw [if_neg hq, if_neg hq, wordToBits_zero, hash_const_false]
+@@ -64,21 +65,20 @@ theorem sim_initial {k : Nat} {draws : Draws k} {wdraws : Nat → Tag}
+ theorem sim_set {k : Nat} {draws : Draws k} {st : AState} {ts : TState k}
+     (hsim : Sim draws st ts) (q : Qubit) (f : Form) (t : Tag)
+     (ht : wordToBits (k := k) t = hash draws f) (fr fr' : Nat) (hfr : fr = fr') :
+-    Sim draws ⟨st.par.set q f, fr'⟩ ⟨ts.tags.set q t, fr⟩ := by
++    Sim draws ⟨st.par.set q f, fr'⟩ ⟨ts.tags.setIfInBounds q t, fr⟩ := by
+   obtain ⟨hlen, -, htag⟩ := hsim
+   refine ⟨by simp [hlen], hfr, fun r => ?_⟩
+   simp only [TState.tagOf, AState.parOf]
+   by_cases hr : r = q
+   · subst hr
+-    by_cases hlt : r < ts.tags.length
+-    · rw [List.getD_eq_getElem?_getD, List.getElem?_set_self hlt,
++    by_cases hlt : r < ts.tags.size
++    · rw [Array.getElem?_setIfInBounds_self_of_lt hlt,
+         AState.getD_set_self _ _ _ (hlen ▸ hlt)]
+       exact ht
+-    · rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by simpa using Nat.le_of_not_lt hlt),
++    · rw [Array.getElem?_eq_none (by simpa using Nat.le_of_not_lt hlt),
+         AState.getD_set_out _ _ _ (hlen ▸ hlt), hash_const_false]
+       exact wordToBits_zero
+-  · rw [List.getD_eq_getElem?_getD, List.getElem?_set, if_neg (by simpa using Ne.symm hr),
+-      ← List.getD_eq_getElem?_getD, AState.getD_set_ne _ _ hr]
++  · rw [Array.getElem?_setIfInBounds_ne (Ne.symm hr), AState.getD_set_ne _ _ hr]
+     exact htag r
+ 
+ theorem sim_step {k : Nat} {draws : Draws k} {wdraws : Nat → Tag} {st : AState} {ts : TState k}
+diff --git a/lean/TzapLean/PhaseFoldRand.lean b/lean/TzapLean/PhaseFoldRand.lean
+index 29c8c664e308b5a82005d7f55d07ab5fc606a935..6776de67bd28ead063f377feaec0539ebeea121c 100644
+--- a/lean/TzapLean/PhaseFoldRand.lean
++++ b/lean/TzapLean/PhaseFoldRand.lean
+@@ -302,6 +302,38 @@ def phaseFoldWithSample (k : Nat) (c : Circuit n m) (s : Sample (varBound c.raw)
+     (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
+     phaseFoldGates_wf (wordsOf k (liftSample s)) c.wf⟩
+ 
++/-- Pack each sampled tag once. Forward merge scans can visit the same draw many times;
++reconstructing its `k` bits at every visit otherwise repeats multiprecision allocation. -/
++def sampleWords {m k : Nat} (s : Sample m k) : Array Tag :=
++  Array.ofFn fun i => bitsToWord (s i)
++
++/-- Looking up a packed sample gives exactly the original stream, including its zero
++padding outside the finite sample. -/
++theorem sampleWords_eq {m k : Nat} (s : Sample m k) :
++    (fun i => (sampleWords s)[i]?.getD 0) = wordsOf k (liftSample s) := by
++  have hz : bitsToWord (k := k) 0 = 0 := by
++    apply Nat.eq_of_testBit_eq
++    intro i
++    simp [bitsToWord, testBit_bitsToWordAux, unbit]
++  funext i
++  by_cases h : i < m <;> simp [sampleWords, wordsOf, liftSample, h, hz]
++
++/-- The executable implementation keeps the packed array outside the lookup closure,
++so every tag is packed once per pass invocation. -/
++def phaseFoldWithSampleCached (k : Nat) (c : Circuit n m) (s : Sample (varBound c.raw) k) :
++    Circuit n m :=
++  let words := sampleWords s
++  ⟨phaseFold k (fun i => words[i]?.getD 0) c.raw,
++    (phaseFold_numQubits k _ c.raw).trans c.numQubits_eq,
++    (phaseFold_numCbits k _ c.raw).trans c.numCbits_eq,
++    phaseFoldGates_wf (fun i => words[i]?.getD 0) c.wf⟩
++
++/-- A proved compiler rewrite; the ideal randomized model and its sample are unchanged. -/
++@[csimp] theorem phaseFoldWithSample_eq_cached :
++    @phaseFoldWithSample = @phaseFoldWithSampleCached := by
++  funext n m k c s
++  simp only [phaseFoldWithSampleCached, sampleWords_eq, phaseFoldWithSample]
++
+ /-- The runtime phase-folding pass. Every invocation obtains a fresh sample from
+ `IO.getRandomBytes`; its idealized distribution and failure bound are `PhaseFoldRand k` below. -/
+ def PhaseFoldRandExec (k : Nat) : ExecutableRandPass where
+diff --git a/lean/TzapLean/PhaseFoldTests.lean b/lean/TzapLean/PhaseFoldTests.lean
+index 2c157e4d163c0badb81207c3f73c24513cb2356f..2b5c9be7d20b08c5358a32e118d24572a7378928 100644
+--- a/lean/TzapLean/PhaseFoldTests.lean
++++ b/lean/TzapLean/PhaseFoldTests.lean
+@@ -36,6 +36,14 @@ def testWords : Nat → Tag := seedWords 63 0
+ -- OS entropy is packed little-endian before the tag is exposed as bits.
+ #guard natOfBytes (ByteArray.mk #[0x01, 0x02, 0x03]) 0 3 == 0x030201
+ 
++-- Exercise the compiled sampled entry point at the CLI's tag width. These two tags
++-- differ only in bit 127; truncating the cached words would merge the middle rotation.
++#guard
++  let c := Circuit.of (RawCircuit.ofGates 2 0 [.t 0, .t 1, .t 0]) (by decide)
++  let sample : Sample (varBound c.raw) 128 :=
++    fun i => wordToBits (if i.val = 0 then 0 else 2 ^ 127)
++  (phaseFoldWithSample 128 c sample).raw.gates == [.t 1, .s 0]
++
+ /-- Phase folding with those draws. -/
+ def pf (n : Nat) (gs : List Gate) : List Gate := phaseFoldGates 63 testWords n gs
+ 

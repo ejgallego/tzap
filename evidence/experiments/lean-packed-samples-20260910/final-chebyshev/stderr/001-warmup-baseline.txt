@@ -1,0 +1,7 @@
+  [1mResult[0m  (2.027s)
+    Gates     112,554 → 96,343  (14.4% reduction)
+    2q gates  20,459 → 20,431  (0.1% reduction)
+    T/Tdg     47,894 → 31,868  (33.4% reduction)
+    Depth     42,955 → 42,193  (1.7% reduction)
+
+  wrote /home/egallego/lean/tzap/experiments/lean-packed-samples-20260910/final-chebyshev-a.qasm

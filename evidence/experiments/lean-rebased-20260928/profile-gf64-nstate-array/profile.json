@@ -1,0 +1,24 @@
+{
+  "schema": "tzap-native-self-profile-v1",
+  "captured_at": "2026-09-28",
+  "revision": "26a4f17a2cd6a9f028f06903b9f4eab5f4230986",
+  "binary_sha256": "662fe5071089ef229bffbadffcc09f3ffa28d109038752bd5ef45fb20a0f8461",
+  "input": "benchmarks/feynman/gf2^64_mult.qasm",
+  "command": [
+    "perf", "record", "-F", "997", "-e", "cycles:u",
+    "-o", "experiments/lean-rebased-20260928/profile-gf64-nstate-array/perf.data",
+    "--", "taskset", "-c", "2", "lean/.lake/build/bin/tzap-lean",
+    "benchmarks/feynman/gf2^64_mult.qasm", "-O1", "-o",
+    "experiments/lean-rebased-20260928/profile-gf64-nstate-array/output.qasm"
+  ],
+  "samples": 2392,
+  "lost_samples": 0,
+  "event": "cycles:u",
+  "frequency_hz": 997,
+  "program_reported_seconds": 2.231,
+  "perf_data_sha256": "4c44bfda1e1238edd8376e0054c83b0941dfb768cc108cfe2090cbb9a99a82ed",
+  "output_sha256": "0ac628b27a55248593c4c70244f3a3ae76bc19603df46737bb86bc3eeec52652",
+  "self_report_sha256": "7f8e6cfeeaf24382de3a65a747f9e9a11e1fb1de1caeef00af999771c21ad497",
+  "generated_c_sha256": "3cafc9a7ecf578e91eda4dda622c9c4aef35eabe1abe8c70d0ede3cb5925ada0",
+  "interpretation": "List.get and List.set are absent from sampled hotspots. Array copy expansion is 0.38% self weight. Allocation/free and GMP-backed Nat arithmetic dominate the remaining leaf costs."
+}

@@ -1,0 +1,19 @@
+✔ decision and case-insensitive text filters compose without changing evidence (4.30733ms)
+✔ group filters keep workload rows, their evidence and summary navigation together (2.805142ms)
+✔ normal handshake, body first (2.482584ms)
+✔ normal handshake, PONG first (1.360281ms)
+✔ PONG then stalled body: timeout aborts; late body cannot transfer (1.559807ms)
+✔ PONG then stalled body: close aborts; late body cannot transfer (1.133044ms)
+✔ closure immediately before transfer is caught without a polling tick (2.378648ms)
+✔ deadline also bounds missing PONG and stalled response headers (1.189279ms)
+✔ HTTP failure aborts and releases controls (1.407419ms)
+✔ body failure aborts and releases controls (1.197093ms)
+✔ blocked popup does not start a trace request (1.047391ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 96.008105

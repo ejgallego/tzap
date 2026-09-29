@@ -1,0 +1,32 @@
+{
+  "baseline": {
+    "sha256": "068b605840482da0c5586495ca562339872af50d1344d144b6d9062cdc2a8029",
+    "bytes": 142527120,
+    "size": "   text\t   data\t    bss\t    dec\t    hex\tfilename\n91541824\t2604816\t 802544\t94949184\t5a8cf40\texperiments/lean-runtime-20260910/baseline\n",
+    "tag_state_symbols": [
+      "00000000003b2c18 0000000000000018 r lp_tzap_x2dlean_TzapLean_TState_step___closed__0_value",
+      "000000000172fc40 0000000000000ddd T lp_tzap_x2dlean_TzapLean_TState_step"
+    ]
+  },
+  "array-candidate": {
+    "sha256": "5691304874fe6656e6994754b2eb506c1fce44255186f01a0f3ad65f41873211",
+    "bytes": 142526920,
+    "size": "   text\t   data\t    bss\t    dec\t    hex\tfilename\n91541608\t2604816\t 802736\t94949160\t5a8cf28\texperiments/lean-runtime-20260910/array-candidate\n",
+    "tag_state_symbols": [
+      "000000000172fc80 000000000000007e T lp_tzap_x2dlean_TzapLean_TState_initial___redArg",
+      "000000000172fd00 0000000000000d4a T lp_tzap_x2dlean_TzapLean_TState_step"
+    ]
+  },
+  "candidate": {
+    "sha256": "ea8e0ac5bf524c800c47637f6c033c920d256afe71b8801484a05546d62c42fc",
+    "bytes": 142526648,
+    "size": "   text\t   data\t    bss\t    dec\t    hex\tfilename\n91541300\t2604816\t 803056\t94949172\t5a8cf34\texperiments/lean-runtime-20260910/candidate\n",
+    "hot_symbols": [
+      "0000000001735560 0000000000000018 T lp_tzap_x2dlean_TzapLean_sampleWords___lam__0",
+      "000000000172fae0 000000000000007e T lp_tzap_x2dlean_TzapLean_TState_initial___redArg",
+      "0000000001735580 00000000000000d0 T lp_tzap_x2dlean_TzapLean_phaseFoldWithSampleCached___redArg___lam__0___boxed",
+      "0000000001735650 00000000000000ea T lp_tzap_x2dlean_TzapLean_phaseFoldWithSampleCached___redArg",
+      "000000000172fb60 0000000000000d4a T lp_tzap_x2dlean_TzapLean_TState_step"
+    ]
+  }
+}

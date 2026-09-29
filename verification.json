@@ -1,0 +1,40 @@
+{
+  "numerical_comparisons": 32,
+  "baselines": 8,
+  "datasets": 25,
+  "original_observations": 474,
+  "source_projection_exact": true,
+  "timeout_censored": true,
+  "rejected_observations_included": true,
+  "profile_and_figure_hashes_valid": true,
+  "negative_validation_and_corruption_checks": true,
+  "checker_sha256": "2b7310a42eed465e7e90bfdcb3e45428179dcabf732e44d5be428b84271d3904",
+  "report_html_sha256": "1596823923062ea738095aafa8d9aa33be2120a155e54539e075156057e0d1ef",
+  "model_sha256": "d67380d3fc1eecef13e3b3534d6e664835bb394390275ccad5ce279aa51ea107",
+  "previous_report": {
+    "retained_comparisons": 14,
+    "refreshed_comparisons": 12,
+    "baseline_entries": 8,
+    "completed_baselines": 7,
+    "statistics_exact": true,
+    "previous_model_sha256": "435ad5cee7ceca6b94e8ecf3d79522a62eb75e86cd4c2956aec6cff98951b29c"
+  },
+  "browser": {
+    "http_artifacts_checked": 1415,
+    "viewports": [
+      1280,
+      768,
+      390
+    ],
+    "browser_errors": [],
+    "test_and_decision_filters": true,
+    "self_profile_toggle_and_filter": true,
+    "grouped_benchmarks_and_warmup_timeout": true,
+    "compact_descriptions_and_exact_command_toggles": true,
+    "plots_visible_by_default": true,
+    "displayed_timings_match_evidence": true,
+    "paired_benchmark_rows": true,
+    "relative_performance_verified": true,
+    "plot_size_control": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "git_head": "737667f27ed575570f86cfe23acaaf7cf2e4c5b1",
+  "git_status": "",
+  "toolchain": "leanprover/lean4:v4.33.1",
+  "build": "Lake release defaults",
+  "cpu_affinity": [
+    2
+  ],
+  "baseline_sha256": "ea8e0ac5bf524c800c47637f6c033c920d256afe71b8801484a05546d62c42fc",
+  "attribution": "experiments/lean-runtime-20260910/cached-qft20-self.txt: scanH 50.66%, Gate.support 14.21%, reduceStep 8.82%; same baseline binary hash",
+  "boundary": "whole native CLI through checked serialization, output write and exit",
+  "baseline_qft": {
+    "source": "experiments/lean-rust-20260910/qft-lean",
+    "method": "Reuse the prior 60-second CPU-2 timeout with identical executable and input hashes. This is a censored observation, not a paired completed-run median."
+  }
+}

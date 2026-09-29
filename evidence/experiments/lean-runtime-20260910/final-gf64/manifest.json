@@ -1,0 +1,130 @@
+{
+  "artifacts": [
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/baseline",
+      "sha256": "068b605840482da0c5586495ca562339872af50d1344d144b6d9062cdc2a8029"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/candidate",
+      "sha256": "ea8e0ac5bf524c800c47637f6c033c920d256afe71b8801484a05546d62c42fc"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm",
+      "sha256": "27f3db5c646bd6db9c63ded17fca66d37491399541c6dae1932d7c25469a1252"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFoldRand.lean",
+      "sha256": "8214064e3ff63765499b7ba0f94d359d365c4090215bbdfd6c95c47a6340f80c"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFoldTests.lean",
+      "sha256": "af03a71b26be6564cfbb6b020834bb9d64cdd529eb3cfc9117cf8992c7ab488d"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/lean-toolchain",
+      "sha256": "3aac669c7a910ec2389f4e4f921b605adf6ebf2d1e0c9b9cd0be4d33f3f5db71"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/lakefile.lean",
+      "sha256": "8109be39d7bbf60303ad239632a95aa997cfc4fc180dde68d7856e430fb77b59"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/lake-manifest.json",
+      "sha256": "2853f999799db3c84f2159dfcf9c20248aef24ebb05dc13e475536073e7439ef"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFold.lean",
+      "sha256": "f5a0849370895bc5b2de364127524575dea735462732720777770598604925b7"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/TzapLean/PhaseFoldProof.lean",
+      "sha256": "2cc9a4b3742a99aa76cd5218989307fcc9fd6e495093890ea9433ba53c706cf5"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/lean/scripts/bench-runtime.py",
+      "sha256": "037278dfd6a8e65440b81568fc3860fcee222d349a09d7b038e3467bcfd8e085"
+    },
+    {
+      "path": "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/compare-final.py",
+      "sha256": "7e0b501c8a6408b4bbb1b33c11fb9ddb6f240441875dd3ac4ee27db32dca400c"
+    }
+  ],
+  "commands": {
+    "baseline": {
+      "argv": [
+        "taskset",
+        "-c",
+        "2",
+        "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/baseline",
+        "/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm",
+        "-O1",
+        "-o",
+        "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/gf64-a.qasm"
+      ],
+      "executable": "/usr/bin/taskset",
+      "executable_sha256": "a431738fadddc2e2326c8ab81843e72f4011658379381aef1502a6ddb1c1115b"
+    },
+    "candidate": {
+      "argv": [
+        "taskset",
+        "-c",
+        "2",
+        "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/candidate",
+        "/home/egallego/lean/tzap/benchmarks/feynman/gf2^64_mult.qasm",
+        "-O1",
+        "-o",
+        "/home/egallego/lean/tzap/experiments/lean-runtime-20260910/gf64-b.qasm"
+      ],
+      "executable": "/usr/bin/taskset",
+      "executable_sha256": "a431738fadddc2e2326c8ab81843e72f4011658379381aef1502a6ddb1c1115b"
+    }
+  },
+  "created_at_utc": "2026-09-10T12:37:17.443438+00:00",
+  "cwd": "/home/egallego/lean/tzap",
+  "elapsed_measurement": {
+    "clock": "time.perf_counter_ns",
+    "scope": "child-process wall time including process startup"
+  },
+  "expected_exit_code": 0,
+  "git": {
+    "head": "2c29be4acb248995b4d8a252b29d1c83d21f8bc4",
+    "root": "/home/egallego/lean/tzap",
+    "status_porcelain": [
+      " M lean/.gitignore",
+      " M lean/README.md",
+      " M lean/TzapLean/PhaseFold.lean",
+      " M lean/TzapLean/PhaseFoldProof.lean",
+      " M lean/TzapLean/PhaseFoldRand.lean",
+      " M lean/TzapLean/PhaseFoldTests.lean",
+      "?? lean/benchmarks/README.md",
+      "?? lean/scripts/bench-runtime.py"
+    ],
+    "tracked_diff_path": "git-tracked.patch",
+    "tracked_diff_sha256": "9e23353c729b04625548c689baae798a8f0b2caa7a3e118e7dfe06c1db9fe70c"
+  },
+  "metadata": {
+    "boundary": "native CLI through checked output and exit",
+    "build": "Lake release defaults",
+    "cache": "unused",
+    "cpu_affinity": "2",
+    "diagnostics": "off",
+    "randomness": "fresh OS 128-bit tags"
+  },
+  "perf": null,
+  "platform": {
+    "machine": "x86_64",
+    "node": "capivara",
+    "processor": "x86_64",
+    "release": "7.2.2-070202-generic",
+    "system": "Linux",
+    "version": "#202608280700 SMP PREEMPT_DYNAMIC Fri Aug 28 07:51:26 UTC 2026"
+  },
+  "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+  "schedule": {
+    "passes": 6,
+    "warmups_per_command": 1
+  },
+  "schema": "lean-profile-compare-alpha",
+  "timeout_seconds": null,
+  "warnings": []
+}

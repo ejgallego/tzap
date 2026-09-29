@@ -1,0 +1,17 @@
+{
+  "date": "2026-09-28",
+  "no_original_experiment_directory": true,
+  "observations": 474,
+  "datasets": 25,
+  "baselines": 8,
+  "comparisons": 32,
+  "dataset_hashes_exact": true,
+  "baseline_statistics_exact": true,
+  "comparison_statistics_exact": true,
+  "original_model_sha256": "d67380d3fc1eecef13e3b3534d6e664835bb394390275ccad5ce279aa51ea107",
+  "rebuilt_model_sha256": "1927bef165cbdd0c0cc7165ade6077489be5a8f2158787784a127048a06936b5",
+  "original_source_manifest_sha256": "e59bdde93552d37bac812a4406014fb0bc7feb7812d941471f7948b528dcb7f4",
+  "rebuilt_source_manifest_sha256": "e59bdde93552d37bac812a4406014fb0bc7feb7812d941471f7948b528dcb7f4",
+  "generator_code_hashes_exact": true,
+  "note": "The bundle was copied to /tmp without ignored experiment directories and rebuilt with the installed skill. Absolute build paths can change model bytes; dataset hashes and every baseline/comparison statistic remain exact."
+}

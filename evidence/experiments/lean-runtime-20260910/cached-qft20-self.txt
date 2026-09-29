@@ -1,0 +1,24 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 59K of event 'cycles:u'
+# Event count (approx.): 204295199205
+#
+#     Overhead  Symbol                                                                                                          IPC   [IPC Coverage]
+# ............  ..............................................................................................................  ....................
+#
+        50.66%  [.] lp_tzap_x2dlean_TzapLean_scanH                                                                              -      -            
+        14.21%  [.] lp_tzap_x2dlean_TzapLean_Gate_support                                                                       -      -            
+         8.82%  [.] lp_tzap_x2dlean_TzapLean_reduceStep                                                                         -      -            
+         5.93%  [.] mi_malloc_small                                                                                             -      -            
+         4.50%  [.] mi_free                                                                                                     -      -            
+         3.63%  [.] lp_tzap_x2dlean_TzapLean_scanXH                                                                             -      -            
+         3.10%  [.] lean_dec_ref_cold                                                                                           -      -            
+         3.02%  [.] lp_tzap_x2dlean_TzapLean_diagonalK                                                                          -      -            
+
+
+#
+# (Tip: To see list of saved events and attributes: perf evlist -v)
+#
